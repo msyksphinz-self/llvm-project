@@ -406,13 +406,17 @@ elseif (LLVM_NATIVE_ARCH MATCHES "wasm32")
   set(LLVM_NATIVE_ARCH WebAssembly)
 elseif (LLVM_NATIVE_ARCH MATCHES "wasm64")
   set(LLVM_NATIVE_ARCH WebAssembly)
+# @{add_LLVM_NATIVE_ARCH_myriscvx_in_cmakelists
 elseif (LLVM_NATIVE_ARCH MATCHES "riscv32")
   set(LLVM_NATIVE_ARCH RISCV)
 elseif (LLVM_NATIVE_ARCH MATCHES "riscv64")
   set(LLVM_NATIVE_ARCH RISCV)
+elseif (LLVM_NATIVE_ARCH MATCHES "myriscvx")
+  set(LLVM_NATIVE_ARCH MYRISCVX)
 else ()
   message(FATAL_ERROR "Unknown architecture ${LLVM_NATIVE_ARCH}")
 endif ()
+# @}add_LLVM_NATIVE_ARCH_myriscvx_in_cmakelists
 
 # If build targets includes "host", then replace with native architecture.
 list(FIND LLVM_TARGETS_TO_BUILD "host" idx)

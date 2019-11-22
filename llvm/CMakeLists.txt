@@ -283,9 +283,11 @@ set(LLVM_EXAMPLES_BINARY_DIR ${LLVM_BINARY_DIR}/examples)
 set(LLVM_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 # List of all targets to be built by default:
+# @{ add_cmakelists_MYRISCVX
 set(LLVM_ALL_TARGETS
   AArch64
   AMDGPU
+# @{ add_cmakelists_MYRISCVX ...
   ARM
   BPF
   Hexagon
@@ -298,8 +300,11 @@ set(LLVM_ALL_TARGETS
   SystemZ
   WebAssembly
   X86
+# @} add_cmakelists_MYRISCVX ...
   XCore
+  MYRISCVX   # MYRISCVXを追加する。
   )
+# @} add_cmakelists_MYRISCVX
 
 # List of targets with JIT support:
 set(LLVM_TARGETS_WITH_JIT X86 PowerPC AArch64 ARM Mips SystemZ)

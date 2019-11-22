@@ -41,12 +41,14 @@ namespace llvm {
 ///
 /// See autoconf/config.guess for a glimpse into what configuration names
 /// look like in practice.
+// @{ add_myriscvx32_64_into_triple_h
 class Triple {
 public:
   enum ArchType {
     UnknownArch,
 
     arm,            // ARM (little endian): arm, armv.*, xscale
+// @{ add_myriscvx32_64_into_triple_h ...
     armeb,          // ARM (big endian): armeb
     aarch64,        // AArch64 (little endian): aarch64
     aarch64_be,     // AArch64 (big endian): aarch64_be
@@ -65,9 +67,13 @@ public:
     ppc64le,        // PPC64LE: powerpc64le
     r600,           // R600: AMD GPUs HD2XXX - HD6XXX
     amdgcn,         // AMDGCN: AMD GCN GPUs
+// @} add_myriscvx32_64_into_triple_h ...
     riscv32,        // RISC-V (32-bit): riscv32
     riscv64,        // RISC-V (64-bit): riscv64
+    myriscvx32,     // この2つを追加。MYRISCVX (32-bit): myriscvx32
+    myriscvx64,     // この2つを追加。MYRISCVX (64-bit): myriscvx64
     sparc,          // Sparc: sparc
+// @} add_myriscvx32_64_into_triple_h
     sparcv9,        // Sparcv9: Sparcv9
     sparcel,        // Sparc: (endianness = little). NB: 'Sparcle' is a CPU variant
     systemz,        // SystemZ: s390x
