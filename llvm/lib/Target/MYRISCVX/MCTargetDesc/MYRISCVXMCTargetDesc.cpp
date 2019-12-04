@@ -28,17 +28,75 @@
 
 using namespace llvm;
 
-// #define GET_INSTRINFO_MC_DESC
-// #include "MYRISCVXGenInstrInfo.inc"
+// @{MYRISCVXMC_TargetDesc_cpp_AddInclude
+#define GET_INSTRINFO_MC_DESC
+#include "MYRISCVXGenInstrInfo.inc"
 
-// #define GET_SUBTARGETINFO_MC_DESC
-// #include "MYRISCVXGenSubtargetInfo.inc"
+#define GET_SUBTARGETINFO_MC_DESC
+#include "MYRISCVXGenSubtargetInfo.inc"
 
-// #define GET_REGINFO_MC_DESC
-// #include "MYRISCVXGenRegisterInfo.inc"
+#define GET_REGINFO_MC_DESC
+#include "MYRISCVXGenRegisterInfo.inc"
+// @}MYRISCVXMC_TargetDesc_cpp_AddInclude
 
-//@2 {
+// @{MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCInstrInfo
+static MCInstrInfo *createMYRISCVXMCInstrInfo() {
+  MCInstrInfo *X = new MCInstrInfo();
+  InitMYRISCVXMCInstrInfo(X); // defined in MYRISCVXGenInstrInfo.inc
+  return X;
+}
+// @}MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCInstrInfo
+
+// @{MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCRegisterInfo
+static MCRegisterInfo *createMYRISCVXMCRegisterInfo(const Triple &TT) {
+  MCRegisterInfo *X = new MCRegisterInfo();
+  InitMYRISCVXMCRegisterInfo(X, MYRISCVX::RA); // defined in MYRISCVXGenRegisterInfo.inc
+  return X;
+}
+// @}MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCRegisterInfo
+
+// @{MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCSubtargetInfo
+static MCSubtargetInfo *createMYRISCVXMCSubtargetInfo(const Triple &TT,
+                                                      StringRef CPU, StringRef FS) {
+  return createMYRISCVXMCSubtargetInfoImpl(TT, CPU, FS);
+}
+// @}MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCSubtargetInfo
+
+// static MCAsmInfo *createMYRISCVXMCAsmInfo(const MCRegisterInfo &MRI,
+//                                           const Triple &TT) {
+//   MCAsmInfo *MAI = new MYRISCVXMCAsmInfo(TT);
+//
+//   unsigned SP = MRI.getDwarfRegNum(MYRISCVX::SP, true);
+//   MCCFIInstruction Inst = MCCFIInstruction::createDefCfa(nullptr, SP, 0);
+//   MAI->addInitialFrameState(Inst);
+//
+//   return MAI;
+// }
+
+// // @{MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCInstPrinter
+// static MCInstPrinter *createMYRISCVXMCInstPrinter(const Triple &T,
+//                                                   unsigned SyntaxVariant,
+//                                                   const MCAsmInfo &MAI,
+//                                                   const MCInstrInfo &MII,
+//                                                   const MCRegisterInfo &MRI) {
+//   return new MYRISCVXInstPrinter(MAI, MII, MRI);
+// }
+// // @}MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCInstPrinter
+
+namespace {
+
+// @{MYRISCVXMC_TargetDesc_cpp_MYRISCVXMCInstrAnalysis
+class MYRISCVXMCInstrAnalysis : public MCInstrAnalysis {
+ public:
+  MYRISCVXMCInstrAnalysis(const MCInstrInfo *Info) : MCInstrAnalysis(Info) {}
+};
+}
+
+static MCInstrAnalysis *createMYRISCVXMCInstrAnalysis(const MCInstrInfo *Info) {
+  return new MYRISCVXMCInstrAnalysis(Info);
+}
+// @}MYRISCVXMC_TargetDesc_cpp_MYRISCVXMCInstrAnalysis
+
 extern "C" void LLVMInitializeMYRISCVXTargetMC() {
 
 }
-//@2 }
