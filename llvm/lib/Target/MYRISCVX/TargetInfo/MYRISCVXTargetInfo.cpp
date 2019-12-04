@@ -11,9 +11,11 @@
 #include "MYRISCVX.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Support/TargetRegistry.h"
+
 using namespace llvm;
 
 namespace llvm {
+// @{getTheMYRISCVX32_64Target
 Target &getTheMYRISCVX32Target() {
   static Target TheMYRISCVX32Target;
   return TheMYRISCVX32Target;
@@ -23,8 +25,10 @@ Target &getTheMYRISCVX64Target() {
   static Target TheMYRISCVX64Target;
   return TheMYRISCVX64Target;
 }
+// @}getTheMYRISCVX32_64Target
 }
 
+// @{LLVMInitializeMYRISCVXTargetInfo
 extern "C" void LLVMInitializeMYRISCVXTargetInfo() {
   RegisterTarget<Triple::myriscvx32,
         /*HasJIT=*/true>
@@ -34,4 +38,5 @@ extern "C" void LLVMInitializeMYRISCVXTargetInfo() {
         /*HasJIT=*/true>
       Y(getTheMYRISCVX64Target(), "myriscvx64", "MYRISCVX (64-bit)", "MYRISCVX");
 }
+// @}LLVMInitializeMYRISCVXTargetInfo
 // @} MYRISCVX/TargetInfo/MYRISCVXTargetInfo.cpp
