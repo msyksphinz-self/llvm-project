@@ -62,26 +62,28 @@ static MCSubtargetInfo *createMYRISCVXMCSubtargetInfo(const Triple &TT,
 }
 // @}MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCSubtargetInfo
 
-// static MCAsmInfo *createMYRISCVXMCAsmInfo(const MCRegisterInfo &MRI,
-//                                           const Triple &TT) {
-//   MCAsmInfo *MAI = new MYRISCVXMCAsmInfo(TT);
-//
-//   unsigned SP = MRI.getDwarfRegNum(MYRISCVX::SP, true);
-//   MCCFIInstruction Inst = MCCFIInstruction::createDefCfa(nullptr, SP, 0);
-//   MAI->addInitialFrameState(Inst);
-//
-//   return MAI;
-// }
+// @{MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCAsmInfo
+static MCAsmInfo *createMYRISCVXMCAsmInfo(const MCRegisterInfo &MRI,
+                                          const Triple &TT) {
+  MCAsmInfo *MAI = new MYRISCVXMCAsmInfo(TT);
 
-// // @{MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCInstPrinter
-// static MCInstPrinter *createMYRISCVXMCInstPrinter(const Triple &T,
-//                                                   unsigned SyntaxVariant,
-//                                                   const MCAsmInfo &MAI,
-//                                                   const MCInstrInfo &MII,
-//                                                   const MCRegisterInfo &MRI) {
-//   return new MYRISCVXInstPrinter(MAI, MII, MRI);
-// }
-// // @}MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCInstPrinter
+  unsigned SP = MRI.getDwarfRegNum(MYRISCVX::SP, true);
+  MCCFIInstruction Inst = MCCFIInstruction::createDefCfa(nullptr, SP, 0);
+  MAI->addInitialFrameState(Inst);
+
+  return MAI;
+}
+// @}MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCAsmInfo
+
+// @{MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCInstPrinter
+static MCInstPrinter *createMYRISCVXMCInstPrinter(const Triple &T,
+                                                  unsigned SyntaxVariant,
+                                                  const MCAsmInfo &MAI,
+                                                  const MCInstrInfo &MII,
+                                                  const MCRegisterInfo &MRI) {
+ return new MYRISCVXInstPrinter(MAI, MII, MRI);
+}
+// @}MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCInstPrinter
 
 namespace {
 
