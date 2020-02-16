@@ -112,6 +112,6 @@ MYRISCVXTargetLowering::LowerReturn(SDValue Chain,
                                     const SmallVectorImpl<SDValue> &OutVals,
                                     const SDLoc &DL, SelectionDAG &DAG) const {
   return DAG.getNode(MYRISCVXISD::Ret, DL, MVT::Other,
-                     Chain, DAG.getRegister(MYRISCVX::RA, MVT::i32));
+                     Chain, DAG.getRegister(MYRISCVX::RA, Subtarget.getXLenVT()));
 }
 // @}MYRISCVXISelLowering_LowerReturn
