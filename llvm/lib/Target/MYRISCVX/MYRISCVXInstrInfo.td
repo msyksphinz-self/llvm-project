@@ -11,6 +11,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+//@{MYRISCVXInstrInfo_MYRISCVXRet
+// Return
+def MYRISCVXRet : SDNode<"MYRISCVXISD::Ret", SDTNone,
+                         [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
+//@}MYRISCVXInstrInfo_MYRISCVXRet
+
 //===----------------------------------------------------------------------===//
 // MYRISCVX profiles and nodes
 //===----------------------------------------------------------------------===//
@@ -91,6 +97,14 @@ class ArithLogicU<bits<7> opcode,
       let isReMaterializable = 1;
 }
 //@}MYRISCVXInstrInfo_Instruction_Format
+
+
+//@{MYRISCVXInstrInfo_jalr_variation
+def JALR : ArithLogicI<0b1100111, 0b000, "jalr", add, simm12, GPR>;
+def: InstAlias<"jr $rs",      (JALR ZERO, GPR:$rs, 0)>;
+def: InstAlias<"jalr $rs",    (JALR RA,   GPR:$rs, 0)>;
+def: InstAlias<"ret",         (JALR ZERO,      RA, 0), 2>;
+//@}MYRISCVXInstrInfo_jalr_variation
 
 
 //===----------------------------------------------------------------------===//
