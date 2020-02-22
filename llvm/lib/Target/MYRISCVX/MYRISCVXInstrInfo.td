@@ -128,6 +128,10 @@ def ADD  : ArithLogicR<0b0110011, 0b000, 0b0000000, "add", add, GPR>;
 def SUB  : ArithLogicR<0b0110011, 0b000, 0b0100000, "sub", sub, GPR>;
 //@}MYRISCVXInstrInfo_Basic_Definition
 
+//@{MYRISCVXInstrInfo_RetRA
 //===----------------------------------------------------------------------===//
 //  Arbitrary patterns that map to one or more instructions
 //===----------------------------------------------------------------------===//
+let isReturn=1, isTerminator=1, hasDelaySlot=0, isBarrier=1, hasCtrlDep=1 in
+  def RetRA : MYRISCVXPseudo<(outs), (ins), "", [(MYRISCVXRet)]>;
+//@}MYRISCVXInstrInfo_RetRA
