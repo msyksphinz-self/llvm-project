@@ -37,6 +37,21 @@ def simm20u : Operand<XLenVT>, ImmLeaf<XLenVT, [{return isInt<32>(Imm) && !(Imm 
 def simm32: Operand<XLenVT>, ImmLeaf<XLenVT, [{return isInt<32>(Imm);}]>;
 //@}MYRISCVXInstrInfo_Operand_Definition
 
+
+// @{MYRISCVXInstrInfo_LO12_HI20
+// Transformation Function - get the lower 12 bits.
+def LO12sext : SDNodeXForm<imm, [{
+  return CurDAG->getTargetConstant(SignExtend64<12>(N->getZExtValue()),
+                                   SDLoc(N), N->getValueType(0));
+}]>;
+
+// Transformation Function - get the higher 20 bits.
+def HI20 : SDNodeXForm<imm, [{
+  return getImm(N, ((N->getZExtValue()+0x800) >> 12) & 0xfffff);
+}]>;
+// @}MYRISCVXInstrInfo_LO12_HI20
+
+
 // shamt field must fit in 5 bits.
 def immZExt5 : ImmLeaf<XLenVT, [{return Imm == (Imm & 0x1f);}]>;
 def shamt : Operand<i32>;
@@ -134,3 +149,17 @@ def SUB  : ArithLogicR<0b0110011, 0b000, 0b0100000, "sub", sub, GPR>;
 let isReturn=1, isTerminator=1, hasDelaySlot=0, isBarrier=1, hasCtrlDep=1 in
   def RetRA : MYRISCVXPseudo<(outs), (ins), "", [(MYRISCVXRet)]>;
 //@}MYRISCVXInstrInfo_RetRA
+
+// Small immediates
+
+// @{MYRISCVXInstrInfo_Pat_simm12
+def : Pat<(simm12:$in), (ADDI ZERO, simm12:$in)>;
+// @}MYRISCVXInstrInfo_Pat_simm12
+
+// @{MYRISCVXInstrInfo_Pat_simm20u
+def : Pat<(simm20u:$in), (LUI (HI20 imm:$in))>;
+// @}MYRISCVXInstrInfo_Pat_simm20u
+// @{MYRISCVXInstrInfo_Pat_simm32
+def : Pat<(simm32:$imm),
+          (ADDI (LUI (HI20 imm:$imm)), (LO12sext imm:$imm))>;
+// @}MYRISCVXInstrInfo_Pat_simm32
