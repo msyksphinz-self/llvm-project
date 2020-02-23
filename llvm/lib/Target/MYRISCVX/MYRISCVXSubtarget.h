@@ -61,6 +61,9 @@ namespace llvm {
     const MYRISCVXABIInfo &getABI() const;
 
     MVT getXLenVT() const { return XLenVT; }
+// @{MYRISCVXSubtarget_is64Bit
+    bool is64Bit() const { return HasRV64; }
+// @}MYRISCVXSubtarget_is64Bit
 
     /// This constructor initializes the data members to match that
     /// of the specified triple.
