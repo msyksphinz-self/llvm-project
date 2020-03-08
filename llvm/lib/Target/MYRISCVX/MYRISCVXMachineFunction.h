@@ -45,7 +45,8 @@ class MYRISCVXFunctionInfo : public MachineFunctionInfo {
 
     /// VarArgsFrameIndex - FrameIndex for start of varargs area.
     int VarArgsFrameIndex;
-  };
+
+};
   //@1 }
 
 } // end of namespace llvm
