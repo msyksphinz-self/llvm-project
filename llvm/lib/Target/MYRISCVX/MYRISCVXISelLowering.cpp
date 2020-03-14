@@ -70,6 +70,11 @@ MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
   // must, computeRegisterProperties - Once all of the register classes are
   //  added, this allows us to compute derived properties we expose.
   computeRegisterProperties(STI.getRegisterInfo());
+
+  //@{MYRISCVXTargetLowering_setOperationAction_DontGenerate
+  setOperationAction(ISD::ROTL, XLenVT, Expand);
+  setOperationAction(ISD::ROTR, XLenVT, Expand);
+  //@}MYRISCVXTargetLowering_setOperationAction_DontGenerate
 }
 
 //===----------------------------------------------------------------------===//
