@@ -30,24 +30,33 @@ class MYRISCVXFunctionInfo : public MachineFunctionInfo {
  public:
  MYRISCVXFunctionInfo(MachineFunction& MF)
      : MF(MF),
+       GlobalBaseReg(0),
        VarArgsFrameIndex(0)
-    {}
+  {}
 
-    ~MYRISCVXFunctionInfo();
+  ~MYRISCVXFunctionInfo();
 
-    int getVarArgsFrameIndex() const { return VarArgsFrameIndex; }
-    void setVarArgsFrameIndex(int Index) { VarArgsFrameIndex = Index; }
+  int getVarArgsFrameIndex() const { return VarArgsFrameIndex; }
+  void setVarArgsFrameIndex(int Index) { VarArgsFrameIndex = Index; }
+  bool globalBaseRegFixed() const;
+  bool globalBaseRegSet() const;
+  unsigned getGlobalBaseReg();
 
  private:
-    virtual void anchor();
+  virtual void anchor();
 
-    MachineFunction& MF;
+  MachineFunction& MF;
 
-    /// VarArgsFrameIndex - FrameIndex for start of varargs area.
-    int VarArgsFrameIndex;
+  /// GlobalBaseReg - keeps track of the virtual register initialized for
+  /// use as the global base register. This is used for PIC in some PIC
+  /// relocation models.
+  unsigned GlobalBaseReg;
+
+  /// VarArgsFrameIndex - FrameIndex for start of varargs area.
+  int VarArgsFrameIndex;
 
 };
-  //@1 }
+//@1 }
 
 } // end of namespace llvm
 

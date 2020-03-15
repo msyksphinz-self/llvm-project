@@ -54,6 +54,16 @@ bool MYRISCVXDAGToDAGISel::runOnMachineFunction(MachineFunction &MF) {
 }
 
 
+/// getGlobalBaseReg - Output the instructions required to put the
+/// GOT address into a register.
+SDNode *MYRISCVXDAGToDAGISel::getGlobalBaseReg() {
+  unsigned GlobalBaseReg = MF->getInfo<MYRISCVXFunctionInfo>()->getGlobalBaseReg();
+  return CurDAG->getRegister(GlobalBaseReg, getTargetLowering()->getPointerTy(
+      CurDAG->getDataLayout()))
+      .getNode();
+}
+
+
 bool MYRISCVXDAGToDAGISel::SelectAddrFI(SDValue Addr, SDValue &Base) {
   if (auto FIN = dyn_cast<FrameIndexSDNode>(Addr)) {
     Base = CurDAG->getTargetFrameIndex(FIN->getIndex(),
@@ -82,8 +92,11 @@ void MYRISCVXDAGToDAGISel::Select(SDNode *Node) {
   }
 
   switch(Opcode) {
+    // Get target GOT address.
+    case ISD::GLOBAL_OFFSET_TABLE:
+      ReplaceNode(Node, getGlobalBaseReg());
+      return;
     default: break;
-
   }
 
   // Select the default instruction
