@@ -96,6 +96,17 @@ class ArithLogicR<bits<7> opcode, bits<3> funct3, bits<7>funct7,
 //@}MYRISCVXInstrInfo_ArithLogicR
 
 
+//@{MYRISCVXInstrInfo_MYRISCVXHiLo
+// Hi and Lo nodes are used to handle global addresses. Used on
+// MYRISCVXISelLowering to lower stuff like GlobalAddress, ExternalSymbol
+// static model. (nothing to do with MYRISCVX Registers Hi and Lo)
+def MYRISCVXHi    : SDNode<"MYRISCVXISD::Hi", SDTIntUnaryOp>;
+def MYRISCVXLo    : SDNode<"MYRISCVXISD::Lo", SDTIntUnaryOp>;
+//@}MYRISCVXInstrInfo_MYRISCVXHiLo
+//@{MYRISCVXInstrInfo_MYRISCVXGPRel
+def MYRISCVXGPRel : SDNode<"MYRISCVXISD::GPRel", SDTIntUnaryOp>;
+//@}MYRISCVXInstrInfo_MYRISCVXGPRel
+
 //@{MYRISCVXInstrInfo_ArithLogicI
 // Arithmetic and logical instructions with 2 register operands.
 class ArithLogicI<bits<7> opcode, bits<3> funct3,
@@ -172,6 +183,13 @@ class StoreMemory<bits<7> opcode, bits<3> funct3, string instr_asm, RegisterClas
   let isPseudo = Pseudo;
 }
 //@}MYRISCVXInstrInfo_LoadMemory_StoreMemory
+
+
+//@{MYRISCVXInstrInfo_MYRISCVXWrapper
+def MYRISCVXWrapper : SDNode<"MYRISCVXISD::Wrapper", SDTIntBinOp>;
+//@}MYRISCVXInstrInfo_MYRISCVXWrapper
+
+def RelocPIC : Predicate<"TM.getRelocationModel() == Reloc::PIC_">;
 
 //===----------------------------------------------------------------------===//
 // Pattern fragment for load/store
@@ -330,6 +348,29 @@ def : Pat<(simm32:$imm),
 // Addr for Frame
 def : Pat<(add (XLenVT addr_fi:$rs1), simm12:$simm12),
           (ADDI (XLenVT addr_fi:$rs1), simm12:$simm12)>;
+
+
+//@{MYRISCVXInstrInfo_HiLoPattern
+// hi/lo relocs
+def : Pat<(MYRISCVXHi tglobaladdr:$in), (LUI tglobaladdr:$in)>;
+def : Pat<(MYRISCVXLo tglobaladdr:$in), (ADDI ZERO, tglobaladdr:$in)>;
+def : Pat<(add GPR:$hi, (MYRISCVXLo tglobaladdr:$lo)),
+          (ADDI GPR:$hi, tglobaladdr:$lo)>;
+//@}MYRISCVXInstrInfo_HiLoPattern
+// gp_rel relocs
+def : Pat<(add GPR:$gp, (MYRISCVXGPRel tglobaladdr:$in)),
+          (ADDI GPR:$gp, tglobaladdr:$in)>;
+
+
+//@{MYRISCVXInstrInfo_WrapperPat
+class WrapperPat<SDNode node, Instruction ORiOp, RegisterClass RC>:
+      Pat<(MYRISCVXWrapper RC:$gp, node:$in),
+          (ORiOp RC:$gp, node:$in)>;
+
+def : WrapperPat<tglobaladdr, ADDI, GPR>;
+def : WrapperPat<texternalsym, ADDI, GPR>;
+//@}MYRISCVXInstrInfo_WrapperPat
+
 
 // @{MYRISCVXInstrInfo_td_MemoryPattern_Define
 // Memory Acccess
