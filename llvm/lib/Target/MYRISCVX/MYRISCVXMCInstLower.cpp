@@ -26,6 +26,16 @@
 
 using namespace llvm;
 
+static void CreateMCInst(MCInst& Inst, unsigned Opc, const MCOperand& Opnd0,
+                         const MCOperand& Opnd1,
+                         const MCOperand& Opnd2 = MCOperand()) {
+  Inst.setOpcode(Opc);
+  Inst.addOperand(Opnd0);
+  Inst.addOperand(Opnd1);
+  if (Opnd2.isValid())
+    Inst.addOperand(Opnd2);
+}
+
 MYRISCVXMCInstLower::MYRISCVXMCInstLower(MYRISCVXAsmPrinter &asmprinter)
     : AsmPrinter(asmprinter) {}
 
@@ -33,7 +43,78 @@ void MYRISCVXMCInstLower::Initialize(MCContext* C) {
   Ctx = C;
 }
 
-//@LowerOperand {
+//@{MYRISCVXMCInstLower_LowerSymbolOperand_Whole
+//@{MYRISCVXMCInstLower_LowerSymbolOperand_Head
+MCOperand MYRISCVXMCInstLower::LowerSymbolOperand(const MachineOperand &MO,
+                                                  MachineOperandType MOTy,
+                                                  unsigned Offset) const {
+//@}MYRISCVXMCInstLower_LowerSymbolOperand_Head
+  MCSymbolRefExpr::VariantKind Kind = MCSymbolRefExpr::VK_None;
+  MYRISCVXMCExpr::MYRISCVXExprKind TargetKind = MYRISCVXMCExpr::CEK_None;
+  const MCSymbol *Symbol;
+
+  //@{MYRISCVXMCInstLower_LowerSymbolOperand_Switch
+  switch(MO.getTargetFlags()) {
+    default:                   llvm_unreachable("Invalid target flag!");
+    case MYRISCVXII::MO_NO_FLAG:
+      break;
+
+    //   // MYRISCVX_GPREL is for llc -march=MYRISCVX -relocation-model=static -MYRISCVX-islinux-format=false (global var in .sdata).
+    // case MYRISCVXII::MO_GPREL:
+    //   TargetKind = MYRISCVXMCExpr::CEK_GPREL;
+    //   break;
+
+    case MYRISCVXII::MO_GOT:
+      TargetKind = MYRISCVXMCExpr::CEK_GOT;
+      break;
+
+      // ABS_HI and ABS_LO is for llc -march=MYRISCVX -relocation-model=static (global var in .data).
+    case MYRISCVXII::MO_ABS_HI:
+      TargetKind = MYRISCVXMCExpr::CEK_ABS_HI;
+      break;
+    case MYRISCVXII::MO_ABS_LO:
+      TargetKind = MYRISCVXMCExpr::CEK_ABS_LO;
+      break;
+
+    case MYRISCVXII::MO_GOT_HI20:
+      TargetKind = MYRISCVXMCExpr::CEK_GOT_HI20;
+      break;
+    case MYRISCVXII::MO_GOT_LO12:
+      TargetKind = MYRISCVXMCExpr::CEK_GOT_LO12;
+      break;
+  }
+  //@}MYRISCVXMCInstLower_LowerSymbolOperand_Switch
+
+  switch (MOTy) {
+    case MachineOperand::MO_GlobalAddress:
+      Symbol = AsmPrinter.getSymbol(MO.getGlobal());
+      Offset += MO.getOffset();
+      break;
+
+    default:
+      llvm_unreachable("<unknown operand type>");
+  }
+
+  const MCExpr *Expr = MCSymbolRefExpr::create(Symbol, Kind, *Ctx);
+
+  if (Offset) {
+    // Assume offset is never negative.
+    assert(Offset > 0);
+    Expr = MCBinaryExpr::createAdd(Expr, MCConstantExpr::create(Offset, *Ctx),
+                                   *Ctx);
+  }
+
+  if (TargetKind != MYRISCVXMCExpr::CEK_None)
+    Expr = MYRISCVXMCExpr::create(TargetKind, Expr, *Ctx);
+
+  return MCOperand::createExpr(Expr);
+
+}
+//@}MYRISCVXMCInstLower_LowerSymbolOperand_Whole
+
+
+
+//@{MYRISCVXMCInstLower_LowerOperand
 MCOperand MYRISCVXMCInstLower::LowerOperand(const MachineOperand& MO,
                                             unsigned offset) const {
   MachineOperandType MOTy = MO.getType();
@@ -47,12 +128,16 @@ MCOperand MYRISCVXMCInstLower::LowerOperand(const MachineOperand& MO,
       return MCOperand::createReg(MO.getReg());
     case MachineOperand::MO_Immediate:
       return MCOperand::createImm(MO.getImm() + offset);
+    case MachineOperand::MO_GlobalAddress:
+      return LowerSymbolOperand(MO, MOTy, offset);
     case MachineOperand::MO_RegisterMask:
       break;
   }
 
   return MCOperand();
 }
+//@}MYRISCVXMCInstLower_LowerOperand
+
 
 void MYRISCVXMCInstLower::Lower(const MachineInstr *MI, MCInst &OutMI) const {
   OutMI.setOpcode(MI->getOpcode());

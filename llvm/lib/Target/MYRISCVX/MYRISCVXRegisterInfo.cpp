@@ -68,6 +68,7 @@ getReservedRegs(const MachineFunction &MF) const {
 
   for (unsigned I = 0; I < array_lengthof(ReservedCPURegs); ++I)
     Reserved.set(ReservedCPURegs[I]);
+  Reserved.set(MYRISCVX::GP);
 
   return Reserved;
 }
