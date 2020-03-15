@@ -80,6 +80,9 @@ bool MYRISCVXDAGToDAGISel::SelectAddrFI(SDValue Addr, SDValue &Base) {
 void MYRISCVXDAGToDAGISel::Select(SDNode *Node) {
   //@Select }
   unsigned Opcode = Node->getOpcode();
+  MVT XLenVT = Subtarget->getXLenVT();
+  SDLoc DL(Node);
+  EVT VT = Node->getValueType(0);
 
   // Dump information about the Node being selected
   LLVM_DEBUG(errs() << "Selecting: "; Node->dump(CurDAG); errs() << "\n");
@@ -96,6 +99,15 @@ void MYRISCVXDAGToDAGISel::Select(SDNode *Node) {
     case ISD::GLOBAL_OFFSET_TABLE:
       ReplaceNode(Node, getGlobalBaseReg());
       return;
+      // @{MYRISCVXISelDAGToDAG_cpp_Select_FrameIndex
+    case ISD::FrameIndex: {
+      SDValue Imm = CurDAG->getTargetConstant(0, DL, XLenVT);
+      int FI = cast<FrameIndexSDNode>(Node)->getIndex();
+      SDValue TFI = CurDAG->getTargetFrameIndex(FI, VT);
+      ReplaceNode(Node, CurDAG->getMachineNode(MYRISCVX::ADDI, DL, VT, TFI, Imm));
+      return;
+      // @}MYRISCVXISelDAGToDAG_cpp_Select_FrameIndex
+    }
     default: break;
   }
 
