@@ -56,23 +56,23 @@ def HI20 : SDNodeXForm<imm, [{
 def immZExt5 : ImmLeaf<XLenVT, [{return Imm == (Imm & 0x1f);}]>;
 def shamt : Operand<i32>;
 
-def calltarget : Operand<iPTR> {
-  let EncoderMethod = "getJumpTargetOpValue";
-}
 
-// JAL
+//@{MYRISCVXInstrInfo_brtarget20
 def brtarget20    : Operand<OtherVT> {
   let EncoderMethod = "getBranch20TargetOpValue";
   let OperandType   = "OPERAND_PCREL";
   let DecoderMethod = "DecodeBranch20Target";
 }
+//@}MYRISCVXInstrInfo_brtarget20
 
 
+//@{MYRISCVXInstrInfo_brtarget12
 // BEQ, BNE
 def brtarget12    : Operand<OtherVT> {
   let EncoderMethod = "getBranch12TargetOpValue";
   let OperandType   = "OPERAND_PCREL";
 }
+//@}MYRISCVXInstrInfo_brtarget12
 
 
 // MYRISCVX Address Mode! SDNode frameindex could possibily be a match
@@ -158,12 +158,36 @@ class ShiftRotateR<bits<7> opcode, bits<7> funct7, bits<3> funct3,
 
 
 //@{MYRISCVXInstrInfo_jalr_variation
-def JALR : ArithLogicI<0b1100111, 0b000, "jalr", add, simm12, GPR>;
+class ArithLogicI_JALR<bits<7> opcode, bits<3> funct3,
+                       string instr_asm,
+                       Operand Od, RegisterClass RC> :
+  MYRISCVX_I<opcode, funct3, (outs RC:$rd), (ins RC:$rs1, Od:$simm12),
+  !strconcat(instr_asm, "\t$rd, $rs1, $simm12"),
+  [], IIAlu> {
+    let isReMaterializable = 1;
+}
+def JALR : ArithLogicI_JALR<0b1100111, 0b000, "jalr", simm12, GPR>;
 def: InstAlias<"jr $rs",      (JALR ZERO, GPR:$rs, 0)>;
 def: InstAlias<"jalr $rs",    (JALR RA,   GPR:$rs, 0)>;
 def: InstAlias<"ret",         (JALR ZERO,      RA, 0), 2>;
 //@}MYRISCVXInstrInfo_jalr_variation
 
+
+//@{MYRISCVXInstrInfo_JumpLink
+// Jump and Link (Call)
+let isCall = 1 in
+class JumpLink<bits<7> opcode, string opstr, DAGOperand opnd> :
+  MYRISCVX_J<opcode, (outs GPR:$rd), (ins opnd:$imm20), !strconcat(opstr, "\t$rd, $imm20"),
+                 [], IIAlu> {
+  let DecoderMethod = "DecodeJumpTarget";
+}
+//@}MYRISCVXInstrInfo_JumpLink
+
+//@{MYRISCVXInstrInfo_JAL
+def JAL : JumpLink<0b1101111, "jal", brtarget20>;
+def : InstAlias<"j $offset",   (JAL  ZERO, brtarget20:$offset)>;
+def : InstAlias<"jal $offset", (JAL  RA,   brtarget20:$offset)>;
+//@}MYRISCVXInstrInfo_JAL
 
 //@{MYRISCVXInstrInfo_LoadMemory_StoreMemory
 // Memory Load/Store
@@ -232,6 +256,37 @@ class SetCC_I<bits<7> opcode, bits<3> funct3,
                let isReMaterializable = 1;
 }
 //@}MYRISCVXInstrInfo_SetCC
+
+
+//@{MYRISCVXInstrInfo_CBranch12
+// Branch instructions with 2 register operands.
+class CBranch12<bits<7> opcode, bits<3> funct3,
+                string instr_asm,
+                PatFrag cond_op, RegisterClass RC> :
+  MYRISCVX_B<opcode, funct3, (outs), (ins RC:$rs1, RC:$rs2, brtarget12:$imm12),
+  !strconcat(instr_asm, "\t$rs1, $rs2, $imm12"),
+  [], IIAlu> {
+    let isBranch = 1;
+    let isTerminator = 1;
+}
+//@}MYRISCVXInstrInfo_CBranch12
+
+
+//@{MYRISCVXInstrInfo_BEQ
+def BEQ     : CBranch12<0b1100011, 0b000, "beq" , seteq,  GPR>;
+def BNE     : CBranch12<0b1100011, 0b001, "bne" , setne,  GPR>;
+def BLT     : CBranch12<0b1100011, 0b100, "blt" , setlt,  GPR>;
+def BGE     : CBranch12<0b1100011, 0b101, "bge" , setge,  GPR>;
+def BLTU    : CBranch12<0b1100011, 0b110, "bltu", setult, GPR>;
+def BGEU    : CBranch12<0b1100011, 0b111, "bgeu", setuge, GPR>;
+//@}MYRISCVXInstrInfo_BEQ
+
+//@{MYRISCVXInstrInfo_PseudoBR
+let isBarrier = 1, isBranch = 1, isTerminator = 1 in
+  def PseudoBR : MYRISCVXPseudo<(outs), (ins brtarget20:$simm20), "", [(br bb:$simm20)]>,
+                 PseudoInstExpansion<(JAL ZERO, brtarget20:$simm20)>;
+//@}MYRISCVXInstrInfo_PseudoBR
+
 
 
 //===----------------------------------------------------------------------===//
@@ -436,3 +491,45 @@ def : Pat<(setgt  GPR:$rs1, GPR:$rs2), (SLT GPR:$rs2, GPR:$rs1)>;
 def : Pat<(setge  GPR:$rs1, GPR:$rs2), (XORI (SLT GPR:$rs1, GPR:$rs2), 1)>;
 def : Pat<(setle  GPR:$rs1, GPR:$rs2), (XORI (SLT GPR:$rs2, GPR:$rs1), 1)>;
 //@}MYRISCVXInstrInfo_SLTPatterns
+
+
+//@{MYRISCVXInstrInfo_BrcondPatsSlt
+// brcond for slt instruction
+multiclass BrcondPatsSlt<RegisterClass RC, Instruction BEQOp, Instruction BNEOp,
+                      Instruction SLTOp, Instruction SLTuOp, Instruction SLTiOp,
+                      Instruction SLTiuOp, Register ZEROReg> {
+  def : Pat<(brcond (XLenVT (setne RC:$lhs, 0)), bb:$dst),
+                (BNEOp RC:$lhs, ZEROReg, bb:$dst)>;
+  def : Pat<(brcond (XLenVT (seteq RC:$lhs, 0)), bb:$dst),
+                (BEQOp RC:$lhs, ZEROReg, bb:$dst)>;
+
+  def : Pat<(brcond (XLenVT (seteq RC:$lhs, RC:$rhs)), bb:$dst),
+                (BEQOp RC:$lhs, RC:$rhs, bb:$dst)>;
+  def : Pat<(brcond (XLenVT (setueq RC:$lhs, RC:$rhs)), bb:$dst),
+                (BEQOp RC:$lhs, RC:$rhs, bb:$dst)>;
+  def : Pat<(brcond (XLenVT (setne RC:$lhs, RC:$rhs)), bb:$dst),
+                (BNEOp RC:$lhs, RC:$rhs, bb:$dst)>;
+  def : Pat<(brcond (XLenVT (setune RC:$lhs, RC:$rhs)), bb:$dst),
+                (BNEOp RC:$lhs, RC:$rhs, bb:$dst)>;
+  def : Pat<(brcond (XLenVT (setlt RC:$lhs, RC:$rhs)), bb:$dst),
+                (BNE (SLTOp RC:$lhs, RC:$rhs), ZERO, bb:$dst)>;
+  def : Pat<(brcond (XLenVT (setult RC:$lhs, RC:$rhs)), bb:$dst),
+                (BNE (SLTuOp RC:$lhs, RC:$rhs), ZERO, bb:$dst)>;
+  def : Pat<(brcond (XLenVT (setgt RC:$lhs, RC:$rhs)), bb:$dst),
+                (BNE (SLTOp RC:$rhs, RC:$lhs), ZERO, bb:$dst)>;
+  def : Pat<(brcond (XLenVT (setugt RC:$lhs, RC:$rhs)), bb:$dst),
+                (BNE (SLTuOp RC:$rhs, RC:$lhs), ZERO, bb:$dst)>;
+  def : Pat<(brcond (XLenVT (setle RC:$lhs, RC:$rhs)), bb:$dst),
+                (BEQ (SLTOp RC:$rhs, RC:$lhs), ZERO, bb:$dst)>;
+  def : Pat<(brcond (XLenVT (setule RC:$lhs, RC:$rhs)), bb:$dst),
+                (BEQ (SLTuOp RC:$rhs, RC:$lhs), ZERO, bb:$dst)>;
+  def : Pat<(brcond (XLenVT (setge RC:$lhs, RC:$rhs)), bb:$dst),
+                (BEQ (SLTOp RC:$lhs, RC:$rhs), ZERO, bb:$dst)>;
+  def : Pat<(brcond (XLenVT (setuge RC:$lhs, RC:$rhs)), bb:$dst),
+                (BEQ (SLTuOp RC:$lhs, RC:$rhs), ZERO, bb:$dst)>;
+  def : Pat<(brcond RC:$cond, bb:$dst),
+                (BNEOp RC:$cond, ZEROReg, bb:$dst)>;
+}
+
+defm : BrcondPatsSlt<GPR, BEQ, BNE, SLT, SLTU, SLTI, SLTIU, ZERO>;
+//@}MYRISCVXInstrInfo_BrcondPatsSlt
