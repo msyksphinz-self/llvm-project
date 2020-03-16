@@ -47,8 +47,14 @@ bool MYRISCVXAsmPrinter::runOnMachineFunction(MachineFunction &MF) {
   return true;
 }
 
+// @{MYRISCVXAsmPrinter_cpp_EmitInstruction_PseudoExpansionLowering
 // @{MYRISCVXAsmPrinter_cpp_EmitInstruction
 void MYRISCVXAsmPrinter::EmitInstruction(const MachineInstr *MI) {
+  // Do any auto-generated pseudo lowerings.
+  if (emitPseudoExpansionLowering(*OutStreamer, MI))
+    return;
+// @}MYRISCVXAsmPrinter_cpp_EmitInstruction_PseudoExpansionLowering
+
   if (MI->isDebugValue()) {
     SmallString<128> Str;
     raw_svector_ostream OS(Str);
@@ -72,6 +78,18 @@ void MYRISCVXAsmPrinter::EmitInstruction(const MachineInstr *MI) {
   } while ((++I != E) && I->isInsideBundle()); // Delay slot check
 }
 // @}MYRISCVXAsmPrinter_cpp_EmitInstruction
+
+
+bool MYRISCVXAsmPrinter::lowerOperand(const MachineOperand &MO, MCOperand &MCOp) {
+  MCOp = MCInstLowering.LowerOperand(MO);
+  return MCOp.isValid();
+}
+
+// @{MYRISCVXAsmPrinter_cpp_EmitInstruction_PseudoLowering_inc
+// Simple pseudo-instructions have their lowering (with expansion to real
+// instructions) auto-generated.
+#include "MYRISCVXGenMCPseudoLowering.inc"
+// @}MYRISCVXAsmPrinter_cpp_EmitInstruction_PseudoLowering_inc
 
 
 //===----------------------------------------------------------------------===//
