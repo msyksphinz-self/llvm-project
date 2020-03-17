@@ -288,6 +288,17 @@ let isBarrier = 1, isBranch = 1, isTerminator = 1 in
 //@}MYRISCVXInstrInfo_PseudoBR
 
 
+//@{MYRISCVXInstrInfo_PseudoBRIND
+let isBarrier = 1, isBranch = 1, isIndirectBranch = 1, isTerminator = 1 in
+def PseudoBRIND : MYRISCVXPseudo<(outs), (ins GPR:$rs1, simm12:$simm12), "", []>,
+                  PseudoInstExpansion<(JALR ZERO, GPR:$rs1, simm12:$simm12)>;
+//@}MYRISCVXInstrInfo_PseudoBRIND
+
+//@{MYRISCVXInstrInfo_PseudoBRIND_Pat
+def : Pat<(brind GPR:$rs1), (PseudoBRIND GPR:$rs1, 0)>;
+def : Pat<(brind (add GPR:$rs1, simm12:$simm12)),
+          (PseudoBRIND GPR:$rs1, simm12:$simm12)>;
+//@}MYRISCVXInstrInfo_PseudoBRIND_Pat
 
 //===----------------------------------------------------------------------===//
 // Instruction definition
