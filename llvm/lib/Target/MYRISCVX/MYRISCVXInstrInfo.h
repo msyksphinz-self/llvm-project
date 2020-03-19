@@ -51,6 +51,10 @@ class MYRISCVXInstrInfo : public MYRISCVXGenInstrInfo {
   void loadImmediate(int64_t Imm, MachineBasicBlock &MBB,
                      MachineBasicBlock::iterator II, const DebugLoc &DL,
                      unsigned DstReg, unsigned *NewImm) const;
+  void copyPhysReg(MachineBasicBlock &MBB,
+                   MachineBasicBlock::iterator MBBI,
+                   const DebugLoc &DL, unsigned DstReg,
+                   unsigned SrcReg, bool KillSrc) const override;
  protected:
 };
 }
