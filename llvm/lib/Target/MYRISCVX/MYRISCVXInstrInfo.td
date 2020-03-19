@@ -11,11 +11,23 @@
 //
 //===----------------------------------------------------------------------===//
 
+
+//@{MYRISCVXInstrInfo_MYRISCVXSelectCC
+def SDT_MYRISCVXSelectCC   : SDTypeProfile<1, 5, [SDTCisSameAs<1, 2>,
+                                                  SDTCisSameAs<0, 4>,
+                                                  SDTCisSameAs<4, 5>]>;
+//@}MYRISCVXInstrInfo_MYRISCVXSelectCC
+
 //@{MYRISCVXInstrInfo_MYRISCVXRet
 // Return
 def MYRISCVXRet : SDNode<"MYRISCVXISD::Ret", SDTNone,
                          [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 //@}MYRISCVXInstrInfo_MYRISCVXRet
+
+//@{MYRISCVXInstrInfo_SelectCC
+def SelectCC : SDNode<"MYRISCVXISD::SELECT_CC", SDT_MYRISCVXSelectCC,
+                      [SDNPInGlue]>;
+//@}MYRISCVXInstrInfo_SelectCC
 
 //===----------------------------------------------------------------------===//
 // MYRISCVX profiles and nodes
@@ -296,6 +308,24 @@ def : Pat<(brind GPR:$rs1), (PseudoBRIND GPR:$rs1, 0)>;
 def : Pat<(brind (add GPR:$rs1, simm12:$simm12)),
           (PseudoBRIND GPR:$rs1, simm12:$simm12)>;
 //@}MYRISCVXInstrInfo_PseudoBRIND_Pat
+
+
+//@{MYRISCVXInstrInfo_SelectCC_rrirr
+let usesCustomInserter = 1 in
+class SelectCC_rrirr<RegisterClass RC, RegisterClass cmpty>
+    : MYRISCVXPseudo<(outs RC:$dst),
+             (ins cmpty:$lhs, cmpty:$rhs, simm12:$imm,
+              RC:$truev, RC:$falsev),
+              "",
+             [(set RC:$dst,
+               (SelectCC cmpty:$lhs,
+                         cmpty:$rhs,
+                         (XLenVT imm:$imm),
+                         RC:$truev,
+                         RC:$falsev))]>;
+
+def Select_GPR_Using_CC_GPR : SelectCC_rrirr<GPR, GPR>;
+//@}MYRISCVXInstrInfo_SelectCC_rrirr
 
 //===----------------------------------------------------------------------===//
 // Instruction definition
