@@ -34,6 +34,12 @@ namespace llvm {
 
       MO_NO_FLAG,
 
+      /// MO_GOT_CALL - Represents the offset into the global offset table at
+      /// which the address of a call site relocation entry symbol resides
+      /// during execution. This is different from the above since this flag
+      /// can only be present in call instructions.
+      MO_GOT_CALL,
+
       MO_GOT,
 
       /// MO_ABS_HI/LO - Relocations used for large GOTs.
