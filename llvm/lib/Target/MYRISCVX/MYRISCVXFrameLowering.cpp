@@ -128,3 +128,22 @@ bool MYRISCVXFrameLowering::hasFP(const MachineFunction &MF) const {
       MFI.hasVarSizedObjects() || MFI.isFrameAddressTaken() ||
       TRI->needsStackRealignment(MF);
 }
+
+
+// @{MYRISCVXFrameLowering_eliminateCallFramePseudoInstr
+// Eliminate ADJCALLSTACKDOWN, ADJCALLSTACKUP pseudo instructions
+MachineBasicBlock::iterator MYRISCVXFrameLowering::
+eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
+                              MachineBasicBlock::iterator I) const {
+  unsigned SP = MYRISCVX::SP;
+  if (!hasReservedCallFrame(MF)) {
+    int64_t Amount = I->getOperand(0).getImm();
+    if (I->getOpcode() == MYRISCVX::ADJCALLSTACKDOWN)
+      Amount = -Amount;
+
+    STI.getInstrInfo()->adjustStackPtr(SP, Amount, MBB, I);
+  }
+
+  return MBB.erase(I);
+}
+// @}MYRISCVXFrameLowering_eliminateCallFramePseudoInstr

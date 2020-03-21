@@ -28,7 +28,9 @@ using namespace llvm;
 // Pin the vtable to this file.
 void MYRISCVXInstrInfo::anchor() {}
 
-MYRISCVXInstrInfo::MYRISCVXInstrInfo() {}
+MYRISCVXInstrInfo::MYRISCVXInstrInfo()
+    : MYRISCVXGenInstrInfo(MYRISCVX::ADJCALLSTACKDOWN, MYRISCVX::ADJCALLSTACKUP)
+{}
 
 /// Return the number of bytes of code the specified instruction may be.
 unsigned MYRISCVXInstrInfo::GetInstSizeInBytes(const MachineInstr &MI) const {
@@ -38,6 +40,60 @@ unsigned MYRISCVXInstrInfo::GetInstSizeInBytes(const MachineInstr &MI) const {
   }
 }
 
+
+//@{MYRISCVXInstrInfo_GetMemOperand
+MachineMemOperand *
+MYRISCVXInstrInfo::GetMemOperand(MachineBasicBlock &MBB, int FI,
+                                 MachineMemOperand::Flags Flags) const {
+
+  MachineFunction &MF = *MBB.getParent();
+  MachineFrameInfo &MFI = MF.getFrameInfo();
+  unsigned Align = MFI.getObjectAlignment(FI);
+
+  return MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(MF, FI),
+                                 Flags, MFI.getObjectSize(FI), Align);
+}
+//@}MYRISCVXInstrInfo_GetMemOperand
+
+
+//@{MYRISCVXInstrInfo_storeRegToStack
+void MYRISCVXInstrInfo::
+storeRegToStack(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
+                unsigned SrcReg, bool isKill, int FI,
+                const TargetRegisterClass *RC, const TargetRegisterInfo *TRI,
+                int64_t Offset) const {
+  DebugLoc DL;
+  MachineMemOperand *MMO = GetMemOperand(MBB, FI, MachineMemOperand::MOStore);
+
+  unsigned Opc = 0;
+
+  Opc = MYRISCVX::SW;
+  assert(Opc && "Register class not handled!");
+  BuildMI(MBB, I, DL, get(Opc)).addReg(SrcReg, getKillRegState(isKill))
+      .addFrameIndex(FI).addImm(Offset).addMemOperand(MMO);
+}
+//@}MYRISCVXInstrInfo_storeRegToStack
+
+
+//@{MYRISCVXInstrInfo_loadRegFromStack
+void MYRISCVXInstrInfo::
+loadRegFromStack(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
+                 unsigned DestReg, int FI, const TargetRegisterClass *RC,
+                 const TargetRegisterInfo *TRI, int64_t Offset) const {
+  DebugLoc DL;
+  if (I != MBB.end()) DL = I->getDebugLoc();
+  MachineMemOperand *MMO = GetMemOperand(MBB, FI, MachineMemOperand::MOLoad);
+  unsigned Opc = 0;
+
+  Opc = MYRISCVX::LW;
+  assert(Opc && "Register class not handled!");
+  BuildMI(MBB, I, DL, get(Opc), DestReg).addFrameIndex(FI).addImm(Offset)
+      .addMemOperand(MMO);
+}
+//@}MYRISCVXInstrInfo_loadRegFromStack
+
+
+//@{MYRISCVXInstrInfo_copyPhysReg
 void MYRISCVXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
                                     MachineBasicBlock::iterator MBBI,
                                     const DebugLoc &DL, unsigned DstReg,
@@ -49,6 +105,7 @@ void MYRISCVXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
     return;
   }
 }
+//@}MYRISCVXInstrInfo_copyPhysReg
 
 
 //@{MYRISCVXInstrInfo_expandPostRA
