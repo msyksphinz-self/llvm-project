@@ -27,6 +27,12 @@ def MYRISCVXRet : SDNode<"MYRISCVXISD::Ret", SDTNone,
                          [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 //@}MYRISCVXInstrInfo_MYRISCVXRet
 
+// @{MYRISCVXInstrInfo_MYRISCVXTailCall
+// Tail call
+def MYRISCVXTailCall : SDNode<"MYRISCVXISD::TailCall", SDT_MYRISCVXCall,
+                               [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue, SDNPVariadic]>;
+// @}MYRISCVXInstrInfo_MYRISCVXTailCall
+
 // @{MYRISCVXInstrInfo_SDT_MYRISCVXCallSeq
 def SDT_MYRISCVXCallSeqStart : SDCallSeqStart<[SDTCisVT<0, XLenVT>, SDTCisVT<1, XLenVT>]>;
 def SDT_MYRISCVXCallSeqEnd   : SDCallSeqEnd  <[SDTCisVT<0, XLenVT>, SDTCisVT<1, XLenVT>]>;
@@ -254,6 +260,16 @@ def MYRISCVXWrapper : SDNode<"MYRISCVXISD::Wrapper", SDTIntBinOp>;
 
 def RelocPIC : Predicate<"TM.getRelocationModel() == Reloc::PIC_">;
 
+//@{MYRISCVXInstrInfo_MYRISCVX_TailCall
+let isCall = 1, isTerminator = 1, isReturn = 1, isBarrier = 1, hasDelaySlot = 0,
+    hasExtraSrcRegAllocReq = 1 in {
+  class TailCall<Instruction JumpInst> :
+    MYRISCVXPseudo<(outs), (ins brtarget20:$target), "", []>,
+    PseudoInstExpansion<(JumpInst ZERO, brtarget20:$target)>;
+}
+//@}MYRISCVXInstrInfo_MYRISCVX_TailCall
+
+
 //===----------------------------------------------------------------------===//
 // Pattern fragment for load/store
 //===----------------------------------------------------------------------===//
@@ -376,6 +392,15 @@ let Defs = [SP], Uses = [SP], hasSideEffects = 1 in {
 let hasSideEffects = 0 in
 def CPRESTORE : MYRISCVXPseudo<(outs), (ins simm12:$loc, GPR:$gp),
                             ".cprestore\t$loc", []>;
+
+// @{MYRISCVXInstrInfo_TAILCALL_Convert
+def TAILCALL : TailCall<JAL>;
+// @}MYRISCVXInstrInfo_TAILCALL_Convert
+
+// @{MYRISCVXInstrInfo_MYRISCVXTailCall
+def : Pat<(MYRISCVXTailCall (iPTR tglobaladdr:$dst)), (TAILCALL texternalsym:$dst)>;
+def : Pat<(MYRISCVXTailCall (iPTR texternalsym:$dst)), (TAILCALL texternalsym:$dst)>;
+// @}MYRISCVXInstrInfo_MYRISCVXTailCall
 
 //===----------------------------------------------------------------------===//
 // Instruction definition
@@ -631,3 +656,11 @@ let isCall = 1, Defs = [RA], isCodeGenOnly = 0 in
 def : Pat<(MYRISCVXCall tglobaladdr:$func),  (PseudoCALL tglobaladdr:$func)>;
 def : Pat<(MYRISCVXCall texternalsym:$func), (PseudoCALL texternalsym:$func)>;
 //@}MYRISCVXInstrInfo_PseudoCall
+
+// @{MYRISCVXInstrInfo_PseudoCallReg
+let isCall = 1, Defs = [RA], isCodeGenOnly = 0 in
+  def PseudoCALLReg : MYRISCVXPseudo<(outs), (ins GPR:$rs), "", [(MYRISCVXCall GPR:$rs)]>,
+                      PseudoInstExpansion<(JALR RA, GPR:$rs, 0)>;
+def : Pat<(MYRISCVXCall tglobaladdr:$func),  (PseudoCALLReg tglobaladdr:$func)>;
+def : Pat<(MYRISCVXCall texternalsym:$func), (PseudoCALLReg texternalsym:$func)>;
+// @}MYRISCVXInstrInfo_PseudoCallReg

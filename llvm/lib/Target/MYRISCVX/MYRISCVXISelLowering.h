@@ -259,6 +259,9 @@ namespace llvm {
     EmitInstrWithCustomInserter(MachineInstr &MI,
                                 MachineBasicBlock *BB) const override;
 
+    bool isEligibleForTailCallOptimization(
+        CCState &CCInfo,
+        unsigned NextStackOffset, const MYRISCVXFunctionInfo& FI) const;
   };
 }
 
