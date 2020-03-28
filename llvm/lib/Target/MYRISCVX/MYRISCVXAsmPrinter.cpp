@@ -49,11 +49,13 @@ bool MYRISCVXAsmPrinter::runOnMachineFunction(MachineFunction &MF) {
 
 // @{MYRISCVXAsmPrinter_cpp_EmitInstruction_PseudoExpansionLowering
 // @{MYRISCVXAsmPrinter_cpp_EmitInstruction
+// @{MYRISCVXAsmPrinter_cpp_EmitInstruction_emitPseudoExpansionlowering
 void MYRISCVXAsmPrinter::EmitInstruction(const MachineInstr *MI) {
+  // @{MYRISCVXAsmPrinter_cpp_EmitInstruction_emitPseudoExpansionlowering...
   // Do any auto-generated pseudo lowerings.
   if (emitPseudoExpansionLowering(*OutStreamer, MI))
     return;
-// @}MYRISCVXAsmPrinter_cpp_EmitInstruction_PseudoExpansionLowering
+  // @}MYRISCVXAsmPrinter_cpp_EmitInstruction_PseudoExpansionLowering
 
   if (MI->isDebugValue()) {
     SmallString<128> Str;
@@ -67,7 +69,12 @@ void MYRISCVXAsmPrinter::EmitInstruction(const MachineInstr *MI) {
   MachineBasicBlock::const_instr_iterator I = MI->getIterator();
   MachineBasicBlock::const_instr_iterator E = MI->getParent()->instr_end();
 
+  // @}MYRISCVXAsmPrinter_cpp_EmitInstruction_emitPseudoExpansionlowering...
   do {
+    // Do any auto-generated pseudo lowerings.
+    if (emitPseudoExpansionLowering(*OutStreamer, &*I))
+      continue;
+    // @}MYRISCVXAsmPrinter_cpp_EmitInstruction_emitPseudoExpansionlowering
 
     if (I->isPseudo())
       llvm_unreachable("Pseudo opcode found in EmitInstruction()");
@@ -177,6 +184,7 @@ void MYRISCVXAsmPrinter::PrintDebugValueComment(const MachineInstr *MI,
   // TODO: implement
   OS << "PrintDebugValueComment()";
 }
+
 
 // Force static initialization.
 extern "C" void LLVMInitializeMYRISCVXAsmPrinter() {
