@@ -70,7 +70,8 @@ static MCSubtargetInfo *createMYRISCVXMCSubtargetInfo(const Triple &TT,
 
 // @{MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCAsmInfo
 static MCAsmInfo *createMYRISCVXMCAsmInfo(const MCRegisterInfo &MRI,
-                                          const Triple &TT) {
+                                          const Triple &TT,
+                                          const MCTargetOptions &Options) {
   MCAsmInfo *MAI = new MYRISCVXMCAsmInfo(TT);
 
   unsigned SP = MRI.getDwarfRegNum(MYRISCVX::SP, true);
