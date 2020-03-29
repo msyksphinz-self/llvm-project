@@ -20,7 +20,6 @@
 subdirectories =
   MCTargetDesc
   TargetInfo
-  InstPrinter
 
 [component_0]
 # TargetGroup components are an extension of LibraryGroups, specifically for
@@ -54,7 +53,6 @@ required_libraries =
   MYRISCVXDesc
   MYRISCVXInfo
   AsmPrinter
-  MYRISCVXAsmPrinter
   SelectionDAG
   Support
   Target

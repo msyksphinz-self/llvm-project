@@ -13,8 +13,8 @@
 
 #include "MYRISCVXMCTargetDesc.h"
 #include "MYRISCVXTargetStreamer.h"
-#include "InstPrinter/MYRISCVXInstPrinter.h"
-#include "MYRISCVXMCAsmInfo.h"
+#include "MCTargetDesc/MYRISCVXInstPrinter.h"
+#include "MCTargetDesc/MYRISCVXMCAsmInfo.h"
 
 #include "llvm/MC/MachineLocation.h"
 #include "llvm/MC/MCELFStreamer.h"
@@ -28,9 +28,6 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/FormattedStream.h"
 #include "llvm/Support/TargetRegistry.h"
-
-#include "MCTargetDesc/MYRISCVXMCAsmInfo.h"
-#include "InstPrinter/MYRISCVXInstPrinter.h"
 
 using namespace llvm;
 
@@ -88,7 +85,7 @@ static MCInstPrinter *createMYRISCVXMCInstPrinter(const Triple &T,
                                                   const MCAsmInfo &MAI,
                                                   const MCInstrInfo &MII,
                                                   const MCRegisterInfo &MRI) {
- return new MYRISCVXInstPrinter(MAI, MII, MRI);
+  return new MYRISCVXInstPrinter(MAI, MII, MRI);
 }
 // @}MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCInstPrinter
 

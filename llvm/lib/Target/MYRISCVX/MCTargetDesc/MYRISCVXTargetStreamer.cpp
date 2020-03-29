@@ -11,7 +11,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "InstPrinter/MYRISCVXInstPrinter.h"
+#include "MCTargetDesc/MYRISCVXInstPrinter.h"
 #include "MYRISCVXMCTargetDesc.h"
 #include "MYRISCVXTargetObjectFile.h"
 #include "MCTargetDesc/MYRISCVXTargetStreamer.h"

@@ -14,7 +14,7 @@
 
 #include "MYRISCVXAsmPrinter.h"
 
-#include "InstPrinter/MYRISCVXInstPrinter.h"
+#include "MCTargetDesc/MYRISCVXInstPrinter.h"
 #include "MYRISCVX.h"
 #include "MYRISCVXInstrInfo.h"
 #include "llvm/ADT/SmallString.h"

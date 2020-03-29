@@ -41,4 +41,3 @@ add_llvm_target(MYRISCVXCodeGen
 add_subdirectory(TargetInfo)
 add_subdirectory(MCTargetDesc)
 # @{MYRISCVX_CMakeLists.txt
-add_subdirectory(InstPrinter)
