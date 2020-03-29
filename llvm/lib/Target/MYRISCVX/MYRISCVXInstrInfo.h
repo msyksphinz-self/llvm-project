@@ -53,8 +53,8 @@ class MYRISCVXInstrInfo : public MYRISCVXGenInstrInfo {
                      unsigned DstReg, unsigned *NewImm) const;
   void copyPhysReg(MachineBasicBlock &MBB,
                    MachineBasicBlock::iterator MBBI,
-                   const DebugLoc &DL, unsigned DstReg,
-                   unsigned SrcReg, bool KillSrc) const override;
+                   const DebugLoc &DL, MCRegister DstReg,
+                   MCRegister SrcReg, bool KillSrc) const override;
   void storeRegToStackSlot(MachineBasicBlock &MBB,
                            MachineBasicBlock::iterator MBBI,
                            unsigned SrcReg, bool isKill, int FrameIndex,

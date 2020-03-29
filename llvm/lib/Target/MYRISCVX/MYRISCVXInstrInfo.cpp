@@ -96,8 +96,8 @@ loadRegFromStack(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
 //@{MYRISCVXInstrInfo_copyPhysReg
 void MYRISCVXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
                                     MachineBasicBlock::iterator MBBI,
-                                    const DebugLoc &DL, unsigned DstReg,
-                                    unsigned SrcReg, bool KillSrc) const {
+                                    const DebugLoc &DL, MCRegister DstReg,
+                                    MCRegister SrcReg, bool KillSrc) const {
   if (MYRISCVX::GPRRegClass.contains(DstReg, SrcReg)) {
     BuildMI(MBB, MBBI, DL, get(MYRISCVX::ADDI), DstReg)
         .addReg(SrcReg, getKillRegState(KillSrc))

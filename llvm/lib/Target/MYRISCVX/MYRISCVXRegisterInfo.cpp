@@ -162,7 +162,7 @@ MYRISCVXRegisterInfo::trackLivenessAfterRegAlloc(const MachineFunction &MF) cons
 }
 
 // @{MYRISCVXRegisterInfo_getFrameRegister
-unsigned MYRISCVXRegisterInfo::
+Register MYRISCVXRegisterInfo::
 getFrameRegister(const MachineFunction &MF) const {
   const TargetFrameLowering *TFI = MF.getSubtarget().getFrameLowering();
   return TFI->hasFP(MF) ? (MYRISCVX::FP) :
