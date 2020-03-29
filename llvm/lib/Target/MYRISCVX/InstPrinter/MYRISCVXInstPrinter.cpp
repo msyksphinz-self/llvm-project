@@ -35,14 +35,15 @@ void MYRISCVXInstPrinter::printRegName(raw_ostream &OS, unsigned RegNo) const {
 }
 
 //@1 {
-void MYRISCVXInstPrinter::printInst(const MCInst *MI, raw_ostream &O,
-                                    StringRef Annot, const MCSubtargetInfo &STI) {
+void MYRISCVXInstPrinter::printInst(const MCInst *MI, uint64_t Address,
+                                    StringRef Annot, const MCSubtargetInfo &STI,
+                                    raw_ostream &O) {
   // Try to print any aliases first.
   if (!printAliasInstr(MI, O))
     //@1 }
     //- printInstruction(MI, O) defined in MYRISCVXGenAsmWriter.inc which came from
     //   MYRISCVX.td indicate.
-    printInstruction(MI, O);
+    printInstruction(MI, Address, O);
   printAnnotation(O, Annot);
 }
 
