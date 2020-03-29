@@ -69,7 +69,8 @@ MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
 
   //- Set .align 2
   // It will emit .align 2 later
-  setMinFunctionAlignment(2);
+  const Align FunctionAlignment(2);
+  setMinFunctionAlignment(FunctionAlignment);
   // must, computeRegisterProperties - Once all of the register classes are
   //  added, this allows us to compute derived properties we expose.
   computeRegisterProperties(STI.getRegisterInfo());

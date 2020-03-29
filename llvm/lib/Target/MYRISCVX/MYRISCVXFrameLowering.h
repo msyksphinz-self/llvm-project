@@ -27,7 +27,7 @@ namespace llvm {
  public:
     explicit MYRISCVXFrameLowering(const MYRISCVXSubtarget &sti)
         : TargetFrameLowering(StackGrowsDown,
-                              /*StackAlignment=*/16,
+                              /*StackAlignment=*/Align(16),
                               /*LocalAreaOffset=*/0),
           STI(sti) {
     }
