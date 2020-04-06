@@ -29,6 +29,7 @@
 #include "llvm/Support/FormattedStream.h"
 #include "llvm/Support/TargetRegistry.h"
 
+#include "MCTargetDesc/MYRISCVXELFStreamer.h"
 #include "MCTargetDesc/MYRISCVXMCAsmInfo.h"
 #include "InstPrinter/MYRISCVXInstPrinter.h"
 
@@ -113,6 +114,15 @@ static MCTargetStreamer *createMYRISCVXAsmTargetStreamer(MCStreamer &S,
                                                          bool isVerboseAsm) {
   return new MYRISCVXTargetAsmStreamer(S, OS);
 }
+// @}MYISCVXMCTarget_cpp_createMYRISCVXAsmTargetStreamer
+
+
+// @{MYISCVXMCTarget_cpp_createMYRISCVXObjectTargetStreamer
+static MCTargetStreamer
+*createMYRISCVXObjectTargetStreamer(MCStreamer &S, const MCSubtargetInfo &STI) {
+  return new MYRISCVXTargetELFStreamer(S, STI);
+}
+// @}MYISCVXMCTarget_cpp_createMYRISCVXObjectTargetStreamer
 
 
 // @{MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC
@@ -139,6 +149,18 @@ extern "C" void LLVMInitializeMYRISCVXTargetMC() {
     // Register the asm target streamer.
     TargetRegistry::RegisterAsmTargetStreamer(*T, createMYRISCVXAsmTargetStreamer);
 
+    // @{MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_Object
+    // Register the object target streamer.
+    TargetRegistry::RegisterObjectTargetStreamer(*T, createMYRISCVXObjectTargetStreamer);
+
+    // Register the MC Code Emitter
+    TargetRegistry::RegisterMCCodeEmitter(*T, createMYRISCVXMCCodeEmitter);
+
+    // @{MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_RegisterMCAsmBackend
+    // Register the asm backend.
+    TargetRegistry::RegisterMCAsmBackend(*T, createMYRISCVXAsmBackend);
+    // @}MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_RegisterMCAsmBackend
+    // @}MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_Object
   }
 }
 // @}MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC
