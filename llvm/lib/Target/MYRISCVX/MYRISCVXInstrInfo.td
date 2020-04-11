@@ -43,11 +43,14 @@ def MYRISCVXCall : SDNode<"MYRISCVXISD::CALL", SDT_MYRISCVXCall,
                           [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue,
                            SDNPVariadic]>;
 //@}MYRISCVXInstrInfo_MYRISCVXCall
+
+//@{MYRISCVXInstrInfo_MYRISCVXCallSeqStart
 // These are target-independent nodes, but have target-specific formats.
 def MYRISCVXCallSeqStart : SDNode<"ISD::CALLSEQ_START", SDT_MYRISCVXCallSeqStart,
                                   [SDNPHasChain, SDNPOutGlue]>;
 def MYRISCVXCallSeqEnd : SDNode<"ISD::CALLSEQ_END", SDT_MYRISCVXCallSeqEnd,
                                 [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue]>;
+//@}MYRISCVXInstrInfo_MYRISCVXCallSeqStart
 
 //===----------------------------------------------------------------------===//
 // MYRISCVX profiles and nodes
@@ -88,6 +91,12 @@ def HI20 : SDNodeXForm<imm, [{
 def immZExt5 : ImmLeaf<XLenVT, [{return Imm == (Imm & 0x1f);}]>;
 def shamt : Operand<i32>;
 
+
+//@{MYRISCVXInstrInfo_calltarget
+def calltarget : Operand<iPTR> {
+  let EncoderMethod = "getJumpTargetOpValue";
+}
+//@}MYRISCVXInstrInfo_calltarget
 
 //@{MYRISCVXInstrInfo_brtarget20
 def brtarget20    : Operand<OtherVT> {
@@ -312,8 +321,8 @@ def BGEU    : CBranch12<0b1100011, 0b111, "bgeu", setuge, GPR>;
 
 //@{MYRISCVXInstrInfo_PseudoBR
 let isBarrier = 1, isBranch = 1, isTerminator = 1 in
-  def PseudoBR : MYRISCVXPseudo<(outs), (ins brtarget20:$simm20), "", [(br bb:$simm20)]>,
-                 PseudoInstExpansion<(JAL ZERO, brtarget20:$simm20)>;
+  def PseudoBR : MYRISCVXPseudo<(outs), (ins brtarget20:$simm20u), "", [(br bb:$simm20u)]>,
+                 PseudoInstExpansion<(JAL ZERO, brtarget20:$simm20u)>;
 //@}MYRISCVXInstrInfo_PseudoBR
 
 
@@ -346,6 +355,27 @@ class SelectCC_rrirr<RegisterClass RC, RegisterClass cmpty>
 
 def Select_GPR_Using_CC_GPR : SelectCC_rrirr<GPR, GPR>;
 //@}MYRISCVXInstrInfo_SelectCC_rrirr
+
+//@{MYRISCVXInstrInfo_ADJCALLSTACK
+let Defs = [SP], Uses = [SP], hasSideEffects = 1 in {
+  // As stack alignment is always done with addi, we need a 16-bit immediate
+  def ADJCALLSTACKDOWN : MYRISCVXPseudo<(outs), (ins simm12:$amt1, simm12:$amt2), "",
+                                        [(MYRISCVXCallSeqStart timm:$amt1, timm:$amt2)]>;
+  def ADJCALLSTACKUP   : MYRISCVXPseudo<(outs), (ins simm12:$amt1, simm12:$amt2), "",
+                                        [(MYRISCVXCallSeqEnd timm:$amt1, timm:$amt2)]>;
+}
+//@}MYRISCVXInstrInfo_ADJCALLSTACK
+
+
+//}
+//@def CPRESTORE {
+// When handling PIC code the assembler needs .cpload and .cprestore
+// directives. If the real instructions corresponding these directives
+// are used, we have the same behavior, but get also a bunch of warnings
+// from the assembler.
+let hasSideEffects = 0 in
+def CPRESTORE : MYRISCVXPseudo<(outs), (ins simm12:$loc, GPR:$gp),
+                            ".cprestore\t$loc", []>;
 
 //===----------------------------------------------------------------------===//
 // Instruction definition
@@ -591,3 +621,13 @@ multiclass BrcondPatsSlt<RegisterClass RC, Instruction BEQOp, Instruction BNEOp,
 
 defm : BrcondPatsSlt<GPR, BEQ, BNE, SLT, SLTU, SLTI, SLTIU, ZERO>;
 //@}MYRISCVXInstrInfo_BrcondPatsSlt
+
+
+//@{MYRISCVXInstrInfo_PseudoCall
+let isCall = 1, Defs = [RA], isCodeGenOnly = 0 in
+  def PseudoCALL : MYRISCVXPseudo<(outs), (ins simm20u:$target), "", [(MYRISCVXCall simm20u:$target)]>,
+                   PseudoInstExpansion<(JAL RA, brtarget20:$target)>;
+
+def : Pat<(MYRISCVXCall tglobaladdr:$func),  (PseudoCALL tglobaladdr:$func)>;
+def : Pat<(MYRISCVXCall texternalsym:$func), (PseudoCALL texternalsym:$func)>;
+//@}MYRISCVXInstrInfo_PseudoCall
