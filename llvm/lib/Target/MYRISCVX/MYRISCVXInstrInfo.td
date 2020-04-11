@@ -649,18 +649,33 @@ defm : BrcondPatsSlt<GPR, BEQ, BNE, SLT, SLTU, SLTI, SLTIU, ZERO>;
 
 
 //@{MYRISCVXInstrInfo_PseudoCall
-let isCall = 1, Defs = [RA], isCodeGenOnly = 0 in
+let isCall = 1, Defs = [RA], isTerminator = 1 in {
   def PseudoCALL : MYRISCVXPseudo<(outs), (ins simm20u:$target), "", [(MYRISCVXCall simm20u:$target)]>,
                    PseudoInstExpansion<(JAL RA, brtarget20:$target)>;
-
+}
 def : Pat<(MYRISCVXCall tglobaladdr:$func),  (PseudoCALL tglobaladdr:$func)>;
 def : Pat<(MYRISCVXCall texternalsym:$func), (PseudoCALL texternalsym:$func)>;
 //@}MYRISCVXInstrInfo_PseudoCall
 
 // @{MYRISCVXInstrInfo_PseudoCallReg
-let isCall = 1, Defs = [RA], isCodeGenOnly = 0 in
+let isCall = 1, Defs = [RA], isIndirectBranch = 1, isTerminator = 1 in
   def PseudoCALLReg : MYRISCVXPseudo<(outs), (ins GPR:$rs), "", [(MYRISCVXCall GPR:$rs)]>,
                       PseudoInstExpansion<(JALR RA, GPR:$rs, 0)>;
 def : Pat<(MYRISCVXCall tglobaladdr:$func),  (PseudoCALLReg tglobaladdr:$func)>;
 def : Pat<(MYRISCVXCall texternalsym:$func), (PseudoCALLReg texternalsym:$func)>;
 // @}MYRISCVXInstrInfo_PseudoCallReg
+
+
+// @{ MYRISCVXInstrInfo_LoadImm32
+class LoadImm32< string instr_asm, Operand Od, RegisterClass RC> :
+  MYRISCVXAsmPseudoInst<(outs RC:$rd), (ins Od:$imm32),
+                     !strconcat(instr_asm, "\t$rd, $imm32")> ;
+def LoadImm32Reg : LoadImm32<"li", shamt, GPR>;
+// @} MYRISCVXInstrInfo_LoadImm32
+
+// @{ MYRISCVXInstrInfo_LoadAddressImm
+class LoadAddressImm<string instr_asm, Operand Od, RegisterClass RC> :
+  MYRISCVXAsmPseudoInst<(outs RC:$rd), (ins Od:$imm32),
+                     !strconcat(instr_asm, "\t$rd, $imm32")> ;
+def LoadAddr32Imm : LoadAddressImm<"la", shamt, GPR>;
+// @} MYRISCVXInstrInfo_LoadAddressImm

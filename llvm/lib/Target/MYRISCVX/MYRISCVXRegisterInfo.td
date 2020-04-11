@@ -20,7 +20,7 @@ let Namespace = "MYRISCVX" in {
   }
 
   // RISCV CPU Registers
-  class MYRISCVXGPRReg<bits<5> Enc, string n, list<string> alt> : MYRISCVXReg<Enc, n>;
+  class MYRISCVXGPRReg<bits<5> Enc, string n, list<string> alt> : MYRISCVXReg<Enc, n, alt>;
 }
 // @}Add_MYRISCVXRegisterInfo_RegisterDefinition
 

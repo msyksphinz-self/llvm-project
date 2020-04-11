@@ -16,6 +16,9 @@ tablegen(LLVM MYRISCVXGenCallingConv.inc -gen-callingconv)
 
 tablegen(LLVM MYRISCVXGenCodeEmitter.inc -gen-emitter)
 tablegen(LLVM MYRISCVXGenMCCodeEmitter.inc -gen-emitter)
+# @{CMakeLists_AsmMatcher
+tablegen(LLVM MYRISCVXGenAsmMatcher.inc -gen-asm-matcher)  # For MYRISCVX AsmParser
+# @}CMakeLists_AsmMatcher
 
 tablegen(LLVM MYRISCVXGenAsmWriter.inc -gen-asm-writer)
 
@@ -41,4 +44,5 @@ add_llvm_target(MYRISCVXCodeGen
 add_subdirectory(TargetInfo)
 add_subdirectory(MCTargetDesc)
 # @{MYRISCVX_CMakeLists.txt
+add_subdirectory(AsmParser)
 add_subdirectory(InstPrinter)

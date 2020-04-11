@@ -35,6 +35,8 @@
 
 using namespace llvm;
 
+#define DEBUG_TYPE "MYRISCVX-asm-parser"
+
 // Include the auto-generated portion of the compress emitter.
 #define GEN_COMPRESS_INSTR
 #include "RISCVGenCompressInstEmitter.inc"
@@ -740,11 +742,23 @@ bool RISCVAsmParser::generateImmOutOfRangeError(
   return Error(ErrorLoc, Msg + " [" + Twine(Lower) + ", " + Twine(Upper) + "]");
 }
 
+void printRISCVOperands(OperandVector &Operands) {
+  for (size_t i = 0; i < Operands.size(); i++) {
+    RISCVOperand* op = static_cast<RISCVOperand*>(&*Operands[i]);
+    assert(op != nullptr);
+    LLVM_DEBUG(dbgs() << "<" << *op << ">");
+  }
+  LLVM_DEBUG(dbgs() << "\n");
+}
+
+
 bool RISCVAsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
                                              OperandVector &Operands,
                                              MCStreamer &Out,
                                              uint64_t &ErrorInfo,
                                              bool MatchingInlineAsm) {
+  printRISCVOperands(Operands);
+
   MCInst Inst;
 
   auto Result =

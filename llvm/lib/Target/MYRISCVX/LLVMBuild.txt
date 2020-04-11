@@ -16,11 +16,14 @@
 ;===------------------------------------------------------------------------===;
 
 ; @{ MYRISCVX_LLVMBuild.txt
+; @{ MYRISCVX_LLVMBuild.txt_AddedAsmParser
 [common]
 subdirectories =
   MCTargetDesc
   TargetInfo
   InstPrinter
+  AsmParser
+; @} MYRISCVX_LLVMBuild.txt_AddedAsmParser
 
 [component_0]
 # TargetGroup components are an extension of LibraryGroups, specifically for
@@ -35,7 +38,7 @@ parent = Target
 #  , and supports JIT compilation. They are optional.
 # Please enable asmprinter
 has_asmprinter = 1
-
+has_asmparser  = 1
 
 [component_1]
 # component_1 is a Library type and name is MYRISCVXCodeGen. After build it will
