@@ -73,8 +73,13 @@ include "MYRISCVXInstrFormats.td"
 //===----------------------------------------------------------------------===//
 // MYRISCVX Operand, Complex Patterns and Transformations Definitions.
 //===----------------------------------------------------------------------===//
-def simm12 : Operand<XLenVT>, ImmLeaf<XLenVT, [{return isInt<12>(Imm);}]>;
-def simm20u : Operand<XLenVT>, ImmLeaf<XLenVT, [{return isInt<32>(Imm) && !(Imm & 0x0fff);}]>;
+def simm12 : Operand<XLenVT>, ImmLeaf<XLenVT, [{return isInt<12>(Imm);}]> {
+  let DecoderMethod = "decodeSImmOperand<12>";
+}
+
+def simm20u : Operand<XLenVT>, ImmLeaf<XLenVT, [{return isInt<32>(Imm) && !(Imm & 0x0fff);}]> {
+  let DecoderMethod = "decodeUImmOperand<20>";
+}
 def simm32: Operand<XLenVT>, ImmLeaf<XLenVT, [{return isInt<32>(Imm);}]>;
 //@}MYRISCVXInstrInfo_Operand_Definition
 
@@ -108,6 +113,7 @@ def calltarget : Operand<iPTR> {
 def brtarget20    : Operand<OtherVT> {
   let EncoderMethod = "getBranch20TargetOpValue";
   let OperandType   = "OPERAND_PCREL";
+  let DecoderMethod = "decodeBranch20Target";
 }
 //@}MYRISCVXInstrInfo_brtarget20
 
@@ -117,6 +123,7 @@ def brtarget20    : Operand<OtherVT> {
 def brtarget12    : Operand<OtherVT> {
   let EncoderMethod = "getBranch12TargetOpValue";
   let OperandType   = "OPERAND_PCREL";
+  let DecoderMethod = "decodeBranch12Target";
 }
 //@}MYRISCVXInstrInfo_brtarget12
 

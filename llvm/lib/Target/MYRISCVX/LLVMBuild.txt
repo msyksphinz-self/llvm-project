@@ -17,12 +17,15 @@
 
 ; @{ MYRISCVX_LLVMBuild.txt
 ; @{ MYRISCVX_LLVMBuild.txt_AddedAsmParser
+; @{ MYRISCVX_LLVMBuild.txt_AddDisassembler
 [common]
 subdirectories =
   MCTargetDesc
+  Disassembler
   TargetInfo
   InstPrinter
   AsmParser
+; @} MYRISCVX_LLVMBuild.txt_AddDisassembler
 ; @} MYRISCVX_LLVMBuild.txt_AddedAsmParser
 
 [component_0]
@@ -34,6 +37,9 @@ type = TargetGroup
 name = MYRISCVX
 # MYRISCVX component is located in directory Target/
 parent = Target
+; @{ LLVMBuild_txt_has_disassembler
+has_disassembler = 1
+; @} LLVMBuild_txt_has_disassembler
 # Whether this target defines an assembly parser, assembly printer, disassembler
 #  , and supports JIT compilation. They are optional.
 # Please enable asmprinter
