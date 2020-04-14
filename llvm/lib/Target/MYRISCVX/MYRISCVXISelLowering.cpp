@@ -66,6 +66,10 @@ MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
 
   // Set up the register classes.
   addRegisterClass(XLenVT, &MYRISCVX::GPRRegClass);
+  // @{ MYRISCVXISelLowering_addRegisterClass_FPR_SRegClass
+  addRegisterClass(MVT::f32, &MYRISCVX::FPR_SRegClass);
+  addRegisterClass(MVT::f64, &MYRISCVX::FPR_DRegClass);
+  // @} MYRISCVXISelLowering_addRegisterClass_FPR_SRegClass
 
   //- Set .align 2
   // It will emit .align 2 later
