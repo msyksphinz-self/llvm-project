@@ -295,7 +295,6 @@ class AlignedStore<PatFrag Node> :
 }]>;
 //@}MYRISCVXInstrInfo_AlignedLoad_AlignedStore
 
-
 //@{MYRISCVXInstrInfo_SetCC
 // SetCC
 class SetCC_R<bits<7> opcode, bits<3> funct3, bits<7> funct7,
@@ -488,8 +487,10 @@ def truncstorei8_a  : AlignedStore<truncstorei8>;
 def truncstorei16_a : AlignedStore<truncstorei16>;
 def truncstorei32_a : AlignedStore<truncstorei32>;
 
+// @{ MYRISCVXInstrInfo_FloatLoadStore_PatFrags
 def truncstoref32_a : AlignedStore<truncstoref32>;
 def truncstoref64_a : AlignedStore<truncstoref64>;
+// @} MYRISCVXInstrInfo_FloatLoadStore_PatFrags
 //@}MYRISCVXInstrInfo_LoadStore_PatFrags
 
 
@@ -599,6 +600,18 @@ let Predicates = [IsRV64] in {
 // @}MYRISCVXInstrInfo_td_MemoryPattern64
 
 
+
+// @{ MYRISCVXInstrInfo_FloatLoadStore
+def FLW : LoadMemory <0b0000111, 0b010, "flw", FPR_S, load_a         , 0>;
+def FSW : StoreMemory<0b0100111, 0b010, "fsw", FPR_S, truncstoref32_a, 0>;
+
+let Predicates = [IsRV64] in {
+  def FLD : LoadMemory <0b0000111, 0b011, "fld", FPR_D, load_a         , 0>;
+  def FSD : StoreMemory<0b0100111, 0b011, "fsd", FPR_D, truncstoref64_a, 0>;
+}
+// @} MYRISCVXInstrInfo_FloatLoadStore
+
+
 //@{MYRISCVXInstrInfo_SLTPatterns
 // Define pattern expansions for setcc operations that aren't directly
 // handled by a RISC-V instruction.
@@ -679,10 +692,32 @@ class LoadImm32< string instr_asm, Operand Od, RegisterClass RC> :
                      !strconcat(instr_asm, "\t$rd, $imm32")> ;
 def LoadImm32Reg : LoadImm32<"li", shamt, GPR>;
 // @} MYRISCVXInstrInfo_LoadImm32
-
 // @{ MYRISCVXInstrInfo_LoadAddressImm
 class LoadAddressImm<string instr_asm, Operand Od, RegisterClass RC> :
   MYRISCVXAsmPseudoInst<(outs RC:$rd), (ins Od:$imm32),
                      !strconcat(instr_asm, "\t$rd, $imm32")> ;
 def LoadAddr32Imm : LoadAddressImm<"la", shamt, GPR>;
 // @} MYRISCVXInstrInfo_LoadAddressImm
+
+
+// @{ MYRISCVXInstrInfo_FloatMemoryAccessPattern
+def : Pat<(f32 (load GPR:$rs1))                          , (FLW GPR:$rs1, 0)           >;
+def : Pat<(f32 (load addr_fi:$rs1))                      , (FLW addr_fi:$rs1, 0)       >;
+def : Pat<(f32 (load (add GPR:$rs1, simm12:$simm12)))    , (FLW GPR:$rs1, $simm12)     >;
+def : Pat<(f32 (load (add addr_fi:$rs1, simm12:$simm12))), (FLW addr_fi:$rs1, $simm12) >;
+
+def : Pat<(store FPR_S:$rs2, GPR:$rs1)                          , (FSW FPR_S:$rs2, GPR:$rs1, 0)                         >;
+def : Pat<(store FPR_S:$rs2, addr_fi:$rs1)                      , (FSW FPR_S:$rs2, addr_fi:$rs1, 0)                     >;
+def : Pat<(store FPR_S:$rs2, (add GPR:$rs1, simm12:$simm12))    , (FSW FPR_S:$rs2, GPR:$rs1, simm12:$simm12)            >;
+def : Pat<(store FPR_S:$rs2, (add addr_fi:$rs1, simm12:$simm12)), (FSW FPR_S:$rs2, addr_fi:$rs1, simm12:$simm12)        >;
+
+def : Pat<(f64 (load GPR:$rs1))                          , (FLD GPR:$rs1, 0)           >;
+def : Pat<(f64 (load addr_fi:$rs1))                      , (FLD addr_fi:$rs1, 0)       >;
+def : Pat<(f64 (load (add GPR:$rs1, simm12:$simm12)))    , (FLD GPR:$rs1, $simm12)     >;
+def : Pat<(f64 (load (add addr_fi:$rs1, simm12:$simm12))), (FLD addr_fi:$rs1, $simm12) >;
+
+def : Pat<(store FPR_D:$rs2, GPR:$rs1)                          , (FSD FPR_D:$rs2, GPR:$rs1, 0)                         >;
+def : Pat<(store FPR_D:$rs2, addr_fi:$rs1)                      , (FSD FPR_D:$rs2, addr_fi:$rs1, 0)                     >;
+def : Pat<(store FPR_D:$rs2, (add GPR:$rs1, simm12:$simm12))    , (FSD FPR_D:$rs2, GPR:$rs1, simm12:$simm12)            >;
+def : Pat<(store FPR_D:$rs2, (add addr_fi:$rs1, simm12:$simm12)), (FSD FPR_D:$rs2, addr_fi:$rs1, simm12:$simm12)        >;
+// @} MYRISCVXInstrInfo_FloatMemoryAccessPattern
