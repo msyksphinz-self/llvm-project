@@ -14,6 +14,11 @@ tablegen(LLVM MYRISCVXGenDAGISel.inc -gen-dag-isel)
 tablegen(LLVM MYRISCVXGenCallingConv.inc -gen-callingconv)
 # @}MYRISCVX_CMakeLists_TableGen
 
+tablegen(LLVM MYRISCVXGenCodeEmitter.inc -gen-emitter)
+tablegen(LLVM MYRISCVXGenMCCodeEmitter.inc -gen-emitter)
+
+tablegen(LLVM MYRISCVXGenAsmWriter.inc -gen-asm-writer)
+
 # MYRISCVXCommonTableGen must be defined
 add_public_tablegen_target(MYRISCVXCommonTableGen)
 
@@ -27,6 +32,7 @@ add_llvm_target(MYRISCVXCodeGen
   MYRISCVXISelLowering.cpp
   MYRISCVXMachineFunction.cpp
   MYRISCVXTargetObjectFile.cpp
+  MYRISCVXAsmPrinter.cpp
 )
 
 # Should match with "subdirectories =  MCTargetDesc TargetInfo" in LLVMBuild.txt

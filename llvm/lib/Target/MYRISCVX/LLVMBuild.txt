@@ -30,6 +30,9 @@ name = MYRISCVX
 parent = Target
 # Whether this target defines an assembly parser, assembly printer, disassembler
 #  , and supports JIT compilation. They are optional.
+# Please enable asmprinter
+has_asmprinter = 1
+
 
 [component_1]
 # component_1 is a Library type and name is MYRISCVXCodeGen. After build it will
@@ -47,6 +50,7 @@ required_libraries =
   CodeGen Core MC
   MYRISCVXDesc
   MYRISCVXInfo
+  AsmPrinter
   SelectionDAG
   Support
   Target
