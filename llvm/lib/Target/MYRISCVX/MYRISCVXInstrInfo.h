@@ -36,6 +36,10 @@ class MYRISCVXInstrInfo : public MYRISCVXGenInstrInfo {
   /// Return the number of bytes of code the specified instruction may be.
   unsigned GetInstSizeInBytes(const MachineInstr &MI) const;
 
+  void expandRetRA(MachineBasicBlock &MBB, MachineBasicBlock::iterator I) const;
+
+  //@expandPostRAPseudo
+    bool expandPostRAPseudo(MachineInstr &MI) const override;
  protected:
 };
 }
