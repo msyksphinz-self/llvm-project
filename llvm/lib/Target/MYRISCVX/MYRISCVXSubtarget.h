@@ -32,8 +32,11 @@ namespace llvm {
 
   class MYRISCVXTargetMachine;
 
+// @{ MYRISCVXSubtarget_is64Bit
   class MYRISCVXSubtarget : public MYRISCVXGenSubtargetInfo {
     virtual void anchor();
+
+    // @{ MYRISCVXSubtarget_is64Bit ...
 
  public:
 
@@ -56,11 +59,14 @@ namespace llvm {
     MYRISCVXTargetLowering TLInfo;
     MYRISCVXRegisterInfo RegInfo;
 
+    // @} MYRISCVXSubtarget_is64Bit ...
  public:
     bool isPositionIndependent() const;
     const MYRISCVXABIInfo &getABI() const;
 
     MVT getXLenVT() const { return XLenVT; }
+    bool is64Bit() const { return HasRV64; }
+    // @}MYRISCVXSubtarget_is64Bit
 
     /// This constructor initializes the data members to match that
     /// of the specified triple.

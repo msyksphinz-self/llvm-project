@@ -33,6 +33,13 @@ def RV64 : HwMode<"+64bit">;
 def RV32 : HwMode<"-64bit">;
 // @}MYRISCVX_td_RV64_RV32
 
+// @{MYRISCVX_td_IsRV64
+def IsRV64 : Predicate<"Subtarget->is64Bit()">,
+                       AssemblerPredicate<"FeatureRV64">;
+def IsRV32 : Predicate<"!Subtarget->is64Bit()">,
+                       AssemblerPredicate<"!FeatureRV64">;
+// @}MYRISCVX_td_IsRV64
+
 include "MYRISCVXRegisterInfo.td"
 include "MYRISCVXSchedule.td"
 include "MYRISCVXInstrInfo.td"
