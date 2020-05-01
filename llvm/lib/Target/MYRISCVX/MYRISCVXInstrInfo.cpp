@@ -57,6 +57,47 @@ bool MYRISCVXInstrInfo::expandPostRAPseudo(MachineInstr &MI) const {
   return true;
 }
 
+//@{MYRISCVXInstrInfo_adjustStackPtr
+/// Adjust SP by Amount bytes.
+void MYRISCVXInstrInfo::adjustStackPtr(unsigned SP, int64_t Amount,
+                                       MachineBasicBlock &MBB,
+                                       MachineBasicBlock::iterator I) const {
+  DebugLoc DL = I != MBB.end() ? I->getDebugLoc() : DebugLoc();
+  unsigned ADD  = MYRISCVX::ADD;
+  unsigned ADDI = MYRISCVX::ADDI;
+
+  if (isInt<12>(Amount)) {
+    // addiu sp, sp, amount
+    BuildMI(MBB, I, DL, get(ADDI), SP).addReg(SP).addImm(Amount);
+  } else { // Expand immediate that doesn't fit in 12-bit.
+    MachineFunction *MF = MBB.getParent();
+    MachineRegisterInfo &MRI = MF->getRegInfo();
+    unsigned Reg = MRI.createVirtualRegister(&MYRISCVX::GPRRegClass);
+    loadImmediate(Amount, MBB, I, DL, Reg, nullptr);
+    BuildMI(MBB, I, DL, get(ADD), SP).addReg(SP).addReg(Reg, RegState::Kill);
+  }
+}
+//@}MYRISCVXInstrInfo_adjustStackPtr
+
+
+//@{MYRISCVXInstrInfo_loadImmediate
+/// This function generates the sequence of instructions needed to get the
+/// result of adding register REG and immediate IMM.
+void
+MYRISCVXInstrInfo::loadImmediate(int64_t Imm, MachineBasicBlock &MBB,
+                                 MachineBasicBlock::iterator II,
+                                 const DebugLoc &DL, unsigned DstReg,
+                                 unsigned *NewImm) const {
+  uint64_t Hi20 = ((Imm + 0x800) >> 12) & 0xfffff;
+  uint64_t Lo12 = SignExtend64<12>(Imm);
+  BuildMI(MBB, II, DL, get(MYRISCVX::LUI), DstReg)
+      .addImm(Hi20);
+  BuildMI(MBB, II, DL, get(MYRISCVX::ADDI), DstReg)
+      .addReg(DstReg, RegState::Kill)
+      .addImm(Lo12);
+}
+//@}MYRISCVXInstrInfo_loadImmediate
+
 
 void MYRISCVXInstrInfo::expandRetRA(MachineBasicBlock &MBB,
                                     MachineBasicBlock::iterator I) const {
