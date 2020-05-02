@@ -252,6 +252,72 @@ def REMU  : ArithLogicR<0b0110011, 0b111, 0b0000001, "remu",   urem,  GPR>;
 // @}MYRISCVXInstrInfo_MulDivInsts
 
 
+// @{MYRISCVXInstrInfo_td_ArithInsts32
+let Predicates = [IsRV64] in {
+  class ArithLogicI_W<bits<7> opcode, bits<3> funct3,
+                    string instr_asm, Operand Od, RegisterClass RC> :
+    MYRISCVX_I<opcode, funct3, (outs RC:$rd), (ins RC:$rs1, Od:$simm12),
+    !strconcat(instr_asm, "\t$rd, $rs1, $simm12"),
+    [], IIAlu> {
+      let isReMaterializable = 1;
+  }
+
+  class ArithLogicR_W<bits<7> opcode, bits<3> funct3, bits<7>funct7,
+                    string instr_asm, RegisterClass RC> :
+    MYRISCVX_R<opcode, funct3, funct7, (outs RC:$rd), (ins RC:$rs1, RC:$rs2),
+    !strconcat(instr_asm, "\t$rd, $rs1, $rs2"),
+    [], IIAlu> {
+      let isReMaterializable = 1;
+  }
+
+  class ShiftRotateI32_W<bits<7> opcode, bits<3> funct3, bit arithshift, string instr_asm>:
+    MYRISCVX_ISHIFT<opcode, funct3, arithshift, (outs GPR:$rd), (ins GPR:$rs1, shamt:$shamt),
+                    !strconcat(instr_asm, "\t$rd, $rs1, $shamt"),
+                    [], IIAlu> {
+  }
+
+  class ShiftRotateR_W<bits<7> opcode, bits<7> funct7, bits<3> funct3,
+                     bits<4> isRotate, string instr_asm,
+                     RegisterClass RC>:
+    MYRISCVX_R<opcode, funct3, funct7, (outs RC:$rd), (ins RC:$rs1, RC:$rs2),
+            !strconcat(instr_asm, "\t$rd, $rs1, $rs2"),
+            [], IIAlu> {
+  }
+
+  def SLLIW : ShiftRotateI32_W <0b0011011, 0b001, 0, "slliw">;
+  def SRLIW : ShiftRotateI32_W <0b0011011, 0b101, 0, "srliw">;
+  def SRAIW : ShiftRotateI32_W <0b0011011, 0b101, 1, "sraiw">;
+  def ADDIW : ArithLogicI_W    <0b0011011, 0b000, "addiw", simm12, GPR>;
+  def ADDW  : ArithLogicR_W    <0b0111011, 0b000, 0b0000000, "addw", GPR>;
+  def SUBW  : ArithLogicR_W    <0b0111011, 0b000, 0b0100000, "subw", GPR>;
+  def SLLW  : ShiftRotateR_W   <0b0111011, 0b0000000, 0b001, 0x0, "sllw", GPR>;
+  def SRLW  : ShiftRotateR_W   <0b0111011, 0b0000000, 0b101, 0x0, "srlw", GPR>;
+  def SRAW  : ShiftRotateR_W   <0b0111011, 0b0100000, 0b101, 0x0, "sraw", GPR>;
+
+// @}MYRISCVXInstrInfo_td_ArithInsts32
+
+// @{ MYRISCVXInstrInfo_td_ArithInsts32_Pattern
+  def : Pat<(sext_inreg GPR:$rs1, i32), (ADDIW GPR:$rs1, 0)>;
+  def : Pat<(and GPR:$rs1, 0xffffffff), (SRLI (SLLI GPR:$rs1, 32), 32)>;
+
+  def : Pat<(sext_inreg (add GPR:$rs1, GPR:$rs2), i32),
+            (ADDW GPR:$rs1, GPR:$rs2)>;
+  def : Pat<(sext_inreg (add GPR:$rs1, simm12:$imm12), i32),
+            (ADDIW GPR:$rs1, simm12:$imm12)>;
+  def : Pat<(sext_inreg (sub GPR:$rs1, GPR:$rs2), i32),
+            (SUBW GPR:$rs1, GPR:$rs2)>;
+  def : Pat<(sext_inreg (shl GPR:$rs1, shamt:$shamt), i32),
+            (SLLIW GPR:$rs1, immZExt5:$shamt)>;
+  def : Pat<(sra (sext_inreg GPR:$rs1, i32), shamt:$shamt),
+            (SRAIW GPR:$rs1, immZExt5:$shamt)>;
+// @} MYRISCVXInstrInfo_td_ArithInsts32_Pattern
+
+  // def : PatGprGpr<riscv_sllw, SLLW>;
+  // def : PatGprGpr<riscv_srlw, SRLW>;
+  // def : PatGprGpr<riscv_sraw, SRAW>;
+}
+
+
 //@{MYRISCVXInstrInfo_RetRA
 let isReturn=1, isTerminator=1, hasDelaySlot=0, isBarrier=1, hasCtrlDep=1 in
   def RetRA : MYRISCVXPseudo<(outs), (ins), "", [(MYRISCVXRet)]>;
