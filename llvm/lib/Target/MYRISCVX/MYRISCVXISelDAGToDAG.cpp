@@ -13,6 +13,7 @@
 
 #include "MYRISCVXISelDAGToDAG.h"
 #include "MYRISCVX.h"
+#include "MYRISCVXMatInt.h"
 
 #include "MYRISCVXMachineFunction.h"
 #include "MYRISCVXRegisterInfo.h"
@@ -64,6 +65,31 @@ bool MYRISCVXDAGToDAGISel::SelectAddrFI(SDValue Addr, SDValue &Base) {
 }
 
 
+// @{ MYRISCVXISelDAGToDAG_cpp_selectImm
+static SDNode *selectImm(SelectionDAG *CurDAG, const SDLoc &DL, int64_t Imm,
+                         MVT XLenVT) {
+  MYRISCVXMatInt::InstSeq Seq;
+  MYRISCVXMatInt::generateInstSeq(Imm, XLenVT == MVT::i64, Seq);
+
+  SDNode *Result = nullptr;
+  SDValue SrcReg = CurDAG->getRegister(MYRISCVX::ZERO, XLenVT);
+  for (MYRISCVXMatInt::Inst &Inst : Seq) {
+    SDValue SDImm = CurDAG->getTargetConstant(Inst.Imm, DL, XLenVT);
+    if (Inst.Opc == MYRISCVX::LUI)
+      Result = CurDAG->getMachineNode(MYRISCVX::LUI, DL, XLenVT, SDImm);
+    else
+      Result = CurDAG->getMachineNode(Inst.Opc, DL, XLenVT, SrcReg, SDImm);
+
+    // Only the first instruction has X0 as its source.
+    SrcReg = SDValue(Result, 0);
+  }
+
+  return Result;
+}
+// @} MYRISCVXISelDAGToDAG_cpp_selectImm
+
+
+// @{ MYRISCVXISelDAGToDAG_cpp_Select_Constant
 // @{MYRISCVXISelDAGToDAG_cpp_Select
 /// Select instructions not customized! Used for
 /// expanded, promoted and normal instructions
@@ -73,6 +99,8 @@ void MYRISCVXDAGToDAGISel::Select(SDNode *Node) {
   MVT XLenVT = Subtarget->getXLenVT();
   SDLoc DL(Node);
   EVT VT = Node->getValueType(0);
+
+  // @{ MYRISCVXISelDAGToDAG_cpp_Select_Constant ...
 
   // Dump information about the Node being selected
   LLVM_DEBUG(errs() << "Selecting: "; Node->dump(CurDAG); errs() << "\n");
@@ -84,8 +112,19 @@ void MYRISCVXDAGToDAGISel::Select(SDNode *Node) {
     return;
   }
 
+  // @{ MYRISCVXISelDAGToDAG_cpp_Select_Constant ...
   switch(Opcode) {
     default: break;
+    case ISD::Constant: {
+      auto ConstNode = cast<ConstantSDNode>(Node);
+      int64_t Imm = ConstNode->getSExtValue();
+      if (XLenVT == MVT::i64) {
+        ReplaceNode(Node, selectImm(CurDAG, SDLoc(Node), Imm, XLenVT));
+        return;
+      }
+      break;
+    }
+      // @} MYRISCVXISelDAGToDAG_cpp_Select_Constant
       // @{MYRISCVXISelDAGToDAG_cpp_Select_FrameIndex
     case ISD::FrameIndex: {
       SDValue Imm = CurDAG->getTargetConstant(0, DL, XLenVT);
