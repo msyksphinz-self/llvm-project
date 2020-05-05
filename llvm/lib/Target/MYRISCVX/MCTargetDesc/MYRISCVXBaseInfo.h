@@ -1,0 +1,77 @@
+//===-- MYRISCVXBaseInfo.h - Top level definitions for MYRISCVX MC --*- C++ -*-===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is distributed under the University of Illinois Open Source
+// License. See LICENSE.TXT for details.
+//
+//===--------------------------------------------------------------------------===//
+//
+// This file contains small standalone helper functions and enum definitions for
+// the MYRISCVX target useful for the compiler back-end and the MC libraries.
+//
+//===--------------------------------------------------------------------------===//
+
+#ifndef LLVM_LIB_TARGET_MYRISCVX_MCTARGETDESC_MYRISCVXBASEINFO_H
+#define LLVM_LIB_TARGET_MYRISCVX_MCTARGETDESC_MYRISCVXBASEINFO_H
+
+#include "MYRISCVXMCTargetDesc.h"
+
+#include "llvm/MC/MCExpr.h"
+#include "llvm/Support/DataTypes.h"
+#include "llvm/Support/ErrorHandling.h"
+
+namespace llvm {
+
+  /// MYRISCVXII - This namespace holds all of the target specific flags that
+  /// instruction info tracks.
+  namespace MYRISCVXII {
+    // @{MachineBaseInfo_MYRISCVXII_TOF
+    /// Target Operand Flag enum.
+    enum TOF {
+      //===------------------------------------------------------------------===//
+      // MYRISCVX Specific MachineOperand flags.
+      MO_NONE,
+
+      MO_CALL,
+      MO_CALL_PLT,
+
+      // Relocations for PC-Relative Addres
+      MO_PCREL_HI20,
+      MO_PCREL_LO12_I,
+      MO_PCREL_LO12_S,
+
+      // Relocations for Absolute Address
+      MO_HI20,
+      MO_LO12_I,
+      MO_LO12_S,
+
+      /// Relocations for GOTs.
+      MO_GOT_HI20
+    }; // enum TOF {
+    // @}MachineBaseInfo_MYRISCVXII_TOF
+
+    enum {
+      //===------------------------------------------------------------------===//
+      // Instruction encodings.  These are the standard/most common forms for
+      // MYRISCVX instructions.
+      //
+
+      // Pseudo - This represents an instruction that is a pseudo instruction
+      // or one that has not been implemented yet.  It is illegal to code generate
+      // it, but tolerated for intermediate implementation stages.
+      Pseudo = 0,
+      FrmR   = 1,
+      FrmI   = 2,
+      FrmS   = 3,
+      FrmB   = 4,
+      FrmU   = 5,
+      FrmJ   = 6,
+
+      FormMask = 15
+    };
+  }
+
+}
+
+#endif
