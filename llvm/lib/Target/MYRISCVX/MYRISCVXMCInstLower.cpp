@@ -33,7 +33,78 @@ void MYRISCVXMCInstLower::Initialize(MCContext* C) {
   Ctx = C;
 }
 
-//@LowerOperand {
+// @{ MYRISCVXMCInstLower_LowerSymbolOperand_Switch
+MCOperand MYRISCVXMCInstLower::LowerSymbolOperand(const MachineOperand &MO,
+                                                  MachineOperandType MOTy,
+                                                  unsigned Offset) const {
+  MCSymbolRefExpr::VariantKind Kind = MCSymbolRefExpr::VK_None;
+  MYRISCVXMCExpr::MYRISCVXExprKind TargetKind = MYRISCVXMCExpr::CEK_None;
+  const MCSymbol *Symbol;
+
+  switch(MO.getTargetFlags()) {
+    default:                   llvm_unreachable("Invalid target flag!");
+    case MYRISCVXII::MO_NONE:
+      break;
+
+      // ABS_HI and ABS_LO is for llc -march=MYRISCVX -relocation-model=static (global var in .data).
+    case MYRISCVXII::MO_HI20:
+      TargetKind = MYRISCVXMCExpr::CEK_HI20;
+      break;
+    case MYRISCVXII::MO_LO12_I:
+      TargetKind = MYRISCVXMCExpr::CEK_LO12_I;
+      break;
+    case MYRISCVXII::MO_LO12_S:
+      TargetKind = MYRISCVXMCExpr::CEK_LO12_S;
+      break;
+
+    case MYRISCVXII::MO_CALL_PLT:
+      TargetKind = MYRISCVXMCExpr::CEK_CALL_PLT;
+      break;
+
+    case MYRISCVXII::MO_GOT_HI20:
+      TargetKind = MYRISCVXMCExpr::CEK_GOT_HI20;
+      break;
+
+    case MYRISCVXII::MO_PCREL_HI20:
+      TargetKind = MYRISCVXMCExpr::CEK_PCREL_HI20;
+      break;
+    case MYRISCVXII::MO_PCREL_LO12_I:
+      TargetKind = MYRISCVXMCExpr::CEK_PCREL_LO12_I;
+      break;
+    case MYRISCVXII::MO_PCREL_LO12_S:
+      TargetKind = MYRISCVXMCExpr::CEK_PCREL_LO12_S;
+      break;
+  }
+  // @} MYRISCVXMCInstLower_LowerSymbolOperand_Switch
+
+  switch (MOTy) {
+    case MachineOperand::MO_GlobalAddress:
+      Symbol = AsmPrinter.getSymbol(MO.getGlobal());
+      Offset += MO.getOffset();
+      break;
+
+    default:
+      llvm_unreachable("<unknown operand type>");
+  }
+
+  const MCExpr *Expr = MCSymbolRefExpr::create(Symbol, Kind, *Ctx);
+
+  if (Offset) {
+    // Assume offset is never negative.
+    assert(Offset > 0);
+    Expr = MCBinaryExpr::createAdd(Expr, MCConstantExpr::create(Offset, *Ctx),
+                                   *Ctx);
+  }
+
+  if (TargetKind != MYRISCVXMCExpr::CEK_None)
+    Expr = MYRISCVXMCExpr::create(TargetKind, Expr, *Ctx);
+
+  return MCOperand::createExpr(Expr);
+
+}
+
+
+//@{MYRISCVXMCInstLower_LowerOperand
 MCOperand MYRISCVXMCInstLower::LowerOperand(const MachineOperand& MO,
                                             unsigned offset) const {
   MachineOperandType MOTy = MO.getType();
@@ -47,12 +118,16 @@ MCOperand MYRISCVXMCInstLower::LowerOperand(const MachineOperand& MO,
       return MCOperand::createReg(MO.getReg());
     case MachineOperand::MO_Immediate:
       return MCOperand::createImm(MO.getImm() + offset);
+    case MachineOperand::MO_GlobalAddress:
+      return LowerSymbolOperand(MO, MOTy, offset);
     case MachineOperand::MO_RegisterMask:
       break;
   }
 
   return MCOperand();
 }
+//@}MYRISCVXMCInstLower_LowerOperand
+
 
 // @{MYRISCVXMCInstLower_Lower
 void MYRISCVXMCInstLower::Lower(const MachineInstr *MI, MCInst &OutMI) const {

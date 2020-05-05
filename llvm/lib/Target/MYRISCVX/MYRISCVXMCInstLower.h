@@ -14,6 +14,8 @@
 #include "llvm/CodeGen/MachineOperand.h"
 #include "llvm/Support/Compiler.h"
 
+#include "MCTargetDesc/MYRISCVXMCExpr.h"
+
 namespace llvm {
   class MCContext;
   class MCInst;
@@ -34,6 +36,10 @@ namespace llvm {
     void Initialize(MCContext* C);
     void Lower(const MachineInstr *MI, MCInst &OutMI) const;
     MCOperand LowerOperand(const MachineOperand& MO, unsigned offset = 0) const;
+
+ private:
+    MCOperand LowerSymbolOperand(const MachineOperand &MO,
+                                 MachineOperandType MOTy, unsigned Offset) const;
   };
 }
 
