@@ -65,9 +65,9 @@ storeRegToStack(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
   DebugLoc DL;
   MachineMemOperand *MMO = GetMemOperand(MBB, FI, MachineMemOperand::MOStore);
 
-  unsigned Opc = 0;
+  unsigned Opc = TRI->getRegSizeInBits(MYRISCVX::GPRRegClass) == 32 ?
+      MYRISCVX::SW : MYRISCVX::SD;
 
-  Opc = MYRISCVX::SW;
   assert(Opc && "Register class not handled!");
   BuildMI(MBB, I, DL, get(Opc)).addReg(SrcReg, getKillRegState(isKill))
       .addFrameIndex(FI).addImm(Offset).addMemOperand(MMO);
@@ -83,9 +83,8 @@ loadRegFromStack(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
   DebugLoc DL;
   if (I != MBB.end()) DL = I->getDebugLoc();
   MachineMemOperand *MMO = GetMemOperand(MBB, FI, MachineMemOperand::MOLoad);
-  unsigned Opc = 0;
-
-  Opc = MYRISCVX::LW;
+  unsigned Opc = TRI->getRegSizeInBits(MYRISCVX::GPRRegClass) == 32 ?
+      MYRISCVX::LW : MYRISCVX::LD;
   assert(Opc && "Register class not handled!");
   BuildMI(MBB, I, DL, get(Opc), DestReg).addFrameIndex(FI).addImm(Offset)
       .addMemOperand(MMO);
