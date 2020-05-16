@@ -227,21 +227,15 @@ def : InstAlias<"jal $offset", (JAL  RA,   brtarget20:$offset)>;
 //@{MYRISCVXInstrInfo_LoadMemory_StoreMemory
 // Memory Load/Store
 let canFoldAsLoad = 1 in
-class LoadMemory<bits<7> opcode, bits<3> funct3, string instr_asm, RegisterClass RC, PatFrag OpNode,
-                 bit Pseudo>:
+class LoadMemory<bits<7> opcode, bits<3> funct3, string instr_asm, RegisterClass RC>:
   MYRISCVX_I<opcode, funct3, (outs RC:$rd), (ins GPR:$rs1, simm12:$simm12),
      !strconcat(instr_asm, "\t$rd, ${simm12}(${rs1})"),
-     [], IILoad> {
-  let isPseudo = Pseudo;
-}
+     [], IILoad>;
 
-class StoreMemory<bits<7> opcode, bits<3> funct3, string instr_asm, RegisterClass RC, PatFrag OpNode,
-                  bit Pseudo>:
+class StoreMemory<bits<7> opcode, bits<3> funct3, string instr_asm, RegisterClass RC>:
   MYRISCVX_S<opcode, funct3, (outs), (ins RC:$rs2, GPR:$rs1, simm12:$simm12),
      !strconcat(instr_asm, "\t$rs2, ${simm12}(${rs1})"),
-     [], IIStore> {
-  let isPseudo = Pseudo;
-}
+     [], IIStore>;
 //@}MYRISCVXInstrInfo_LoadMemory_StoreMemory
 
 //===----------------------------------------------------------------------===//
@@ -522,14 +516,14 @@ def truncstoref64_a : AlignedStore<truncstoref64>;
 
 // @{MYRISCVXInstrInfo_td_MemoryInsts
 /// Aligned Load and Store Instructions
-def LW  : LoadMemory <0b0000011, 0b010, "lw",  GPR, sextloadi32_a  , 0>;
-def SW  : StoreMemory<0b0100011, 0b010, "sw",  GPR, truncstorei32_a, 0>;
-def LB  : LoadMemory <0b0000011, 0b000, "lb",  GPR, sextloadi8_a   , 0>;
-def LBU : LoadMemory <0b0000011, 0b100, "lbu", GPR, zextloadi8_a   , 0>;
-def SB  : StoreMemory<0b0100011, 0b000, "sb",  GPR, truncstorei8_a , 0>;
-def LH  : LoadMemory <0b0000011, 0b001, "lh",  GPR, sextloadi16_a  , 0>;
-def LHU : LoadMemory <0b0000011, 0b101, "lhu", GPR, zextloadi16_a  , 0>;
-def SH  : StoreMemory<0b0100011, 0b001, "sh",  GPR, truncstorei16_a, 0>;
+def LW  : LoadMemory <0b0000011, 0b010, "lw",  GPR>;
+def SW  : StoreMemory<0b0100011, 0b010, "sw",  GPR>;
+def LB  : LoadMemory <0b0000011, 0b000, "lb",  GPR>;
+def LBU : LoadMemory <0b0000011, 0b100, "lbu", GPR>;
+def SB  : StoreMemory<0b0100011, 0b000, "sb",  GPR>;
+def LH  : LoadMemory <0b0000011, 0b001, "lh",  GPR>;
+def LHU : LoadMemory <0b0000011, 0b101, "lhu", GPR>;
+def SH  : StoreMemory<0b0100011, 0b001, "sh",  GPR>;
 // @}MYRISCVXInstrInfo_td_MemoryInsts
 
 
@@ -586,9 +580,9 @@ defm : StorePattern<store         , SW>, Requires<[IsRV32]>;
 
 // @{MYRISCVXInstrInfo_td_MemoryPattern64
 let Predicates = [IsRV64] in {
-  def LD  : LoadMemory <0b0000011, 0b011, "ld",  GPR, load_a         , 0>;
-  def SD  : StoreMemory<0b0100011, 0b011, "sd",  GPR, store_a        , 0>;
-  def LWU : LoadMemory <0b0000011, 0b110, "lwu",  GPR, sextloadi32_a  , 0>;
+  def LD  : LoadMemory <0b0000011, 0b011, "ld",  GPR>;
+  def SD  : StoreMemory<0b0100011, 0b011, "sd",  GPR>;
+  def LWU : LoadMemory <0b0000011, 0b110, "lwu", GPR>;
 
   /// Loads
   defm : LoadPattern<sextloadi32 , LW>;
