@@ -18,7 +18,7 @@ class CCIfSubtarget<string F, CCAction A, string Invert = "">
            A>;
 
 // @{MYRISCVXCallingConv_CSR_LP32
-def CSR_LP32 : CalleeSavedRegs<(add SP, FP, S1, (sequence "S%u", 2, 11))>;
+def CSR_LP32 : CalleeSavedRegs<(add RA, SP, FP, S1, (sequence "S%u", 2, 11))>;
 // @}MYRISCVXCallingConv_CSR_LP32
 
 
