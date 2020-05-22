@@ -52,6 +52,7 @@ bool MYRISCVXAsmPrinter::runOnMachineFunction(MachineFunction &MF) {
 // @{MYRISCVXAsmPrinter_cpp_EmitInstruction_MCInstLower
 void MYRISCVXAsmPrinter::EmitInstruction(const MachineInstr *MI) {
   // @{MYRISCVXAsmPrinter_cpp_EmitInstruction_MCInstLower ...
+  // @{MYRISCVXAsmPrinter_cpp_EmitInstruction_emitPseudoExpansionlowering ...
   // Do any auto-generated pseudo lowerings.
   if (emitPseudoExpansionLowering(*OutStreamer, MI))
     return;
@@ -177,6 +178,7 @@ void MYRISCVXAsmPrinter::PrintDebugValueComment(const MachineInstr *MI,
   // TODO: implement
   OS << "PrintDebugValueComment()";
 }
+
 
 // Force static initialization.
 extern "C" void LLVMInitializeMYRISCVXAsmPrinter() {

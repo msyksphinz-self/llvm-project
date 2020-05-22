@@ -228,6 +228,9 @@ namespace llvm {
 
     static MachineBasicBlock *emitSelectPseudo(MachineInstr &MI,
                                                MachineBasicBlock *BB);
+    bool isEligibleForTailCallOptimization(
+        CCState &CCInfo,
+        unsigned NextStackOffset, const MYRISCVXFunctionInfo& FI) const;
   };
 }
 

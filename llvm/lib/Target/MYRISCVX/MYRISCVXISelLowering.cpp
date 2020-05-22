@@ -37,6 +37,8 @@ using namespace llvm;
 
 #define DEBUG_TYPE "MYRISCVX-lower"
 
+STATISTIC(NumTailCalls, "Number of tail calls");
+
 //@3_1 1 {
 const char *MYRISCVXTargetLowering::getTargetNodeName(unsigned Opcode) const {
   switch (Opcode) {
@@ -351,6 +353,7 @@ MYRISCVXTargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
 
 
 // @{ MYRISCVXISelLowering_LowerCall
+// @{ MYRISCVXISellowering_LowerCall_TailCall
 SDValue
 MYRISCVXTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
                                   SmallVectorImpl<SDValue> &InVals) const {
@@ -362,7 +365,9 @@ MYRISCVXTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
   SmallVectorImpl<ISD::InputArg> &Ins   = CLI.Ins;
   SDValue Chain                         = CLI.Chain;
   SDValue Callee                        = CLI.Callee;
+  // @} MYRISCVXISellowering_LowerCall_TailCall...
   bool &IsTailCall                      = CLI.IsTailCall;
+  // @{ MYRISCVXISellowering_LowerCall_TailCall...
   CallingConv::ID CallConv              = CLI.CallConv;
   bool IsVarArg                         = CLI.IsVarArg;
 
@@ -382,6 +387,16 @@ MYRISCVXTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
 
   // Get a count of how many bytes are to be pushed on the stack.
   unsigned NextStackOffset = CCInfo.getNextStackOffset();
+
+  // Check if it's really possible to do a tail call.
+  if (IsTailCall)
+    IsTailCall = isEligibleForTailCallOptimization(CCInfo, NextStackOffset,
+                                                   *MF.getInfo<MYRISCVXFunctionInfo>());
+
+  if (IsTailCall) {
+    ++NumTailCalls;
+  }
+  // @} MYRISCVXISellowering_LowerCall_TailCall
 
   // Chain is the output chain of the last Load/Store or CopyToReg node.
   // ByValChain is the output chain of the last Memcpy node created for copying
@@ -487,6 +502,12 @@ MYRISCVXTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
 
   getOpndList(Ops, RegsToPass, IsPICCall, GlobalOrExternal, InternalLinkage,
               CLI, Callee, Chain);
+
+  //@{MYRISCVXISelLowering_LowerCall_IsTailCall_DAG_getNode
+  if (IsTailCall) {
+    return DAG.getNode(MYRISCVXISD::TailCall, DL, MVT::Other, Ops);
+  }
+  //@}MYRISCVXISelLowering_LowerCall_IsTailCall_DAG_getNode
 
   // @{ MYRISCVXISelLowering_LowerCall_MYRISCVXISD_CALL
   Chain = DAG.getNode(MYRISCVXISD::CALL, DL, NodeTys, Ops);
@@ -638,6 +659,9 @@ const {
                  ArgLocs, *DAG.getContext());
   CCInfo.AnalyzeFormalArguments (Ins, CC_MYRISCVX);
   // @}MYRISCVXISelLowering_LowerFormalArguments_AnalyzeFormalarguments
+
+  MYRISCVXFI->setFormalArgInfo(CCInfo.getNextStackOffset(),
+                               CCInfo.getInRegsParamsCount() > 0);
 
   Function::const_arg_iterator FuncArg =
       DAG.getMachineFunction().getFunction().arg_begin();
@@ -807,6 +831,7 @@ SDValue MYRISCVXTargetLowering::lowerVASTART(SDValue Op, SelectionDAG &DAG) cons
 
 
 // @{MYRISCVXISelLowering_writeVarArgRegs
+// @{MYRISCVXISelLowering_writeVarArgRegs_Loop
 void MYRISCVXTargetLowering::writeVarArgRegs(std::vector<SDValue> &OutChains,
                                              SDValue Chain, const SDLoc &DL,
                                              SelectionDAG &DAG,
@@ -819,6 +844,8 @@ void MYRISCVXTargetLowering::writeVarArgRegs(std::vector<SDValue> &OutChains,
   MachineFunction &MF = DAG.getMachineFunction();
   MachineFrameInfo &MFI = MF.getFrameInfo();
   MYRISCVXFunctionInfo *MYRISCVXFI = MF.getInfo<MYRISCVXFunctionInfo>();
+
+  // @{ MYRISCVXISelLowering_writeVarArgRegs_Loop ...
 
   // Offset of the first variable argument from stack pointer.
   int VaArgOffset;
@@ -835,6 +862,8 @@ void MYRISCVXTargetLowering::writeVarArgRegs(std::vector<SDValue> &OutChains,
   // which is a value necessary to VASTART.
   int FI = MFI.CreateFixedObject(RegSizeInBytes, VaArgOffset, true);
   MYRISCVXFI->setVarArgsFrameIndex(FI);
+
+  // @} MYRISCVXISelLowering_writeVarArgRegs_Loop ...
 
   // Copy the integer registers that have not been used for argument passing
   // to the argument register save area. For O32, the save area is allocated
@@ -857,3 +886,23 @@ void MYRISCVXTargetLowering::writeVarArgRegs(std::vector<SDValue> &OutChains,
   }
 }
 // @}MYRISCVXISelLowering_writeVarArgRegs
+
+
+// @{ MYRISCVXISelLowering_isEligibleForTailCallOptimization
+/// isEligibleForTailCallOptimization - Check whether the call is eligible
+/// for tail call optimization.
+/// Note: This is modelled after ARM's IsEligibleForTailCallOptimization.
+bool MYRISCVXTargetLowering::
+isEligibleForTailCallOptimization(
+    CCState &CCInfo,
+    unsigned NextStackOffset, const MYRISCVXFunctionInfo& FI) const {
+
+  // Return false if either the callee or caller has a byval argument.
+  if (CCInfo.getInRegsParamsCount() > 0 || FI.hasByvalArg())
+    return false;
+
+  // Return true if the callee's argument area is no larger than the
+  // caller's.
+  return NextStackOffset <= FI.getIncomingArgSize();
+}
+// @} MYRISCVXISelLowering_isEligibleForTailCallOptimization
