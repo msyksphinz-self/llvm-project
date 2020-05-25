@@ -64,8 +64,8 @@ namespace llvm {
       FrmR   = 1,
       FrmI   = 2,
       FrmS   = 3,
-      FrmB   = 4,
-      FrmU   = 5,
+      FrmU   = 4,
+      FrmB   = 5,
       FrmJ   = 6,
 
       FormMask = 15

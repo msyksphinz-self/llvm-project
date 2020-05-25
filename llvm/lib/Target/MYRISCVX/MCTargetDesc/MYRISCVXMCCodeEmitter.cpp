@@ -249,11 +249,13 @@ getExprOpValue(const MCInst &MI, const MCExpr *Expr,
       FixupKind = MYRISCVX::fixup_MYRISCVX_JAL;
     } else if (MIFrm == MYRISCVXII::FrmB) {
       FixupKind = MYRISCVX::fixup_MYRISCVX_BRANCH;
+    } else {
+      llvm_unreachable("Invalid Kind. Error");
     }
   }
   // @} MYRISCVXMCCodeEmitter_getExprOpValue_Fixup
 
-  Fixups.push_back(MCFixup::create(0, Expr, MCFixupKind(FixupKind)));
+  Fixups.push_back(MCFixup::create(0, Expr, MCFixupKind(FixupKind), MI.getLoc()));
 
   return 0;
 }
