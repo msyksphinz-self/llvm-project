@@ -45,6 +45,11 @@ namespace llvm {
     std::unique_ptr<MCObjectTargetWriter>
         createObjectTargetWriter() const override;
 
+    bool evaluateTargetFixup(const MCAssembler &Asm, const MCAsmLayout &Layout,
+                           const MCFixup &Fixup, const MCFragment *DF,
+                           const MCValue &Target, uint64_t &Value,
+                           bool &WasForced) override;
+
     void applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
                     const MCValue &Target, MutableArrayRef<char> Data,
                     uint64_t Value, bool IsResolved,

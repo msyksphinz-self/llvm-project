@@ -15,6 +15,7 @@
 #include "MCTargetDesc/MYRISCVXAsmBackend.h"
 #include "MCTargetDesc/MYRISCVXFixupKinds.h"
 #include "MCTargetDesc/MYRISCVXMCTargetDesc.h"
+#include "MCTargetDesc/MYRISCVXMCExpr.h"
 
 #include "llvm/MC/MCAsmBackend.h"
 #include "llvm/MC/MCAssembler.h"
@@ -24,6 +25,8 @@
 #include "llvm/MC/MCFixupKindInfo.h"
 #include "llvm/MC/MCObjectWriter.h"
 #include "llvm/MC/MCSubtargetInfo.h"
+#include "llvm/MC/MCSymbol.h"
+#include "llvm/MC/MCValue.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -111,6 +114,68 @@ MYRISCVXAsmBackend::createObjectTargetWriter() const {
 }
 
 
+bool MYRISCVXAsmBackend::evaluateTargetFixup(
+    const MCAssembler &Asm, const MCAsmLayout &Layout, const MCFixup &Fixup,
+    const MCFragment *DF, const MCValue &Target, uint64_t &Value,
+    bool &WasForced) {
+  const MCFixup *AUIPCFixup;
+  const MCFragment *AUIPCDF;
+  MCValue AUIPCTarget;
+  switch (Fixup.getTargetKind()) {
+  default:
+    llvm_unreachable("Unexpected fixup kind!");
+  case MYRISCVX::fixup_MYRISCVX_PCREL_HI20:
+    AUIPCFixup = &Fixup;
+    AUIPCDF = DF;
+    AUIPCTarget = Target;
+    break;
+  case MYRISCVX::fixup_MYRISCVX_PCREL_LO12_I:
+  case MYRISCVX::fixup_MYRISCVX_PCREL_LO12_S: {
+    AUIPCFixup = cast<MYRISCVXMCExpr>(Fixup.getValue())->getPCRelHiFixup(&AUIPCDF);
+    if (!AUIPCFixup) {
+      Asm.getContext().reportError(Fixup.getLoc(),
+                                   "could not find corresponding %pcrel_hi");
+      return true;
+    }
+
+    // MCAssembler::evaluateFixup will emit an error for this case when it sees
+    // the %pcrel_hi, so don't duplicate it when also seeing the %pcrel_lo.
+    const MCExpr *AUIPCExpr = AUIPCFixup->getValue();
+    if (!AUIPCExpr->evaluateAsRelocatable(AUIPCTarget, &Layout, AUIPCFixup))
+      return true;
+    break;
+  }
+  }
+
+  if (!AUIPCTarget.getSymA() || AUIPCTarget.getSymB())
+    return false;
+
+  const MCSymbolRefExpr *A = AUIPCTarget.getSymA();
+  const MCSymbol &SA = A->getSymbol();
+  if (A->getKind() != MCSymbolRefExpr::VK_None || SA.isUndefined())
+    return false;
+
+  auto *Writer = Asm.getWriterPtr();
+  if (!Writer)
+    return false;
+
+  bool IsResolved = Writer->isSymbolRefDifferenceFullyResolvedImpl(
+      Asm, SA, *AUIPCDF, false, true);
+  if (!IsResolved)
+    return false;
+
+  Value = Layout.getSymbolOffset(SA) + AUIPCTarget.getConstant();
+  Value -= Layout.getFragmentOffset(AUIPCDF) + AUIPCFixup->getOffset();
+
+  if (shouldForceRelocation(Asm, *AUIPCFixup, AUIPCTarget)) {
+    WasForced = true;
+    return false;
+  }
+
+  return true;
+}
+
+
 // @{ MYRISCVXAsmBackend_applyFixup
 // @{ MYRISCVXAsmBackend_applyFixup_adjustFixupValue
 /// ApplyFixup - Apply the \p Value for given \p Fixup into the provided
@@ -122,34 +187,24 @@ void MYRISCVXAsmBackend::applyFixup(const MCAssembler &Asm, const MCFixup &Fixup
                                     bool IsResolved,
                                     const MCSubtargetInfo *STI) const {
   MCContext &Ctx = Asm.getContext();
-  MCFixupKind Kind = Fixup.getKind();
-  Value = adjustFixupValue(Fixup, Value, Ctx);
-  // @} MYRISCVXAsmBackend_applyFixup_adjustFixupValue
-
+  MCFixupKindInfo Info = getFixupKindInfo(Fixup.getKind());
   if (!Value)
     return; // Doesn't change encoding.
+  // Apply any target-specific value adjustments.
+  Value = adjustFixupValue(Fixup, Value, Ctx);
 
-  // Where do we start in the object
+  // Shift the value into position.
+  Value <<= Info.TargetOffset;
+
   unsigned Offset = Fixup.getOffset();
-  // Number of bytes we need to fixup
-  unsigned NumBytes = (getFixupKindInfo(Kind).TargetSize + 7) / 8;
+  unsigned NumBytes = alignTo(Info.TargetSize + Info.TargetOffset, 8) / 8;
 
-  // Grab current value, if any, from bits.
-  uint64_t CurVal = 0;
+  assert(Offset + NumBytes <= Data.size() && "Invalid fixup offset!");
 
+  // For each byte of the fragment that the fixup touches, mask in the
+  // bits from the fixup value.
   for (unsigned i = 0; i != NumBytes; ++i) {
-    unsigned Idx = i;
-    CurVal |= (uint64_t)((uint8_t)Data[Offset + Idx]) << (i*8);
-  }
-
-  uint64_t Mask = ((uint64_t)(-1) >>
-                   (64 - getFixupKindInfo(Kind).TargetSize));
-  CurVal |= Value & Mask;
-
-  // Write out the fixed up bytes back to the code/data bits.
-  for (unsigned i = 0; i != NumBytes; ++i) {
-    unsigned Idx = i;
-    Data[Offset + Idx] = (uint8_t)((CurVal >> (i*8)) & 0xff);
+    Data[Offset + i] |= uint8_t((Value >> (i * 8)) & 0xff);
   }
 }
 // @} MYRISCVXAsmBackend_applyFixup
@@ -163,13 +218,20 @@ getFixupKindInfo(MCFixupKind Kind) const {
     // MYRISCVXFixupKinds.h.
     //
     // name                        offset  bits  flags
-    { "fixup_MYRISCVX_32",             0,     32,   0 },
-    { "fixup_MYRISCVX_HI16",           0,     16,   0 },
-    { "fixup_MYRISCVX_LO16",           0,     16,   0 },
-    { "fixup_MYRISCVX_GPREL16",        0,     16,   0 },
-    { "fixup_MYRISCVX_GOT",            0,     16,   0 },
-    { "fixup_MYRISCVX_GOT_HI16",       0,     16,   0 },
-    { "fixup_MYRISCVX_GOT_LO16",       0,     16,   0 }
+    { "fixup_MYRISCVX_HI20",           12,  20,      0   },
+    { "fixup_MYRISCVX_LO12_I",         20,  12,      0   },
+    { "fixup_MYRISCVX_LO12_S",          0,  32,      0   },
+    { "fixup_MYRISCVX_PCREL_HI20",     12,  20,
+      MCFixupKindInfo::FKF_IsPCRel | MCFixupKindInfo::FKF_IsTarget },
+    { "fixup_MYRISCVX_PCREL_LO12_I",   20,  12,
+      MCFixupKindInfo::FKF_IsPCRel | MCFixupKindInfo::FKF_IsTarget },
+    { "fixup_MYRISCVX_PCREL_LO12_S",    0,  32,
+      MCFixupKindInfo::FKF_IsPCRel | MCFixupKindInfo::FKF_IsTarget},
+    { "fixup_MYRISCVX_CALL",            0,  32,      MCFixupKindInfo::FKF_IsPCRel },
+    { "fixup_MYRISCVX_RELAX",           0,  0,       0   },
+    { "fixup_MYRISCVX_GOT_HI20",       12,  20,      MCFixupKindInfo::FKF_IsPCRel },
+    { "fixup_MYRISCVX_JAL",            12,  20,      MCFixupKindInfo::FKF_IsPCRel },
+    { "fixup_MYRISCVX_BRANCH",          0,  32,      MCFixupKindInfo::FKF_IsPCRel },
   };
 
   if (Kind < FirstTargetFixupKind)
