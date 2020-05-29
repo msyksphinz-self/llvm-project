@@ -20,18 +20,10 @@ using namespace llvm;
 
 #define DEBUG_TYPE "MYRISCVXmcexpr"
 
-const MYRISCVXMCExpr *MYRISCVXMCExpr::create(MYRISCVXMCExpr::MYRISCVXExprKind Kind,
-                                             const MCExpr *Expr, MCContext &Ctx) {
+const MYRISCVXMCExpr *MYRISCVXMCExpr::create(MYRISCVXExprKind Kind, const MCExpr *Expr,
+                                             MCContext &Ctx) {
   return new (Ctx) MYRISCVXMCExpr(Kind, Expr);
 }
-
-const MYRISCVXMCExpr *MYRISCVXMCExpr::create(const MCSymbol *Symbol, MYRISCVXMCExpr::MYRISCVXExprKind Kind,
-                                             MCContext &Ctx) {
-  const MCSymbolRefExpr *MCSym =
-      MCSymbolRefExpr::create(Symbol, MCSymbolRefExpr::VK_None, Ctx);
-  return new (Ctx) MYRISCVXMCExpr(Kind, MCSym);
-}
-
 
 //@{MYRISCVXMCExpr_printImpl
 void MYRISCVXMCExpr::printImpl(raw_ostream &OS, const MCAsmInfo *MAI) const {
@@ -128,6 +120,23 @@ MYRISCVXMCExpr::evaluateAsRelocatableImpl(MCValue &Res,
                                           const MCFixup *Fixup) const {
   return getSubExpr()->evaluateAsRelocatable(Res, Layout, Fixup);
 }
+
+
+MYRISCVXMCExpr::MYRISCVXExprKind
+MYRISCVXMCExpr::getVariantKindForName(StringRef name) {
+  return StringSwitch<MYRISCVXMCExpr::MYRISCVXExprKind>(name)
+      .Case("hi", CEK_HI20)
+      .Case("lo", CEK_LO12_I)
+      .Case("lo", CEK_LO12_S)
+      .Case("call", CEK_CALL)
+      .Case("call", CEK_CALL_PLT)
+      .Case("got_pcrel_hi", CEK_GOT_HI20)
+      .Case("pcrel_hi", CEK_PCREL_HI20)
+      .Case("pcrel_lo12", CEK_PCREL_LO12_I)
+      .Case("pcrel_lo12", CEK_PCREL_LO12_S)
+      .Default(CEK_None);
+}
+
 
 void MYRISCVXMCExpr::visitUsedExpr(MCStreamer &Streamer) const {
   Streamer.visitUsedExpr(*getSubExpr());

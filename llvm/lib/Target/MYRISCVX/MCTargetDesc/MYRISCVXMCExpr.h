@@ -47,8 +47,6 @@ namespace llvm {
  public:
     static const MYRISCVXMCExpr *create(MYRISCVXExprKind Kind, const MCExpr *Expr,
                                         MCContext &Ctx);
-    static const MYRISCVXMCExpr *create(const MCSymbol *Symbol,
-                                        MYRISCVXMCExpr::MYRISCVXExprKind Kind, MCContext &Ctx);
 
     /// Get the kind of this expression.
     MYRISCVXExprKind getKind() const { return Kind; }
@@ -61,6 +59,8 @@ namespace llvm {
     void printImpl(raw_ostream &OS, const MCAsmInfo *MAI) const override;
     bool evaluateAsRelocatableImpl(MCValue &Res, const MCAsmLayout *Layout,
                                    const MCFixup *Fixup) const override;
+    static MYRISCVXExprKind getVariantKindForName(StringRef name);
+
     void visitUsedExpr(MCStreamer &Streamer) const override;
     MCFragment *findAssociatedFragment() const override {
       return getSubExpr()->findAssociatedFragment();

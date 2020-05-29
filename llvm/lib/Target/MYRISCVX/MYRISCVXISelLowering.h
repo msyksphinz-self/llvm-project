@@ -122,7 +122,7 @@ namespace llvm {
         case CodeModel::Medium: {
           // MedLow C-Model
           SDValue AddrHi = getTargetNode(N, Ty, DAG, MYRISCVXII::MO_PCREL_HI20);
-          SDValue AddrLo = getTargetNode(N, Ty, DAG, MYRISCVXII::MO_LO12_I);
+          SDValue AddrLo = getTargetNode(N, Ty, DAG, MYRISCVXII::MO_PCREL_LO12_I);
           SDValue MNHi = SDValue(DAG.getMachineNode(MYRISCVX::AUIPC, DL, Ty, AddrHi), 0);
           return SDValue(DAG.getMachineNode(MYRISCVX::ADDI, DL, Ty, MNHi, AddrLo), 0);
         }

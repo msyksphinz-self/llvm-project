@@ -118,59 +118,59 @@ bool MYRISCVXAsmBackend::evaluateTargetFixup(
     const MCAssembler &Asm, const MCAsmLayout &Layout, const MCFixup &Fixup,
     const MCFragment *DF, const MCValue &Target, uint64_t &Value,
     bool &WasForced) {
-  const MCFixup *AUIPCFixup;
-  const MCFragment *AUIPCDF;
-  MCValue AUIPCTarget;
-  switch (Fixup.getTargetKind()) {
-  default:
-    llvm_unreachable("Unexpected fixup kind!");
-  case MYRISCVX::fixup_MYRISCVX_PCREL_HI20:
-    AUIPCFixup = &Fixup;
-    AUIPCDF = DF;
-    AUIPCTarget = Target;
-    break;
-  case MYRISCVX::fixup_MYRISCVX_PCREL_LO12_I:
-  case MYRISCVX::fixup_MYRISCVX_PCREL_LO12_S: {
-    AUIPCFixup = cast<MYRISCVXMCExpr>(Fixup.getValue())->getPCRelHiFixup(&AUIPCDF);
-    if (!AUIPCFixup) {
-      Asm.getContext().reportError(Fixup.getLoc(),
-                                   "could not find corresponding %pcrel_hi");
-      return true;
-    }
-
-    // MCAssembler::evaluateFixup will emit an error for this case when it sees
-    // the %pcrel_hi, so don't duplicate it when also seeing the %pcrel_lo.
-    const MCExpr *AUIPCExpr = AUIPCFixup->getValue();
-    if (!AUIPCExpr->evaluateAsRelocatable(AUIPCTarget, &Layout, AUIPCFixup))
-      return true;
-    break;
-  }
-  }
-
-  if (!AUIPCTarget.getSymA() || AUIPCTarget.getSymB())
-    return false;
-
-  const MCSymbolRefExpr *A = AUIPCTarget.getSymA();
-  const MCSymbol &SA = A->getSymbol();
-  if (A->getKind() != MCSymbolRefExpr::VK_None || SA.isUndefined())
-    return false;
-
-  auto *Writer = Asm.getWriterPtr();
-  if (!Writer)
-    return false;
-
-  bool IsResolved = Writer->isSymbolRefDifferenceFullyResolvedImpl(
-      Asm, SA, *AUIPCDF, false, true);
-  if (!IsResolved)
-    return false;
-
-  Value = Layout.getSymbolOffset(SA) + AUIPCTarget.getConstant();
-  Value -= Layout.getFragmentOffset(AUIPCDF) + AUIPCFixup->getOffset();
-
-  if (shouldForceRelocation(Asm, *AUIPCFixup, AUIPCTarget)) {
-    WasForced = true;
-    return false;
-  }
+  // const MCFixup *AUIPCFixup;
+  // const MCFragment *AUIPCDF;
+  // MCValue AUIPCTarget;
+  // switch (Fixup.getTargetKind()) {
+  // default:
+  //   llvm_unreachable("Unexpected fixup kind!");
+  // case MYRISCVX::fixup_MYRISCVX_PCREL_HI20:
+  //   AUIPCFixup = &Fixup;
+  //   AUIPCDF = DF;
+  //   AUIPCTarget = Target;
+  //   break;
+  // case MYRISCVX::fixup_MYRISCVX_PCREL_LO12_I:
+  // case MYRISCVX::fixup_MYRISCVX_PCREL_LO12_S: {
+  //   AUIPCFixup = cast<MYRISCVXMCExpr>(Fixup.getValue())->getPCRelHiFixup(&AUIPCDF);
+  //   if (!AUIPCFixup) {
+  //     Asm.getContext().reportError(Fixup.getLoc(),
+  //                                  "could not find corresponding %pcrel_hi");
+  //     return true;
+  //   }
+  //
+  //   // MCAssembler::evaluateFixup will emit an error for this case when it sees
+  //   // the %pcrel_hi, so don't duplicate it when also seeing the %pcrel_lo.
+  //   const MCExpr *AUIPCExpr = AUIPCFixup->getValue();
+  //   if (!AUIPCExpr->evaluateAsRelocatable(AUIPCTarget, &Layout, AUIPCFixup))
+  //     return true;
+  //   break;
+  // }
+  // }
+  //
+  // if (!AUIPCTarget.getSymA() || AUIPCTarget.getSymB())
+  //   return false;
+  //
+  // const MCSymbolRefExpr *A = AUIPCTarget.getSymA();
+  // const MCSymbol &SA = A->getSymbol();
+  // if (A->getKind() != MCSymbolRefExpr::VK_None || SA.isUndefined())
+  //   return false;
+  //
+  // auto *Writer = Asm.getWriterPtr();
+  // if (!Writer)
+  //   return false;
+  //
+  // bool IsResolved = Writer->isSymbolRefDifferenceFullyResolvedImpl(
+  //     Asm, SA, *AUIPCDF, false, true);
+  // if (!IsResolved)
+  //   return false;
+  //
+  // Value = Layout.getSymbolOffset(SA) + AUIPCTarget.getConstant();
+  // Value -= Layout.getFragmentOffset(AUIPCDF) + AUIPCFixup->getOffset();
+  //
+  // if (shouldForceRelocation(Asm, *AUIPCFixup, AUIPCTarget)) {
+  //   WasForced = true;
+  //   return false;
+  // }
 
   return true;
 }
