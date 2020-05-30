@@ -121,7 +121,7 @@ MYRISCVXMCExpr::evaluateAsRelocatableImpl(MCValue &Res,
   return getSubExpr()->evaluateAsRelocatable(Res, Layout, Fixup);
 }
 
-
+// @{ MYRISCVXMCExpr_getVariantKindForName
 MYRISCVXMCExpr::MYRISCVXExprKind
 MYRISCVXMCExpr::getVariantKindForName(StringRef name) {
   return StringSwitch<MYRISCVXMCExpr::MYRISCVXExprKind>(name)
@@ -136,6 +136,7 @@ MYRISCVXMCExpr::getVariantKindForName(StringRef name) {
       .Case("pcrel_lo12", CEK_PCREL_LO12_S)
       .Default(CEK_None);
 }
+// @} MYRISCVXMCExpr_getVariantKindForName
 
 
 void MYRISCVXMCExpr::visitUsedExpr(MCStreamer &Streamer) const {

@@ -72,6 +72,17 @@ class MYRISCVXAsmParser : public MCTargetAsmParser {
                                uint64_t &ErrorInfo,
                                bool MatchingInlineAsm) override;
 
+  bool needsExpansion(MCInst &Inst);
+
+  void expandInstruction(MCInst &Inst, SMLoc IDLoc,
+                         SmallVectorImpl<MCInst> &Instructions,
+                         MCStreamer &Out);
+  void expandLoadImm(MCInst &Inst, SMLoc IDLoc,
+                     SmallVectorImpl<MCInst> &Instructions);
+  void expandLoadAddressImm(MCInst &Inst, SMLoc IDLoc,
+                            SmallVectorImpl<MCInst> &Instructions,
+                            MCStreamer &Out);
+
   bool ParseRegister(unsigned &RegNo, SMLoc &StartLoc,
                      SMLoc &EndLoc) override;
   bool ParseInstruction(ParseInstructionInfo &Info, StringRef Name,
@@ -298,7 +309,97 @@ void printMYRISCVXOperands(OperandVector &Operands) {
 }
 
 
+// @{ MYRISCVXAsmParser_needsExpansion
+bool MYRISCVXAsmParser::needsExpansion(MCInst &Inst) {
+  switch(Inst.getOpcode()) {
+    case MYRISCVX::LoadImm32Reg:
+    case MYRISCVX::LoadAddr32Imm:
+      return true;
+    default:
+      return false;
+  }
+}
+// @} MYRISCVXAsmParser_needsExpansion
+
+
+void MYRISCVXAsmParser::expandInstruction(MCInst &Inst, SMLoc IDLoc,
+                                          SmallVectorImpl<MCInst> &Instructions,
+                                          MCStreamer &Out){
+  switch(Inst.getOpcode()) {
+    case MYRISCVX::LoadImm32Reg:
+      return expandLoadImm(Inst, IDLoc, Instructions);
+    case MYRISCVX::LoadAddr32Imm:
+      return expandLoadAddressImm(Inst,IDLoc,Instructions, Out);
+  }
+}
+
+
+// @{ MYRISCVXAsmParser_expandLoadImm
+void MYRISCVXAsmParser::expandLoadImm(MCInst &Inst, SMLoc IDLoc,
+                                      SmallVectorImpl<MCInst> &Instructions){
+  MCInst tmpInst;
+  const MCOperand &ImmOp = Inst.getOperand(1);
+  assert(ImmOp.isImm() && "expected immediate operand kind");
+  const MCOperand &RegOp = Inst.getOperand(0);
+  assert(RegOp.isReg() && "expected register operand kind");
+
+  int ImmValue = ImmOp.getImm();
+  tmpInst.setLoc(IDLoc);
+  if ( -2048 <= ImmValue && ImmValue < 2048) {
+    tmpInst.setOpcode(MYRISCVX::ADDI);
+    tmpInst.addOperand(MCOperand::createReg(RegOp.getReg()));
+    tmpInst.addOperand(
+        MCOperand::createReg(MYRISCVX::ZERO));
+    tmpInst.addOperand(MCOperand::createImm(ImmValue));
+    Instructions.push_back(tmpInst);
+  } else {
+    tmpInst.setOpcode(MYRISCVX::LUI);
+    tmpInst.addOperand(MCOperand::createReg(RegOp.getReg()));
+    tmpInst.addOperand(MCOperand::createImm((((ImmValue + 0x800) & 0xfffff000) >> 12) & 0xffffff));
+    Instructions.push_back(tmpInst);
+    tmpInst.clear();
+    tmpInst.setOpcode(MYRISCVX::ADDI);
+    tmpInst.addOperand(MCOperand::createReg(RegOp.getReg()));
+    tmpInst.addOperand(MCOperand::createReg(RegOp.getReg()));
+    tmpInst.addOperand(MCOperand::createImm(ImmValue & 0x00fff));
+    tmpInst.setLoc(IDLoc);
+    Instructions.push_back(tmpInst);
+  }
+}
+// @} MYRISCVXAsmParser_expandLoadImm
+// @{ MYRISCVXAsmParser_expandLoadAddressImm
+void MYRISCVXAsmParser::expandLoadAddressImm(MCInst &Inst, SMLoc IDLoc,
+                                             SmallVectorImpl<MCInst> &Instructions,
+                                             MCStreamer &Out){
+  MCContext &Ctx = getContext();
+
+  MCOperand DestReg = Inst.getOperand(0);
+  const MYRISCVXMCExpr *Symbol = MYRISCVXMCExpr::create(
+      MYRISCVXMCExpr::CEK_PCREL_HI20, Inst.getOperand(1).getExpr(), Ctx);
+
+  MCInst tmpInst0 = MCInstBuilder(MYRISCVX::LUI)
+      .addOperand(DestReg)
+      .addExpr(Symbol);
+  Instructions.push_back(tmpInst0);
+
+  const MCExpr *RefToLinkTmpLabel =
+      MYRISCVXMCExpr::create(MYRISCVXMCExpr::CEK_PCREL_LO12_I,
+                             Inst.getOperand(1).getExpr(),
+                             Ctx);
+
+  MCInst tmpInst1 = MCInstBuilder(MYRISCVX::ADDI)
+      .addOperand(DestReg)
+      .addOperand(DestReg)
+      .addExpr(RefToLinkTmpLabel);
+  Instructions.push_back(tmpInst1);
+
+}
+// @} MYRISCVXAsmParser_expandLoadAddressImm
+
+
+
 // @{ MYRISCVXAsmParser_MatchAndEmitInstruction
+// @{ MYRISCVXAsmParser_MatchAndEmitInstruction_InstExpansion
 bool MYRISCVXAsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
                                                 OperandVector &Operands,
                                                 MCStreamer &Out,
@@ -311,6 +412,15 @@ bool MYRISCVXAsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
   switch (MatchResult) {
     default: break;
     case Match_Success: {
+      if (needsExpansion(Inst)) {
+        SmallVector<MCInst, 4> Instructions;
+        expandInstruction(Inst, IDLoc, Instructions, Out);
+        for(unsigned i = 0; i < Instructions.size(); i++){
+          Out.EmitInstruction(Instructions[i], getSTI());
+        }
+        return false;
+      }
+      // @} MYRISCVXAsmParser_MatchAndEmitInstruction_InstExpansion
       Inst.setLoc(IDLoc);
       Out.EmitInstruction(Inst, getSTI());
       return false;

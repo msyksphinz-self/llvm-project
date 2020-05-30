@@ -683,3 +683,18 @@ multiclass BrcondPatsSlt<RegisterClass RC, Instruction BEQOp, Instruction BNEOp,
 
 defm : BrcondPatsSlt<GPR, BEQ, BNE, SLT, SLTU, SLTI, SLTIU, ZERO>;
 // @} MYRISCVXInstrInfo_BrcondPatsSlt
+
+
+// @{ MYRISCVXInstrInfo_LoadImm32
+class LoadImm32< string instr_asm, Operand Od, RegisterClass RC> :
+  MYRISCVXAsmPseudoInst<(outs RC:$rd), (ins Od:$imm32),
+                     !strconcat(instr_asm, "\t$rd, $imm32")> ;
+def LoadImm32Reg : LoadImm32<"li", shamt, GPR>;
+// @} MYRISCVXInstrInfo_LoadImm32
+
+// @{ MYRISCVXInstrInfo_LoadAddressImm
+class LoadAddressImm<string instr_asm, Operand Od, RegisterClass RC> :
+  MYRISCVXAsmPseudoInst<(outs RC:$rd), (ins Od:$imm32),
+                     !strconcat(instr_asm, "\t$rd, $imm32")> ;
+def LoadAddr32Imm : LoadAddressImm<"la", shamt, GPR>;
+// @} MYRISCVXInstrInfo_LoadAddressImm
