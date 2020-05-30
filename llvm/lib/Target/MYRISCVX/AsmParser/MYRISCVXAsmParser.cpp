@@ -530,15 +530,13 @@ MYRISCVXAsmParser::parseMemOperand(OperandVector &Operands) {
 // @} MYRISCVXAsmParser_parseMemOperand
 
 // @{ MYRISCVXAsmParser_ParseInstruction
+// @{ MYRISCVXAsmParser_ParseInstruction_ParseMnemnoic
 bool MYRISCVXAsmParser::
 ParseInstruction(ParseInstructionInfo &Info, StringRef Name, SMLoc NameLoc,
                  OperandVector &Operands) {
 
-  // Create the leading tokens for the mnemonic, split by '.' characters.
-  size_t Start = 0, Next = Name.find('.');
-  StringRef Mnemonic = Name.slice(Start, Next);
-
-  Operands.push_back(MYRISCVXOperand::CreateToken(Mnemonic, NameLoc));
+  Operands.push_back(MYRISCVXOperand::CreateToken(Name, NameLoc));
+  // @} MYRISCVXAsmParser_ParseInstruction_ParseMnemnoic
 
   // Read the remaining operands.
   if (getLexer().isNot(AsmToken::EndOfStatement)) {
