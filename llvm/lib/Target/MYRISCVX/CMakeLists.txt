@@ -21,6 +21,9 @@ tablegen(LLVM MYRISCVXGenAsmMatcher.inc -gen-asm-matcher)  # For MYRISCVX AsmPar
 # @}CMakeLists_AsmMatcher
 
 tablegen(LLVM MYRISCVXGenAsmWriter.inc -gen-asm-writer)
+# @{CMakeLists_DisassemblerTables
+tablegen(LLVM MYRISCVXGenDisassemblerTables.inc -gen-disassembler)
+# @}CMakeLists_DisassemblerTables
 
 # MYRISCVXCommonTableGen must be defined
 add_public_tablegen_target(MYRISCVXCommonTableGen)
@@ -45,4 +48,7 @@ add_llvm_target(MYRISCVXCodeGen
 add_subdirectory(TargetInfo)
 add_subdirectory(MCTargetDesc)
 add_subdirectory(AsmParser)
+# @{CMakeLists_Disassembler
+add_subdirectory(Disassembler)
+# @}CMakeLists_Disassembler
 # @{MYRISCVX_CMakeLists.txt
