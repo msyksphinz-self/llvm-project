@@ -6,12 +6,12 @@
 define dso_local signext i32 @simm_const() #0 {
 ; MYRVX32I-LABEL:simm_const:
 ; MYRVX32I:         # %bb.0:
-; MYRVX32I-NEXT:	addi	x10, zero, 291
+; MYRVX32I-NEXT:	addi	x10, x0, 291
 ; MYRVX32I-NEXT:	ret
 
 ; MYRVX64I-LABEL:simm_const:
 ; MYRVX64I:         # %bb.0:
-; MYRVX64I-NEXT:	addi	x10, zero, 291
+; MYRVX64I-NEXT:	addi	x10, x0, 291
 ; MYRVX64I-NEXT:	ret
 
 entry:

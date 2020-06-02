@@ -9,9 +9,9 @@ define dso_local signext i32 @add_int_O0(i32 signext %arg1, i32 signext %arg2) #
 ; MYRVX32I-LABEL:add_int_O0:
 ; MYRVX32I:         # %bb.0:
 ; MYRVX32I-NEXT:addi    x2, x2, -16
-; MYRVX32I-NEXT:addi    x12, zero, 10
+; MYRVX32I-NEXT:addi    x12, x0, 10
 ; MYRVX32I-NEXT:sw      x12, 4(x2)
-; MYRVX32I-NEXT:addi    x12, zero, 20
+; MYRVX32I-NEXT:addi    x12, x0, 20
 ; MYRVX32I-NEXT:sw      x12, 0(x2)
 ; MYRVX32I-NEXT:sw      x11, 8(x2)
 ; MYRVX32I-NEXT:sw      x10, 12(x2)
@@ -23,9 +23,9 @@ define dso_local signext i32 @add_int_O0(i32 signext %arg1, i32 signext %arg2) #
 ; MYRVX64I-LABEL:add_int_O0:
 ; MYRVX64I:             # %bb.0:                                # %entry
 ; MYRVX64I-NEXT:        addi    x2, x2, -16
-; MYRVX64I-NEXT:        addi    x12, zero, 10
+; MYRVX64I-NEXT:        addi    x12, x0, 10
 ; MYRVX64I-NEXT:        sw      x12, 4(x2)
-; MYRVX64I-NEXT:        addi    x12, zero, 20
+; MYRVX64I-NEXT:        addi    x12, x0, 20
 ; MYRVX64I-NEXT:        sw      x12, 0(x2)
 ; MYRVX64I-NEXT:        sw      x11, 8(x2)
 ; MYRVX64I-NEXT:        sw      x10, 12(x2)

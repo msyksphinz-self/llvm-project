@@ -55,10 +55,10 @@ define dso_local void @store_memory_test() #0 {
 ; MYRVX32I:     # %bb.0:
 ; MYRVX32I-NEXT:    lui x10, 1
 ; MYRVX32I-NEXT:	addi    x11, x10, 568
-; MYRVX32I-NEXT:	addi    x12, zero, 0
+; MYRVX32I-NEXT:	addi    x12, x0, 0
 ; MYRVX32I-NEXT:	sw  x12, 0(x11)
 ; MYRVX32I-NEXT:	addi    x10, x10, 564
-; MYRVX32I-NEXT:	addi    x13, zero, 1
+; MYRVX32I-NEXT:	addi    x13, x0, 1
 ; MYRVX32I-NEXT:	sw  x13, 0(x10)
 ; MYRVX32I-NEXT:	sw  x13, 0(x10)
 ; MYRVX32I-NEXT:	sh  x13, 0(x10)
@@ -74,7 +74,7 @@ define dso_local void @store_memory_test() #0 {
 ; MYRVX64I:         # %bb.0:
 ; MYRVX64I-NEXT:    lui x10, 1
 ; MYRVX64I-NEXT:    addiw    x10, x10, 564
-; MYRVX64I-NEXT:    addi    x11, zero, 1
+; MYRVX64I-NEXT:    addi    x11, x0, 1
 ; MYRVX64I-NEXT:    sd  x11, 0(x10)
 ; MYRVX64I-NEXT:    sw  x11, 0(x10)
 ; MYRVX64I-NEXT:    sh  x11, 0(x10)

@@ -44,7 +44,7 @@ define dso_local signext i32 @sum_array(i32* nocapture readonly %array, i32 sign
 
 ; MYRVX64I_STATIC_MEDLOW-LABEL:sum_array:
 ; MYRVX64I_STATIC_MEDLOW:        # %bb.0:
-; MYRVX64I_STATIC_MEDLOW-NEXT:	addi	x14, zero, 2
+; MYRVX64I_STATIC_MEDLOW-NEXT:	addi	x14, x0, 2
 ; MYRVX64I_STATIC_MEDLOW-NEXT:	sll	x11, x11, x14
 ; MYRVX64I_STATIC_MEDLOW-NEXT:	add	x11, x10, x11
 ; MYRVX64I_STATIC_MEDLOW-NEXT:	lw	x11, 0(x11)
@@ -60,7 +60,7 @@ define dso_local signext i32 @sum_array(i32* nocapture readonly %array, i32 sign
 
 ; MYRVX64I_STATIC_MEDANY-LABEL:sum_array:
 ; MYRVX64I_STATIC_MEDANY:        # %bb.0:
-; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x14, zero, 2
+; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x14, x0, 2
 ; MYRVX64I_STATIC_MEDANY-NEXT:	sll	x11, x11, x14
 ; MYRVX64I_STATIC_MEDANY-NEXT:	add	x11, x10, x11
 ; MYRVX64I_STATIC_MEDANY-NEXT:	lw	x11, 0(x11)

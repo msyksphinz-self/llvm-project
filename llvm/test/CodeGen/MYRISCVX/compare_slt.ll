@@ -13,7 +13,7 @@ define dso_local signext i32 @compare_slt(i32 signext %a, i32 signext %b) local_
 ;MYRVX32I-LABEL:compare_slt:
 ;MYRVX32I:     # %bb.0:
 ;MYRVX32I-NEXT:	xor	x12, x10, x11
-;MYRVX32I-NEXT:	sltu	x13, zero, x12
+;MYRVX32I-NEXT:	sltu	x13, x0, x12
 ;MYRVX32I-NEXT:	andi	x13, x13, 1
 ;MYRVX32I-NEXT:	sltiu	x12, x12, 1
 ;MYRVX32I-NEXT:	andi	x12, x12, 1
@@ -36,7 +36,7 @@ define dso_local signext i32 @compare_slt(i32 signext %a, i32 signext %b) local_
 ;MYRVX64I-LABEL:compare_slt:
 ;MYRVX64I:      # %bb.0:
 ;MYRVX64I-NEXT:	xor	x12, x10, x11
-;MYRVX64I-NEXT:	sltu	x13, zero, x12
+;MYRVX64I-NEXT:	sltu	x13, x0, x12
 ;MYRVX64I-NEXT:	andi	x13, x13, 1
 ;MYRVX64I-NEXT:	sltiu	x12, x12, 1
 ;MYRVX64I-NEXT:	andi	x12, x12, 1

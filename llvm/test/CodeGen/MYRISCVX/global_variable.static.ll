@@ -38,7 +38,7 @@ define dso_local void @update_global() local_unnamed_addr #0 {
 ; MYRVX32I_STATIC_MEDANY-LABEL:update_global:
 ; MYRVX32I_STATIC_MEDANY:      # %bb.0:
 ; MYRVX32I_STATIC_MEDANY-NEXT:	auipc	x10, %pcrel_hi(global_val)
-; MYRVX32I_STATIC_MEDANY-NEXT:	addi	x10, x10, %lo(global_val)
+; MYRVX32I_STATIC_MEDANY-NEXT:	addi	x10, x10, %pcrel_lo(global_val)
 ; MYRVX32I_STATIC_MEDANY-NEXT:	lw	x11, 0(x10)
 ; MYRVX32I_STATIC_MEDANY-NEXT:	addi	x11, x11, 1
 ; MYRVX32I_STATIC_MEDANY-NEXT:	sw	x11, 0(x10)
@@ -47,7 +47,7 @@ define dso_local void @update_global() local_unnamed_addr #0 {
 ; MYRVX64I_STATIC_MEDANY-LABEL:update_global:
 ; MYRVX64I_STATIC_MEDANY:      # %bb.0:
 ; MYRVX64I_STATIC_MEDANY-NEXT:	auipc	x10, %pcrel_hi(global_val)
-; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x10, x10, %lo(global_val)
+; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x10, x10, %pcrel_lo(global_val)
 ; MYRVX64I_STATIC_MEDANY-NEXT:	lw	x11, 0(x10)
 ; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x11, x11, 1
 ; MYRVX64I_STATIC_MEDANY-NEXT:	sw	x11, 0(x10)

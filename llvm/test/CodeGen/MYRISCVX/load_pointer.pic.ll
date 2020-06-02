@@ -17,7 +17,7 @@ define signext i32 @local_pointer() #0 {
 ; MYRVX32I_PIC_MEDLOW-LABEL:	local_pointer:
 ; MYRVX32I_PIC_MEDLOW:       	# %bb.0:
 ; MYRVX32I_PIC_MEDLOW-NEXT:		addi	x2, x2, -8
-; MYRVX32I_PIC_MEDLOW-NEXT:		addi	x10, zero, 3
+; MYRVX32I_PIC_MEDLOW-NEXT:		addi	x10, x0, 3
 ; MYRVX32I_PIC_MEDLOW-NEXT:		sw	x10, 4(x2)
 ; MYRVX32I_PIC_MEDLOW-NEXT:		addi	x10, x2, 4
 ; MYRVX32I_PIC_MEDLOW-NEXT:		sw	x10, 0(x2)
@@ -29,7 +29,7 @@ define signext i32 @local_pointer() #0 {
 ; MYRVX32I_PIC_MEDANY-LABEL:	local_pointer:
 ; MYRVX32I_PIC_MEDANY:	    # %bb.0:
 ; MYRVX32I_PIC_MEDANY-NEXT:		addi	x2, x2, -8
-; MYRVX32I_PIC_MEDANY-NEXT:		addi	x10, zero, 3
+; MYRVX32I_PIC_MEDANY-NEXT:		addi	x10, x0, 3
 ; MYRVX32I_PIC_MEDANY-NEXT:		sw	x10, 4(x2)
 ; MYRVX32I_PIC_MEDANY-NEXT:		addi	x10, x2, 4
 ; MYRVX32I_PIC_MEDANY-NEXT:		sw	x10, 0(x2)
@@ -41,7 +41,7 @@ define signext i32 @local_pointer() #0 {
 ; MYRVX64I_PIC_MEDLOW-LABEL:	local_pointer:
 ; MYRVX64I_PIC_MEDLOW:	    # %bb.0:
 ; MYRVX64I_PIC_MEDLOW-NEXT:		addi	x2, x2, -16
-; MYRVX64I_PIC_MEDLOW-NEXT:		addi	x10, zero, 3
+; MYRVX64I_PIC_MEDLOW-NEXT:		addi	x10, x0, 3
 ; MYRVX64I_PIC_MEDLOW-NEXT:		sw	x10, 12(x2)
 ; MYRVX64I_PIC_MEDLOW-NEXT:		addi	x10, x2, 12
 ; MYRVX64I_PIC_MEDLOW-NEXT:		sd	x10, 0(x2)
@@ -53,7 +53,7 @@ define signext i32 @local_pointer() #0 {
 ; MYRVX64I_PIC_MEDANY-LABEL:	local_pointer:
 ; MYRVX64I_PIC_MEDANY:	    # %bb.0:
 ; MYRVX64I_PIC_MEDANY-NEXT:		addi	x2, x2, -16
-; MYRVX64I_PIC_MEDANY-NEXT:		addi	x10, zero, 3
+; MYRVX64I_PIC_MEDANY-NEXT:		addi	x10, x0, 3
 ; MYRVX64I_PIC_MEDANY-NEXT:		sw	x10, 12(x2)
 ; MYRVX64I_PIC_MEDANY-NEXT:		addi	x10, x2, 12
 ; MYRVX64I_PIC_MEDANY-NEXT:		sd	x10, 0(x2)

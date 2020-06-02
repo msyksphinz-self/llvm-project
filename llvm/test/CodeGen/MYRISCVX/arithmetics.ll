@@ -13,11 +13,11 @@ define dso_local signext i32 @arithmetics() #0 {
 ;MYRVX32I-LABEL:arithmetics:
 ;MYRVX32I:      # %bb.0:
 ;MYRVX32I-NEXT:	addi	x2, x2, -56
-;MYRVX32I-NEXT:	addi	x10, zero, 5
+;MYRVX32I-NEXT:	addi	x10, x0, 5
 ;MYRVX32I-NEXT:	sw	x10, 52(x2)
-;MYRVX32I-NEXT:	addi	x10, zero, 2
+;MYRVX32I-NEXT:	addi	x10, x0, 2
 ;MYRVX32I-NEXT:	sw	x10, 48(x2)
-;MYRVX32I-NEXT:	addi	x10, zero, -5
+;MYRVX32I-NEXT:	addi	x10, x0, -5
 ;MYRVX32I-NEXT:	sw	x10, 44(x2)
 ;MYRVX32I-NEXT:	lw	x10, 52(x2)
 ;MYRVX32I-NEXT:	lw	x11, 48(x2)
@@ -44,21 +44,21 @@ define dso_local signext i32 @arithmetics() #0 {
 ;MYRVX32I-NEXT:	srli	x10, x10, 30
 ;MYRVX32I-NEXT:	sw	x10, 8(x2)
 ;MYRVX32I-NEXT:	lw	x10, 52(x2)
-;MYRVX32I-NEXT:	addi	x11, zero, 1
+;MYRVX32I-NEXT:	addi	x11, x0, 1
 ;MYRVX32I-NEXT:	sll	x10, x11, x10
 ;MYRVX32I-NEXT:	sw	x10, 20(x2)
 ;MYRVX32I-NEXT:	lw	x10, 48(x2)
 ;MYRVX32I-NEXT:	sll	x10, x11, x10
 ;MYRVX32I-NEXT:	sw	x10, 4(x2)
 ;MYRVX32I-NEXT:	lw	x10, 52(x2)
-;MYRVX32I-NEXT:	addi	x11, zero, 128
+;MYRVX32I-NEXT:	addi	x11, x0, 128
 ;MYRVX32I-NEXT:	srl	x10, x11, x10
 ;MYRVX32I-NEXT:	sw	x10, 16(x2)
 ;MYRVX32I-NEXT:	lw	x10, 48(x2)
 ;MYRVX32I-NEXT:	lw	x11, 52(x2)
 ;MYRVX32I-NEXT:	sra	x10, x10, x11
 ;MYRVX32I-NEXT:	sw	x10, 0(x2)
-;MYRVX32I-NEXT:	addi	x10, zero, 0
+;MYRVX32I-NEXT:	addi	x10, x0, 0
 ;MYRVX32I-NEXT:	addi	x2, x2, 56
 ;MYRVX32I-NEXT:	ret
 
@@ -66,11 +66,11 @@ define dso_local signext i32 @arithmetics() #0 {
 ;MYRVX64I-LABEL:arithmetics:
 ;MYRVX64I:      # %bb.0:
 ;MYRVX64I-NEXT:	addi	x2, x2, -56
-;MYRVX64I-NEXT:	addi	x10, zero, 5
+;MYRVX64I-NEXT:	addi	x10, x0, 5
 ;MYRVX64I-NEXT:	sw	x10, 52(x2)
-;MYRVX64I-NEXT:	addi	x10, zero, 2
+;MYRVX64I-NEXT:	addi	x10, x0, 2
 ;MYRVX64I-NEXT:	sw	x10, 48(x2)
-;MYRVX64I-NEXT:	addi	x11, zero, 1
+;MYRVX64I-NEXT:	addi	x11, x0, 1
 ;MYRVX64I-NEXT:	slli	x12, x11, 32
 ;MYRVX64I-NEXT:	addi	x12, x12, -5
 ;MYRVX64I-NEXT:	sw	x12, 44(x2)
@@ -96,7 +96,7 @@ define dso_local signext i32 @arithmetics() #0 {
 ;MYRVX64I-NEXT:	srl	x10, x12, x10
 ;MYRVX64I-NEXT:	sw	x10, 24(x2)
 ;MYRVX64I-NEXT:	lwu	x10, 44(x2)
-;MYRVX64I-NEXT:	addi	x12, zero, 30
+;MYRVX64I-NEXT:	addi	x12, x0, 30
 ;MYRVX64I-NEXT:	srl	x10, x10, x12
 ;MYRVX64I-NEXT:	sw	x10, 8(x2)
 ;MYRVX64I-NEXT:	lwu	x10, 52(x2)
@@ -106,14 +106,14 @@ define dso_local signext i32 @arithmetics() #0 {
 ;MYRVX64I-NEXT:	sll	x10, x11, x10
 ;MYRVX64I-NEXT:	sw	x10, 4(x2)
 ;MYRVX64I-NEXT:	lwu	x10, 52(x2)
-;MYRVX64I-NEXT:	addi	x11, zero, 128
+;MYRVX64I-NEXT:	addi	x11, x0, 128
 ;MYRVX64I-NEXT:	srl	x10, x11, x10
 ;MYRVX64I-NEXT:	sw	x10, 16(x2)
 ;MYRVX64I-NEXT:	lw	x10, 48(x2)
 ;MYRVX64I-NEXT:	lwu	x11, 52(x2)
 ;MYRVX64I-NEXT:	sra	x10, x10, x11
 ;MYRVX64I-NEXT:	sw	x10, 0(x2)
-;MYRVX64I-NEXT:	addi	x10, zero, 0
+;MYRVX64I-NEXT:	addi	x10, x0, 0
 ;MYRVX64I-NEXT:	addi	x2, x2, 56
 ;MYRVX64I-NEXT:	ret
 

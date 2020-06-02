@@ -16,11 +16,11 @@ define dso_local i64 @func_S32(i64 %elem.coerce) local_unnamed_addr #0 {
 ; MYRVX64I_STATIC_MEDANY:       # %bb.0:
 ; MYRVX64I_STATIC_MEDANY-NEXT:	slli	x11, x10, 32
 ; MYRVX64I_STATIC_MEDANY-NEXT:	srli	x11, x11, 32
-; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x12, zero, 16
+; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x12, x0, 16
 ; MYRVX64I_STATIC_MEDANY-NEXT:	srl	x12, x11, x12
 ; MYRVX64I_STATIC_MEDANY-NEXT:	andi	x10, x10, 255
 ; MYRVX64I_STATIC_MEDANY-NEXT:	add	x10, x12, x10
-; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x12, zero, 8
+; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x12, x0, 8
 ; MYRVX64I_STATIC_MEDANY-NEXT:	srl	x11, x11, x12
 ; MYRVX64I_STATIC_MEDANY-NEXT:	andi	x11, x11, 255
 ; MYRVX64I_STATIC_MEDANY-NEXT:	add	x10, x10, x11
@@ -47,7 +47,7 @@ define dso_local i64 @func_S64(i64 %elem.coerce) local_unnamed_addr #0 {
 ; MYRVX64I_STATIC_MEDANY-NEXT:	sd	x1, 24(x2)              # 8-byte Folded Spill
 ; MYRVX64I_STATIC_MEDANY-NEXT:	sd	x2, 16(x2)              # 8-byte Folded Spill
 ; MYRVX64I_STATIC_MEDANY-NEXT:	sd	x9, 8(x2)               # 8-byte Folded Spill
-; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x11, zero, 32
+; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x11, x0, 32
 ; MYRVX64I_STATIC_MEDANY-NEXT:	srl	x9, x10, x11
 ; MYRVX64I_STATIC_MEDANY-NEXT:	slli	x10, x10, 32
 ; MYRVX64I_STATIC_MEDANY-NEXT:	srli	x10, x10, 32
@@ -155,11 +155,11 @@ define dso_local signext i32 @func_S256_caller() local_unnamed_addr #2 {
 ; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x2, x2, -48
 ; MYRVX64I_STATIC_MEDANY-NEXT:	sd	x1, 40(x2)              # 8-byte Folded Spill
 ; MYRVX64I_STATIC_MEDANY-NEXT:	sd	x2, 32(x2)              # 8-byte Folded Spill
-; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x10, zero, 225
+; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x10, x0, 225
 ; MYRVX64I_STATIC_MEDANY-NEXT:	slli	x10, x10, 34
 ; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x10, x10, 800
 ; MYRVX64I_STATIC_MEDANY-NEXT:	sd	x10, 24(x2)
-; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x10, zero, 175
+; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x10, x0, 175
 ; MYRVX64I_STATIC_MEDANY-NEXT:	slli	x10, x10, 34
 ; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x10, x10, 600
 ; MYRVX64I_STATIC_MEDANY-NEXT:	sd	x10, 16(x2)
