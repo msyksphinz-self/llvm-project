@@ -142,6 +142,7 @@ void MYRISCVXDAGToDAGISel::Select(SDNode *Node) {
 // @}MYRISCVXISelDAGToDAG_cpp_Select
 
 
+// @{ MYRISCVXDAGToDAGISel_SelectInlineAsmMemoryOperand
 bool MYRISCVXDAGToDAGISel::SelectInlineAsmMemoryOperand(
     const SDValue &Op, unsigned ConstraintID, std::vector<SDValue> &OutOps) {
   switch (ConstraintID) {
@@ -150,15 +151,13 @@ bool MYRISCVXDAGToDAGISel::SelectInlineAsmMemoryOperand(
     // operand and need no special handling.
     OutOps.push_back(Op);
     return false;
-  case InlineAsm::Constraint_A:
-    OutOps.push_back(Op);
-    return false;
   default:
     break;
   }
 
   return true;
 }
+// @} MYRISCVXDAGToDAGISel_SelectInlineAsmMemoryOperand
 
 
 void MYRISCVXDAGToDAGISel::processFunctionAfterISel(MachineFunction &MF) {

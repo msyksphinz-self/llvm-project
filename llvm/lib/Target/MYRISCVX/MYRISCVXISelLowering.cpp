@@ -341,6 +341,7 @@ emitSelectPseudo(MachineInstr &MI,
 // @} MYRISCVXISelLowering_emitSelectPseudo
 
 
+// @{ MYRISCVXTargetLowering_getRegForInlineAsmConstraint
 std::pair<unsigned, const TargetRegisterClass *>
 MYRISCVXTargetLowering::getRegForInlineAsmConstraint(const TargetRegisterInfo *TRI,
                                                   StringRef Constraint,
@@ -358,59 +359,7 @@ MYRISCVXTargetLowering::getRegForInlineAsmConstraint(const TargetRegisterInfo *T
 
   return TargetLowering::getRegForInlineAsmConstraint(TRI, Constraint, VT);
 }
-
-unsigned
-MYRISCVXTargetLowering::getInlineAsmMemConstraint(StringRef ConstraintCode) const {
-  // Currently only support length 1 constraints.
-  if (ConstraintCode.size() == 1) {
-    switch (ConstraintCode[0]) {
-    case 'A':
-      return InlineAsm::Constraint_A;
-    default:
-      break;
-    }
-  }
-
-  return TargetLowering::getInlineAsmMemConstraint(ConstraintCode);
-}
-
-void MYRISCVXTargetLowering::LowerAsmOperandForConstraint(
-    SDValue Op, std::string &Constraint, std::vector<SDValue> &Ops,
-    SelectionDAG &DAG) const {
-  // Currently only support length 1 constraints.
-  if (Constraint.length() == 1) {
-    switch (Constraint[0]) {
-    case 'I':
-      // Validate & create a 12-bit signed immediate operand.
-      if (auto *C = dyn_cast<ConstantSDNode>(Op)) {
-        uint64_t CVal = C->getSExtValue();
-        if (isInt<12>(CVal))
-          Ops.push_back(
-              DAG.getTargetConstant(CVal, SDLoc(Op), Subtarget.getXLenVT()));
-      }
-      return;
-    case 'J':
-      // Validate & create an integer zero operand.
-      if (auto *C = dyn_cast<ConstantSDNode>(Op))
-        if (C->getZExtValue() == 0)
-          Ops.push_back(
-              DAG.getTargetConstant(0, SDLoc(Op), Subtarget.getXLenVT()));
-      return;
-    case 'K':
-      // Validate & create a 5-bit unsigned immediate operand.
-      if (auto *C = dyn_cast<ConstantSDNode>(Op)) {
-        uint64_t CVal = C->getZExtValue();
-        if (isUInt<5>(CVal))
-          Ops.push_back(
-              DAG.getTargetConstant(CVal, SDLoc(Op), Subtarget.getXLenVT()));
-      }
-      return;
-    default:
-      break;
-    }
-  }
-  TargetLowering::LowerAsmOperandForConstraint(Op, Constraint, Ops, DAG);
-}
+// @} MYRISCVXTargetLowering_getRegForInlineAsmConstraint
 
 
 // @{ MYRISCVXISelLowering_EmitInstrWithCustomInserter

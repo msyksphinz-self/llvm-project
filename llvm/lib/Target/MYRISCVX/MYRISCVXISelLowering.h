@@ -222,15 +222,9 @@ namespace llvm {
 
     static unsigned getBranchOpcodeForIntCondCode (ISD::CondCode CC);
 
-    unsigned getInlineAsmMemConstraint(StringRef ConstraintCode) const override;
-
     std::pair<unsigned, const TargetRegisterClass *>
     getRegForInlineAsmConstraint(const TargetRegisterInfo *TRI,
                                  StringRef Constraint, MVT VT) const override;
-
-    void LowerAsmOperandForConstraint(SDValue Op, std::string &Constraint,
-                                      std::vector<SDValue> &Ops,
-                                      SelectionDAG &DAG) const override;
 
     MachineBasicBlock *
     EmitInstrWithCustomInserter(MachineInstr &MI,
