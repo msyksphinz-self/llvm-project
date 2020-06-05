@@ -92,6 +92,9 @@ class MYRISCVXAsmParser : public MCTargetAsmParser {
 
   OperandMatchResultTy parseMemOperand(OperandVector &);
 
+  unsigned validateTargetOperandClass(MCParsedAsmOperand &Op,
+                                      unsigned Kind) override;
+
   bool ParseOperand(OperandVector &Operands, StringRef Mnemonic);
 
   bool reportParseError(StringRef ErrorMsg);
@@ -447,6 +450,25 @@ bool MYRISCVXAsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
   return true;
 }
 // @} MYRISCVXAsmParser_MatchAndEmitInstruction
+
+
+unsigned MYRISCVXAsmParser::validateTargetOperandClass(MCParsedAsmOperand &AsmOp,
+                                                       unsigned Kind) {
+  MYRISCVXOperand &Op = static_cast<MYRISCVXOperand &>(AsmOp);
+  if (!Op.isReg())
+    return Match_InvalidOperand;
+
+  Register Reg = Op.getReg();
+  bool IsRegFPR64 =
+      MYRISCVXMCRegisterClasses[MYRISCVX::FPR_DRegClassID].contains(Reg);
+
+  // As the parser couldn't differentiate an FPR32 from an FPR64, coerce the
+  // register from FPR64 to FPR32 or FPR64C to FPR32C if necessary.
+  if (IsRegFPR64 && Kind == MCK_FPR_S) {
+    return Match_Success;
+  }
+  return Match_InvalidOperand;
+}
 
 
 bool MYRISCVXAsmParser::ParseRegister(unsigned &RegNo, SMLoc &StartLoc,

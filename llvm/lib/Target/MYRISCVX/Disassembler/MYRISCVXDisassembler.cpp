@@ -62,6 +62,19 @@ static DecodeStatus DecodeGPRRegisterClass(MCInst &Inst,
                                            unsigned RegNo,
                                            uint64_t Address,
                                            const void *Decoder);
+
+// @{ MYRISCVXDisassembler_DecodeFPR_declare
+static DecodeStatus DecodeFPR_SRegisterClass(MCInst &Inst,
+                                             unsigned RegNo,
+                                             uint64_t Address,
+                                             const void *Decoder);
+static DecodeStatus DecodeFPR_DRegisterClass(MCInst &Inst,
+                                             unsigned RegNo,
+                                             uint64_t Address,
+                                             const void *Decoder);
+// @} MYRISCVXDisassembler_DecodeFPR_declare
+
+
 template <unsigned N>
 static DecodeStatus decodeImmOperand(MCInst &Inst,
                                      uint64_t Imm,
@@ -176,3 +189,29 @@ static DecodeStatus decodeBranchTarget(MCInst &Inst,
   return MCDisassembler::Success;
 }
 // @} MYRISCVXDisassembler_cpp_decodeBranchTarget
+
+
+// @{ MYRISCVXDisassembler_DecodeFPR
+static DecodeStatus DecodeFPR_SRegisterClass(MCInst &Inst,
+                                             unsigned RegNo,
+                                             uint64_t Address,
+                                             const void *Decoder) {
+  if (RegNo > 32)
+    return MCDisassembler::Fail;
+
+  Inst.addOperand(MCOperand::createReg(MYRISCVX::F0_D + RegNo));
+  return MCDisassembler::Success;
+}
+
+
+static DecodeStatus DecodeFPR_DRegisterClass(MCInst &Inst,
+                                             unsigned RegNo,
+                                             uint64_t Address,
+                                             const void *Decoder) {
+  if (RegNo > 32)
+    return MCDisassembler::Fail;
+
+  Inst.addOperand(MCOperand::createReg(MYRISCVX::F0_S + RegNo));
+  return MCDisassembler::Success;
+}
+// @} MYRISCVXDisassembler_DecodeFPR
