@@ -287,7 +287,6 @@ class AlignedStore<PatFrag Node> :
 }]>;
 //@}MYRISCVXInstrInfo_AlignedLoad_AlignedStore
 
-
 //@{MYRISCVXInstrInfo_SetCC
 // SetCC
 class SetCC_R<bits<7> opcode, bits<3> funct3, bits<7> funct7,
@@ -545,8 +544,10 @@ def truncstorei8_a  : AlignedStore<truncstorei8>;
 def truncstorei16_a : AlignedStore<truncstorei16>;
 def truncstorei32_a : AlignedStore<truncstorei32>;
 
+// @{ MYRISCVXInstrInfo_FloatLoadStore_PatFrags
 def truncstoref32_a : AlignedStore<truncstoref32>;
 def truncstoref64_a : AlignedStore<truncstoref64>;
+// @} MYRISCVXInstrInfo_FloatLoadStore_PatFrags
 //@}MYRISCVXInstrInfo_LoadStore_PatFrags
 
 
@@ -591,12 +592,14 @@ multiclass LoadPattern<PatFrag LoadOp, MYRISCVXInst Inst> {
   def : Pat<(LoadOp (add addr_fi:$rs1, simm12:$simm12)), (Inst addr_fi:$rs1, simm12:$simm12) >;
 }
 
-multiclass StorePattern<PatFrag StoreOp, MYRISCVXInst Inst> {
-  def : Pat<(StoreOp GPR:$rs2, GPR:$rs1)                          , (Inst GPR:$rs2, GPR:$rs1, 0)                 >;
-  def : Pat<(StoreOp GPR:$rs2, addr_fi:$rs1)                      , (Inst GPR:$rs2, addr_fi:$rs1, 0)             >;
-  def : Pat<(StoreOp GPR:$rs2, (add GPR:$rs1, simm12:$simm12))    , (Inst GPR:$rs2, GPR:$rs1, simm12:$simm12)    >;
-  def : Pat<(StoreOp GPR:$rs2, (add addr_fi:$rs1, simm12:$simm12)), (Inst GPR:$rs2, addr_fi:$rs1, simm12:$simm12)>;
+// @{ MYRISCVXInstrInfo_td_MemoryPattern_Define_forFP
+multiclass StorePattern<PatFrag StoreOp, MYRISCVXInst Inst, RegisterClass RC> {
+  def : Pat<(StoreOp RC:$rs2, GPR:$rs1)                          , (Inst RC:$rs2, GPR:$rs1, 0)                 >;
+  def : Pat<(StoreOp RC:$rs2, addr_fi:$rs1)                      , (Inst RC:$rs2, addr_fi:$rs1, 0)             >;
+  def : Pat<(StoreOp RC:$rs2, (add GPR:$rs1, simm12:$simm12))    , (Inst RC:$rs2, GPR:$rs1, simm12:$simm12)    >;
+  def : Pat<(StoreOp RC:$rs2, (add addr_fi:$rs1, simm12:$simm12)), (Inst RC:$rs2, addr_fi:$rs1, simm12:$simm12)>;
 }
+// @} MYRISCVXInstrInfo_td_MemoryPattern_Define_forFP
 // @}MYRISCVXInstrInfo_td_MemoryPattern_Define
 
 // @{MYRISCVXInstrInfo_td_MemoryPattern_Impl
@@ -608,9 +611,9 @@ defm : LoadPattern<load        , LW>, Requires<[IsRV32]>;
 defm : LoadPattern<zextloadi8  , LBU>;
 defm : LoadPattern<zextloadi16 , LHU>;
 
-defm : StorePattern<truncstorei8  , SB>;
-defm : StorePattern<truncstorei16 , SH>;
-defm : StorePattern<store         , SW>, Requires<[IsRV32]>;
+defm : StorePattern<truncstorei8  , SB, GPR>;
+defm : StorePattern<truncstorei16 , SH, GPR>;
+defm : StorePattern<store         , SW, GPR>, Requires<[IsRV32]>;
 // @}MYRISCVXInstrInfo_td_MemoryPattern_Impl
 
 
@@ -627,10 +630,25 @@ let Predicates = [IsRV64] in {
   defm : LoadPattern<load        , LD>;
 
   /// Stores
-  defm : StorePattern<truncstorei32 , SW>;
-  defm : StorePattern<store         , SD>;
+  defm : StorePattern<truncstorei32 , SW, GPR>;
+  defm : StorePattern<store         , SD, GPR>;
 } // Predicates = [IsRV64]
 // @}MYRISCVXInstrInfo_td_MemoryPattern64
+
+
+// @{ MYRISCVXInstrInfo_FloatLoadStore
+def FLW : LoadMemory <0b0000111, 0b010, "flw", FPR_S>;
+def FSW : StoreMemory<0b0100111, 0b010, "fsw", FPR_S>;
+
+defm : LoadPattern <load_a, FLW>;
+defm : StorePattern<store,  FSW, FPR_S>;
+
+def FLD : LoadMemory <0b0000111, 0b011, "fld", FPR_D>;
+def FSD : StoreMemory<0b0100111, 0b011, "fsd", FPR_D>;
+
+defm : LoadPattern <load_a, FLD>;
+defm : StorePattern<store , FSD, FPR_D>;
+// @} MYRISCVXInstrInfo_FloatLoadStore
 
 
 //@{MYRISCVXInstrInfo_SLTPatterns
@@ -707,7 +725,6 @@ class LoadImm32< string instr_asm, Operand Od, RegisterClass RC> :
                      !strconcat(instr_asm, "\t$rd, $imm32")> ;
 def LoadImm32Reg : LoadImm32<"li", shamt, GPR>;
 // @} MYRISCVXInstrInfo_LoadImm32
-
 // @{ MYRISCVXInstrInfo_LoadAddressImm
 class LoadAddressImm<string instr_asm, Operand Od, RegisterClass RC> :
   MYRISCVXAsmPseudoInst<(outs RC:$rd), (ins Od:$imm32),
