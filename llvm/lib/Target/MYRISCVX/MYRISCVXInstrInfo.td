@@ -731,3 +731,5 @@ class LoadAddressImm<string instr_asm, Operand Od, RegisterClass RC> :
                      !strconcat(instr_asm, "\t$rd, $imm32")> ;
 def LoadAddr32Imm : LoadAddressImm<"la", shamt, GPR>;
 // @} MYRISCVXInstrInfo_LoadAddressImm
+
+include "MYRISCVXInstrInfoFD.td"
