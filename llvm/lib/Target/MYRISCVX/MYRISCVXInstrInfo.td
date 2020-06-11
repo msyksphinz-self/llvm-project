@@ -112,6 +112,10 @@ def HI20 : SDNodeXForm<imm, [{
 def immZExt5 : ImmLeaf<XLenVT, [{return Imm == (Imm & 0x1f);}]>;
 def shamt : Operand<i32>;
 
+
+def uimm5 : Operand<XLenVT>, ImmLeaf<XLenVT, [{return isUInt<5>(Imm);}]>;
+
+
 //@{MYRISCVXInstrInfo_calltarget
 def calltarget : Operand<iPTR> {
   let EncoderMethod = "getJumpTargetOpValue";
@@ -731,5 +735,31 @@ class LoadAddressImm<string instr_asm, Operand Od, RegisterClass RC> :
                      !strconcat(instr_asm, "\t$rd, $imm32")> ;
 def LoadAddr32Imm : LoadAddressImm<"la", shamt, GPR>;
 // @} MYRISCVXInstrInfo_LoadAddressImm
+
+
+//===----------------------------------------------------------------------===//
+// CSR Instructions
+//===----------------------------------------------------------------------===//
+class CSRR<bits<7> opcode, bits<3> funct3, string instr_asm> :
+  MYRISCVX_I<opcode, funct3, (outs GPR:$rd), (ins simm12:$simm12, GPR:$rs1),
+  !strconcat(instr_asm, "\t$rd, $simm12, $rs1"),
+  [], IIAlu> {
+    let isReMaterializable = 1;
+}
+
+class CSRI<bits<7> opcode, bits<3> funct3, string instr_asm> :
+  MYRISCVX_I<opcode, funct3, (outs GPR:$rd), (ins simm12:$simm12, uimm5:$uimm5),
+  !strconcat(instr_asm, "\t$rd, $simm12, $uimm5"),
+  [], IIAlu> {
+    let isReMaterializable = 1;
+}
+
+def CSRRW : CSRR <0b1110011, 0b001, "csrrw">;
+def CSRRS : CSRR <0b1110011, 0b010, "csrrs">;
+def CSRRC : CSRR <0b1110011, 0b011, "csrrc">;
+
+def CSRRWI : CSRI <0b1110011, 0b101, "csrrwi">;
+def CSRRSI : CSRI <0b1110011, 0b110, "csrrsi">;
+def CSRRCI : CSRI <0b1110011, 0b111, "csrrci">;
 
 include "MYRISCVXInstrInfoFD.td"
