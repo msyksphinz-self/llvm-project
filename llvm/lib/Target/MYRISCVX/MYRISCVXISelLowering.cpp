@@ -121,6 +121,18 @@ MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
   // Effectively disable jump table generation.
   setMinimumJumpTableEntries(INT_MAX);
   // @}MYRISCVXTargetLowering_setMinimumJumpTableEntries
+
+  setOperationAction(ISD::ConstantPool, MVT::i32, Custom);
+  setOperationAction(ISD::ConstantPool, MVT::i64, Custom);
+  setOperationAction(ISD::ConstantPool, MVT::f32, Custom);
+  setOperationAction(ISD::ConstantPool, MVT::f64, Custom);
+
+  // RISCV doesn't have extending float->double load/store.  Set LoadExtAction
+  // for f32, f16
+  for (MVT VT : MVT::fp_valuetypes()) {
+    setLoadExtAction(ISD::EXTLOAD, VT, MVT::f32, Expand);
+    setLoadExtAction(ISD::EXTLOAD, VT, MVT::f16, Expand);
+  }
 }
 
 //===----------------------------------------------------------------------===//
@@ -152,6 +164,7 @@ LowerOperation(SDValue Op, SelectionDAG &DAG) const
 {
   switch (Op.getOpcode())
   {
+    case ISD::ConstantPool : return lowerConstantPool(Op, DAG);
     case ISD::SELECT       : return lowerSELECT(Op, DAG);
 // @} MYRISCVXTargetLowering_LowerOperation_SELECT
     case ISD::GlobalAddress: return lowerGlobalAddress(Op, DAG);
@@ -227,6 +240,37 @@ lowerSELECT(SDValue Op, SelectionDAG &DAG) const
 // @} MYRISCVXTargetLowering_lowerSELECT
 
 
+SDValue MYRISCVXTargetLowering::lowerConstantPool(SDValue Op,
+                                                  SelectionDAG &DAG) const {
+  SDLoc DL(Op);
+  EVT Ty = Op.getValueType();
+  ConstantPoolSDNode *N = cast<ConstantPoolSDNode>(Op);
+  int64_t Offset = N->getOffset();
+  MVT XLenVT = Subtarget.getXLenVT();
+
+  if (!isPositionIndependent()) {
+    SDValue Addr = getAddrStatic(N, Ty, DAG);
+    if (Offset) {
+      return DAG.getNode(ISD::ADD, DL, Ty, Addr,
+                         DAG.getConstant(Offset, DL, XLenVT));
+    } else {
+      return Addr;
+    }
+  } else {
+    SDValue got_addr = getAddrGlobalGOT(
+        N, Ty, DAG, MYRISCVXII::MO_GOT_HI20, MYRISCVXII::MO_PCREL_LO12_I,
+        DAG.getEntryNode(),
+        MachinePointerInfo::getGOT(DAG.getMachineFunction()));
+    if (Offset) {
+      got_addr = DAG.getNode(ISD::ADD, DL, Ty, got_addr,
+                             DAG.getConstant(Offset, DL, XLenVT));
+    }
+    return DAG.getLoad(Ty, DL, DAG.getEntryNode(), got_addr,
+                       MachinePointerInfo::getGOT(DAG.getMachineFunction()));
+  }
+}
+
+
 // @{ MYRISCVXTargetLowering_getTargetNode_Global
 SDValue MYRISCVXTargetLowering::getTargetNode(GlobalAddressSDNode *N, EVT Ty,
                                               SelectionDAG &DAG,
@@ -243,6 +287,14 @@ SDValue MYRISCVXTargetLowering::getTargetNode(ExternalSymbolSDNode *N, EVT Ty,
   return DAG.getTargetExternalSymbol(N->getSymbol(), Ty, Flag);
 }
 // @} MYRISCVXTargetLowering_getTargetNode_External
+
+
+SDValue MYRISCVXTargetLowering::getTargetNode(ConstantPoolSDNode *N, EVT Ty,
+                                              SelectionDAG &DAG,
+                                              unsigned Flags) const {
+  return DAG.getTargetConstantPool(N->getConstVal(), Ty, N->getAlignment(),
+                                   N->getOffset(), Flags);
+}
 
 
 // @{ MYRISCVXISelLowering_getBranchOpcodeForIntCondCode
