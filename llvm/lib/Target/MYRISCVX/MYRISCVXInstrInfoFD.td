@@ -159,8 +159,24 @@ def : Pat<(setule FPR_S:$rs1, FPR_S:$rs2), (FLE_S $rs1, $rs2)>;
 def : Pat<(setugt FPR_S:$rs1, FPR_S:$rs2), (FLE_S $rs2, $rs1)>;
 def : Pat<(setuge FPR_S:$rs1, FPR_S:$rs2), (FLT_S $rs2, $rs1)>;
 
+def : Pat<(setoeq FPR_S:$rs1, FPR_S:$rs2), (FEQ_S $rs1, $rs2)>;
+def : Pat<(setolt FPR_S:$rs1, FPR_S:$rs2), (FLT_S $rs1, $rs2)>;
+def : Pat<(setole FPR_S:$rs1, FPR_S:$rs2), (FLE_S $rs1, $rs2)>;
+def : Pat<(setogt FPR_S:$rs1, FPR_S:$rs2), (FLE_S $rs2, $rs1)>;
+def : Pat<(setoge FPR_S:$rs1, FPR_S:$rs2), (FLT_S $rs2, $rs1)>;
+
 def : Pat<(setgt  FPR_S:$rs1, FPR_S:$rs2), (FLE_S $rs2, $rs1)>;
 def : Pat<(setge  FPR_S:$rs1, FPR_S:$rs2), (FLT_S $rs2, $rs1)>;
+
+def : Pat<(seto FPR_S:$rs1, FPR_S:$rs2),
+          (AND (FEQ_S FPR_S:$rs1, FPR_S:$rs1),
+               (FEQ_S FPR_S:$rs2, FPR_S:$rs2))>;
+
+def : Pat<(setuo FPR_S:$rs1, FPR_S:$rs2),
+          (SLTIU (AND (FEQ_S FPR_S:$rs1, FPR_S:$rs1),
+                      (FEQ_S FPR_S:$rs2, FPR_S:$rs2)),
+                 1)>;
+def Select_FPR_S_Using_CC_GPR : SelectCC_rrirr<FPR_S, GPR>;
 // @} MYRISCVXInstrInfoFD_td_FP_Compare_S_Pattern
 
 
@@ -187,8 +203,30 @@ def : Pat<(setule FPR_D:$rs1, FPR_D:$rs2), (FLE_D $rs1, $rs2)>;
 def : Pat<(setugt FPR_D:$rs1, FPR_D:$rs2), (FLE_D $rs2, $rs1)>;
 def : Pat<(setuge FPR_D:$rs1, FPR_D:$rs2), (FLT_D $rs2, $rs1)>;
 
+def : Pat<(setoeq FPR_D:$rs1, FPR_D:$rs2), (FEQ_D $rs1, $rs2)>;
+def : Pat<(setolt FPR_D:$rs1, FPR_D:$rs2), (FLT_D $rs1, $rs2)>;
+def : Pat<(setole FPR_D:$rs1, FPR_D:$rs2), (FLE_D $rs1, $rs2)>;
+def : Pat<(setogt FPR_D:$rs1, FPR_D:$rs2), (FLE_D $rs2, $rs1)>;
+def : Pat<(setoge FPR_D:$rs1, FPR_D:$rs2), (FLT_D $rs2, $rs1)>;
+
 def : Pat<(setgt  FPR_D:$rs1, FPR_D:$rs2), (FLE_D $rs2, $rs1)>;
 def : Pat<(setge  FPR_D:$rs1, FPR_D:$rs2), (FLT_D $rs2, $rs1)>;
+
+// Define pattern expansions for setcc operations which aren't directly
+// handled by a RISC-V instruction and aren't expanded in the SelectionDAG
+// Legalizer.
+
+def : Pat<(seto FPR_D:$rs1, FPR_D:$rs2),
+          (AND (FEQ_D FPR_D:$rs1, FPR_D:$rs1),
+               (FEQ_D FPR_D:$rs2, FPR_D:$rs2))>;
+
+def : Pat<(setuo FPR_D:$rs1, FPR_D:$rs2),
+          (SLTIU (AND (FEQ_D FPR_D:$rs1, FPR_D:$rs1),
+                      (FEQ_D FPR_D:$rs2, FPR_D:$rs2)),
+                 1)>;
+
+def Select_FPR_D_Using_CC_GPR : SelectCC_rrirr<FPR_D, GPR>;
+
 // @} MYRISCVXInstrInfoFD_td_FP_Compare_D_Pattern
 
 // @{ MYRISCVXInstrInfoFD_td_FP_Alias_D
@@ -239,6 +277,10 @@ def FCVT_WU_D : FPSingleOp<0b1010011, 0b000, 0b1100001, 0b00001, "fcvt.wu.d", GP
 def FCLASS_D  : FPSingleOp<0b1010011, 0b001, 0b1110001, 0b00000, "fclass.d",  FPR_D, FPR_D>;
 def FCVT_D_W  : FPSingleOp<0b1010011, 0b000, 0b1101001, 0b00000, "fcvt.d.w",  FPR_D, GPR>;
 def FCVT_D_WU : FPSingleOp<0b1010011, 0b000, 0b1101001, 0b00001, "fcvt.d.wu", FPR_D, GPR>;
+
+def FCVT_S_D  : FPSingleOp<0b1010011, 0b111, 0b0100000, 0b00001, "fcvt.s.d", FPR_S, FPR_D>;
+def FCVT_D_S  : FPSingleOp<0b1010011, 0b111, 0b0100001, 0b00000, "fcvt.d.s", FPR_D, FPR_S>;
+
 // def FMV_W_X   : FPSingleOp<0b1010011, 0b000, 0b1111001, 0b00000, "fmv.w.x",   FPR_D, GPR>;
 // @} MYRISCVXInstrInfoFD_td_FP_Double_Single_TwoOps
 
@@ -255,3 +297,6 @@ def : Pat<(fp_to_uint FPR_D:$rs1), (FCVT_WU_D $rs1)>;
 def : Pat<(sint_to_fp GPR:$rs1), (FCVT_D_W  $rs1)>;
 def : Pat<(uint_to_fp GPR:$rs1), (FCVT_D_WU $rs1)>;
 // @} MYRISCVXInstrInfoFD_td_FP_Double_Single_TwoOps_Patterns
+
+def : Pat<(fpround  FPR_D:$rs1), (FCVT_S_D FPR_D:$rs1)>;
+def : Pat<(fpextend FPR_S:$rs1), (FCVT_D_S FPR_S:$rs1)>;

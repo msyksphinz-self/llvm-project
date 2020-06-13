@@ -128,6 +128,9 @@ MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
   setOperationAction(ISD::SELECT_CC,         MVT::f32,   Expand);
   setOperationAction(ISD::SELECT_CC,         MVT::f64,   Expand);
 
+  setOperationAction(ISD::SELECT,       MVT::f32, Custom);
+  setOperationAction(ISD::SELECT,       MVT::f64, Custom);
+
   setOperationAction(ISD::ConstantPool, MVT::i32, Custom);
   setOperationAction(ISD::ConstantPool, MVT::i64, Custom);
   setOperationAction(ISD::ConstantPool, MVT::f32, Custom);
@@ -429,6 +432,8 @@ MYRISCVXTargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
     default:
       llvm_unreachable("Unexpected instr type to insert");
     case MYRISCVX::Select_GPR_Using_CC_GPR:
+    case MYRISCVX::Select_FPR_S_Using_CC_GPR:
+    case MYRISCVX::Select_FPR_D_Using_CC_GPR:
       return emitSelectPseudo(MI, BB);
   }
 }

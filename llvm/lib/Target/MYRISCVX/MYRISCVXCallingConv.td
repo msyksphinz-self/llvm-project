@@ -121,8 +121,8 @@ def RetCC_LP32 : CallingConv<[
   CCIfType<[i32], CCAssignToReg<[A0, A1]>>,
 
   // Floating-Point are return in registers FA0, FA1
-  CCIfType<[f32], CCAssignToReg<[F10_S]>>,
-  CCIfType<[f64], CCAssignToReg<[F10_D]>>
+  CCIfType<[f32], CCAssignToReg<[F10_S, F11_S]>>,
+  CCIfType<[f64], CCAssignToReg<[F10_D, F11_D]>>
 ]>;
 // @}MYRISCVXCallingConv_RetCC_LP32_FP
 // @}MYRISCVXCallingConv_RetCC_LP32
@@ -136,8 +136,8 @@ def RetCC_LP64 : CallingConv<[
   CCIfType<[i32, i64], CCAssignToReg<[A0, A1]>>,
 
   // Floating-Point are return in registers FA0, FA1
-  CCIfType<[f32], CCAssignToReg<[F10_S]>>,
-  CCIfType<[f64], CCAssignToReg<[F10_D]>>
+  CCIfType<[f32], CCAssignToReg<[F10_S, F11_S]>>,
+  CCIfType<[f64], CCAssignToReg<[F10_D, F11_D]>>
 ]>;
 // @}MYRISCVXCallingConv_RetCC_LP64
 
