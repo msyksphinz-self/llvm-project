@@ -9,11 +9,18 @@
 // This is the top level entry point for the MYRISCVX target.
 //===----------------------------------------------------------------------===//
 
+// @{Add_MYRISCVX_td_target
+
 include "llvm/Target/Target.td"
 
 //===----------------------------------------------------------------------===//
 // Target-dependent interfaces
 //===----------------------------------------------------------------------===//
+
+// @{MYRISCVX_td_RV64_RV32
+def RV64 : HwMode<"+64bit">;
+def RV32 : HwMode<"-64bit">;
+// @}MYRISCVX_td_RV64_RV32
 
 include "MYRISCVXRegisterInfo.td"
 include "MYRISCVXInstrInfo.td"
@@ -28,3 +35,4 @@ def MYRISCVX : Target {
 // def MYRISCVXInstrInfo : InstrInfo as before.
   let InstructionSet = MYRISCVXInstrInfo;
 }
+// @}Add_MYRISCVX_td_target
