@@ -43,7 +43,7 @@ MYRISCVXSubtarget::MYRISCVXSubtarget(const Triple &TT, const std::string &CPU,
     TM(_TM), TargetTriple(TT), TSInfo(),
     InstrInfo(),
     FrameLowering(initializeSubtargetDependencies(CPU, FS, TM)),
-    TLInfo(TM, *this), RegInfo(*this) {
+    TLInfo(TM, *this), RegInfo(*this, getHwMode()) {
 }
 
 
