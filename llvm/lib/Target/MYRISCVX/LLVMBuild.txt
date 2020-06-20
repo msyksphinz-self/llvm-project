@@ -30,12 +30,16 @@ parent = Target
 # component_1 is a Library type and name is MYRISCVXCodeGen. After build it will
 #  in lib/libLLVMMYRISCVXCodeGen.a of your build command directory.
 type = Library
+# Please enable asmprinter
+has_asmprinter = 1
+
 name = MYRISCVXCodeGen
 parent = MYRISCVX
 required_libraries =
   CodeGen Core MC
   MYRISCVXDesc
   MYRISCVXInfo
+  AsmPrinter
   SelectionDAG
   Support
   Target
