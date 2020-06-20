@@ -23,6 +23,8 @@ class Triple;
 Target &getTheMYRISCVX32Target();
 Target &getTheMYRISCVX64Target();
 
+} // End llvm namespace
+
 // @{ MYRISCVXMC_TargetDesc_h_AddInclude
 // Defines symbolic names for MYRISCVX registers. This defines a mapping from
 // register name to register number.
@@ -37,7 +39,5 @@ Target &getTheMYRISCVX64Target();
 #include "MYRISCVXGenSubtargetInfo.inc"
 // @} MYRISCVXMC_TargetDesc_h_AddInclude
 
-
-} // End llvm namespace
 
 #endif
