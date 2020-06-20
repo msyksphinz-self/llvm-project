@@ -5,7 +5,12 @@ set(LLVM_TARGET_DEFINITIONS MYRISCVX.td)
 #  your hand code C++ files.
 # MYRISCVXGenRegisterInfo.inc came from MYRISCVXRegisterInfo.td, MYRISCVXGenInstrInfo.inc
 #  came from MYRISCVXInstrInfo.td.
+# @{MYRISCVX_CMakeLists_TableGen
 tablegen(LLVM MYRISCVXGenRegisterInfo.inc -gen-register-info)
+tablegen(LLVM MYRISCVXGenInstrInfo.inc -gen-instr-info)
+tablegen(LLVM MYRISCVXGenSubtargetInfo.inc -gen-subtarget)
+tablegen(LLVM MYRISCVXGenMCPseudoLowering.inc -gen-pseudo-lowering)
+# @}MYRISCVX_CMakeLists_TableGen
 
 # MYRISCVXCommonTableGen must be defined
 add_public_tablegen_target(MYRISCVXCommonTableGen)
