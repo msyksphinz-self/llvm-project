@@ -33,6 +33,13 @@ def RV64 : HwMode<"+64bit">;    // MYRISCVX64用のスイッチを定義
 def RV32 : HwMode<"-64bit">;    // MYRISCVX32用のスイッチを定義
 // @} MYRISCVX_td_RV64_RV32
 
+// @{ MYRISCVX_td_IsRV64
+def IsRV64 : Predicate<"Subtarget->is64Bit()">,
+                       AssemblerPredicate<"FeatureRV64">;
+def IsRV32 : Predicate<"!Subtarget->is64Bit()">,
+                       AssemblerPredicate<"!FeatureRV64">;
+// @} MYRISCVX_td_IsRV64
+
 include "MYRISCVXRegisterInfo.td"   // レジスタ定義を含んだtdファイル
 include "MYRISCVXSchedule.td"
 include "MYRISCVXInstrInfo.td"      // 命令定義を含んだtdファイル
