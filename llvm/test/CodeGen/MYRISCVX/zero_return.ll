@@ -6,10 +6,12 @@
 define i32 @zero_return() nounwind {
 ; MYRVX32I-LABEL: zero_return:
 ; MYRVX32I:       # %bb.0:
+; MYRVX32I:         addi    x10, x0, 0
 ; MYRVX32I-NEXT:    ret
 
 ; MYRVX64I-LABEL: zero_return:
 ; MYRVX64I:       # %bb.0:
+; MYRVX64I:         addi    x10, x0, 0
 ; MYRVX64I-NEXT:    ret
 entry:
   ret i32 0
