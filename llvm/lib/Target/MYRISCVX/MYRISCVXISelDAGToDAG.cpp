@@ -69,6 +69,9 @@ bool MYRISCVXDAGToDAGISel::SelectAddrFI(SDValue Addr, SDValue &Base) {
 // @{ MYRISCVXISelDAGToDAG_cpp_Select
 void MYRISCVXDAGToDAGISel::Select(SDNode *Node) {
   unsigned Opcode = Node->getOpcode();
+  MVT XLenVT = Subtarget->getXLenVT();
+  SDLoc DL(Node);
+  EVT VT = Node->getValueType(0);
 
   LLVM_DEBUG(errs() << "Selecting: "; Node->dump(CurDAG); errs() << "\n");
 
@@ -82,6 +85,15 @@ void MYRISCVXDAGToDAGISel::Select(SDNode *Node) {
   switch(Opcode) {
     default: break;
 
+      // @{ MYRISCVXISelDAGToDAG_cpp_Select_FrameIndex
+    case ISD::FrameIndex: {
+      SDValue Imm = CurDAG->getTargetConstant(0, DL, XLenVT);
+      int FI = cast<FrameIndexSDNode>(Node)->getIndex();
+      SDValue TFI = CurDAG->getTargetFrameIndex(FI, VT);
+      ReplaceNode(Node, CurDAG->getMachineNode(MYRISCVX::ADDI, DL, VT, TFI, Imm));
+      return;
+      // @} MYRISCVXISelDAGToDAG_cpp_Select_FrameIndex
+    }
   }
 
   // Select the default instruction
