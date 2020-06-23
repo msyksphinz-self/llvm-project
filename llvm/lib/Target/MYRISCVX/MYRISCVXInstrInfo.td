@@ -210,6 +210,30 @@ class AlignedStore<PatFrag Node> :
 }]>;
 //@} MYRISCVXInstrInfo_AlignedLoad_AlignedStore
 
+
+// @{ MYRISCVXInstrInfo_SetCC
+// SetCC
+class SetCC_R<bits<7> opcode, bits<3> funct3, bits<7> funct7,
+              string instr_asm, PatFrag cond_op,
+              RegisterClass RC> :
+  MYRISCVX_R<opcode, funct3, funct7, (outs RC:$rd), (ins RC:$rs1, RC:$rs2),
+             !strconcat(instr_asm, "\t$rd, $rs1, $rs2"),
+             [(set GPR:$rd, (cond_op RC:$rs1, RC:$rs2))], IIAlu> {
+               let isReMaterializable = 1;
+}
+
+
+class SetCC_I<bits<7> opcode, bits<3> funct3,
+              string instr_asm, PatFrag cond_op,
+              Operand Od, RegisterClass RC> :
+  MYRISCVX_I<opcode, funct3, (outs RC:$rd), (ins RC:$rs1, Od:$simm12),
+             !strconcat(instr_asm, "\t$rd, $rs1, $simm12"),
+             [(set GPR:$rd, (cond_op RC:$rs1, Od:$simm12))], IIAlu> {
+               let isReMaterializable = 1;
+}
+// @} MYRISCVXInstrInfo_SetCC
+
+
 //===----------------------------------------------------------------------===//
 // Instruction definition
 //===----------------------------------------------------------------------===//
@@ -256,6 +280,12 @@ def REM   : ArithLogicR<0b0110011, 0b110, 0b0000001, "rem",    srem,  GPR>;
 def REMU  : ArithLogicR<0b0110011, 0b111, 0b0000001, "remu",   urem,  GPR>;
 // @} MYRISCVXInstrInfo_MulDivInsts
 
+// @{ MYRISCVXInstrInfo_SLTInsts
+def SLTI  : SetCC_I<0b0010011, 0b010, "slti",  setlt,  simm12, GPR>;
+def SLTIU : SetCC_I<0b0010011, 0b011, "sltiu", setult, simm12, GPR>;
+def SLT   : SetCC_R<0b0110011, 0b010, 0b0000000, "slt",  setlt,  GPR>;
+def SLTU  : SetCC_R<0b0110011, 0b011, 0b0000000, "sltu", setult, GPR>;
+// @} MYRISCVXInstrInfo_SLTInsts
 
 def assertzexti32 : PatFrag<(ops node:$src),
                             (assertzext node:$src),
@@ -475,3 +505,17 @@ let Predicates = [IsRV64] in {
   defm : StorePattern<store         , SD, GPR>;
 } // Predicates = [IsRV64]
 // @} MYRISCVXInstrInfo_td_MemoryPattern64
+
+
+// @{ MYRISCVXInstrInfo_SLTPatterns
+// Define pattern expansions for setcc operations that aren't directly
+// handled by a RISC-V instruction.
+def : Pat<(seteq  GPR:$rs1, GPR:$rs2), (SLTIU (XOR GPR:$rs1, GPR:$rs2), 1)>;
+def : Pat<(setne  GPR:$rs1, GPR:$rs2), (SLTU ZERO, (XOR GPR:$rs1, GPR:$rs2))>;
+def : Pat<(setugt GPR:$rs1, GPR:$rs2), (SLTU GPR:$rs2, GPR:$rs1)>;
+def : Pat<(setuge GPR:$rs1, GPR:$rs2), (XORI (SLTU GPR:$rs1, GPR:$rs2), 1)>;
+def : Pat<(setule GPR:$rs1, GPR:$rs2), (XORI (SLTU GPR:$rs2, GPR:$rs1), 1)>;
+def : Pat<(setgt  GPR:$rs1, GPR:$rs2), (SLT GPR:$rs2, GPR:$rs1)>;
+def : Pat<(setge  GPR:$rs1, GPR:$rs2), (XORI (SLT GPR:$rs1, GPR:$rs2), 1)>;
+def : Pat<(setle  GPR:$rs1, GPR:$rs2), (XORI (SLT GPR:$rs2, GPR:$rs1), 1)>;
+// @} MYRISCVXInstrInfo_SLTPatterns
