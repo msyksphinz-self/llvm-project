@@ -249,6 +249,9 @@ def XORI : ArithLogicI<0b0010011, 0b100, "xori", xor, simm12, GPR>;
 def ORI  : ArithLogicI<0b0010011, 0b110, "ori",  or,  simm12, GPR>;
 def ANDI : ArithLogicI<0b0010011, 0b111, "andi", and, simm12, GPR>;
 
+// @{ MYRISCVXInstrInfo_AUIPC
+def AUIPC: ArithLogicU<0b0010111, "auipc", GPR, simm20u>;
+// @} MYRISCVXInstrInfo_AUIPC
 def LUI  : ArithLogicU<0b0110111, "lui", GPR, simm20u>;
 def ADD  : ArithLogicR<0b0110011, 0b000, 0b0000000, "add", add, GPR>;
 def SUB  : ArithLogicR<0b0110011, 0b000, 0b0100000, "sub", sub, GPR>;
