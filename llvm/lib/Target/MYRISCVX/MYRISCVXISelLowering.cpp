@@ -39,6 +39,7 @@ using namespace llvm;
 
 const char *MYRISCVXTargetLowering::getTargetNodeName(unsigned Opcode) const {
   switch (Opcode) {
+    case MYRISCVXISD::CALL:              return "MYRISCVXISD::CALL";
     case MYRISCVXISD::TailCall:          return "MYRISCVXISD::TailCall";
     case MYRISCVXISD::Hi:                return "MYRISCVXISD::Hi";
     case MYRISCVXISD::Lo:                return "MYRISCVXISD::Lo";
