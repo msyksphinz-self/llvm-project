@@ -27,9 +27,9 @@ define dso_local signext i32 @func_caller() #0 {
 ; MYRVX32I_STATIC_MEDLOW-NEXT:         lui     x12, %hi(c)
 ; MYRVX32I_STATIC_MEDLOW-NEXT:         addi    x12, x12, %lo(c)
 ; MYRVX32I_STATIC_MEDLOW-NEXT:         lw      x12, 0(x12)
-; MYRVX32I_STATIC_MEDLOW-NEXT:         addi    x2, x2, 0
+; MYRVX32I_STATIC_MEDLOW-NEXT:         mv      x2, x2
 ; MYRVX32I_STATIC_MEDLOW-NEXT:         call    func_callee
-; MYRVX32I_STATIC_MEDLOW-NEXT:         addi    x2, x2, 0
+; MYRVX32I_STATIC_MEDLOW-NEXT:         mv      x2, x2
 ; MYRVX32I_STATIC_MEDLOW-NEXT:         lw      x2, 8(x2)               # 4-byte Folded Reload
 ; MYRVX32I_STATIC_MEDLOW-NEXT:         lw      x1, 12(x2)              # 4-byte Folded Reload
 ; MYRVX32I_STATIC_MEDLOW-NEXT:         addi    x2, x2, 16
@@ -50,9 +50,9 @@ define dso_local signext i32 @func_caller() #0 {
 ; MYRVX64I_STATIC_MEDLOW-NEXT:         lui     x12, %hi(c)
 ; MYRVX64I_STATIC_MEDLOW-NEXT:         addi    x12, x12, %lo(c)
 ; MYRVX64I_STATIC_MEDLOW-NEXT:         lw      x12, 0(x12)
-; MYRVX64I_STATIC_MEDLOW-NEXT:         addi    x2, x2, 0
+; MYRVX64I_STATIC_MEDLOW-NEXT:         mv      x2, x2
 ; MYRVX64I_STATIC_MEDLOW-NEXT:         call    func_callee
-; MYRVX64I_STATIC_MEDLOW-NEXT:         addi    x2, x2, 0
+; MYRVX64I_STATIC_MEDLOW-NEXT:         mv      x2, x2
 ; MYRVX64I_STATIC_MEDLOW-NEXT:         ld      x2, 0(x2)               # 8-byte Folded Reload
 ; MYRVX64I_STATIC_MEDLOW-NEXT:         ld      x1, 8(x2)               # 8-byte Folded Reload
 ; MYRVX64I_STATIC_MEDLOW-NEXT:         addi    x2, x2, 16
