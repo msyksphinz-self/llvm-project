@@ -67,10 +67,12 @@ class MYRISCVXOffsetFusionPass : public MachineFunctionPass {
               if (HeadInst.getOperand(2).getType() == MachineOperand::MO_Immediate &&
                   HeadInst.getOperand(2).getImm() == 0) {
                 if (PrevInst->getOpcode() == MYRISCVX::ADDI &&
+                    PrevInst->getOperand(0).getType() == MachineOperand::MO_Register &&
+                    HeadInst.getOperand(1).getType() == MachineOperand::MO_Register &&
                     PrevInst->getOperand(0).getReg() == HeadInst.getOperand(1).getReg()) {
-                  HeadInst.getOperand(2).setImm(PrevInst->getOperand(2).getImm());
+                  HeadInst.getOperand(2).setImm(PrevInst->getOperand(1).getImm());
                   MBB.erase(PrevInst);
-                  LLVM_DEBUG(dbgs() << "  Replace Offset Calculation.\n");
+                  LLVM_DEBUG(dbgs() << "  Replace Offset Calculation : " << PrevInst->getOperand(1).getImm() << '\n');
                 }
               }
           }
