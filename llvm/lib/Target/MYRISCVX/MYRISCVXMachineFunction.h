@@ -38,6 +38,14 @@ class MYRISCVXFunctionInfo : public MachineFunctionInfo {
   int getVarArgsFrameIndex() const { return VarArgsFrameIndex; }
   void setVarArgsFrameIndex(int Index) { VarArgsFrameIndex = Index; }
 
+  /// Create a MachinePointerInfo that has an ExternalSymbolPseudoSourceValue
+  /// object representing a GOT entry for an external function.
+  MachinePointerInfo callPtrInfo(const char *ES);
+
+  /// Create a MachinePointerInfo that has a GlobalValuePseudoSourceValue object
+  /// representing a GOT entry for a global function.
+  MachinePointerInfo callPtrInfo(const GlobalValue *GV);
+
  private:
   virtual void anchor();
 
