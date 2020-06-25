@@ -38,6 +38,57 @@ unsigned MYRISCVXInstrInfo::GetInstSizeInBytes(const MachineInstr &MI) const {
   }
 }
 
+// @{ MYRISCVXInstrInfo_GetMemOperand
+MachineMemOperand *
+MYRISCVXInstrInfo::GetMemOperand(MachineBasicBlock &MBB, int FI,
+                                 MachineMemOperand::Flags Flags) const {
+
+  MachineFunction &MF = *MBB.getParent();
+  MachineFrameInfo &MFI = MF.getFrameInfo();
+  unsigned Align = MFI.getObjectAlignment(FI);
+
+  return MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(MF, FI),
+                                 Flags, MFI.getObjectSize(FI), Align);
+}
+// @} MYRISCVXInstrInfo_GetMemOperand
+
+
+// @{ MYRISCVXInstrInfo_storeRegToStack
+void MYRISCVXInstrInfo::
+storeRegToStack(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
+                unsigned SrcReg, bool isKill, int FI,
+                const TargetRegisterClass *RC, const TargetRegisterInfo *TRI,
+                int64_t Offset) const {
+  DebugLoc DL;
+  MachineMemOperand *MMO = GetMemOperand(MBB, FI, MachineMemOperand::MOStore);
+
+  unsigned Opc = TRI->getRegSizeInBits(MYRISCVX::GPRRegClass) == 32 ?
+      MYRISCVX::SW : MYRISCVX::SD;
+
+  assert(Opc && "Register class not handled!");
+  BuildMI(MBB, I, DL, get(Opc)).addReg(SrcReg, getKillRegState(isKill))
+      .addFrameIndex(FI).addImm(Offset).addMemOperand(MMO);
+}
+// @} MYRISCVXInstrInfo_storeRegToStack
+
+
+// @{ MYRISCVXInstrInfo_loadRegFromStack
+void MYRISCVXInstrInfo::
+loadRegFromStack(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
+                 unsigned DestReg, int FI, const TargetRegisterClass *RC,
+                 const TargetRegisterInfo *TRI, int64_t Offset) const {
+  DebugLoc DL;
+  if (I != MBB.end()) DL = I->getDebugLoc();
+  MachineMemOperand *MMO = GetMemOperand(MBB, FI, MachineMemOperand::MOLoad);
+  unsigned Opc = TRI->getRegSizeInBits(MYRISCVX::GPRRegClass) == 32 ?
+      MYRISCVX::LW : MYRISCVX::LD;
+  assert(Opc && "Register class not handled!");
+  BuildMI(MBB, I, DL, get(Opc), DestReg).addFrameIndex(FI).addImm(Offset)
+      .addMemOperand(MMO);
+}
+// @} MYRISCVXInstrInfo_loadRegFromStack
+
+
 // @{ MYRISCVXInstrInfo_copyPhysReg
 void MYRISCVXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
                                  MachineBasicBlock::iterator MBBI,
