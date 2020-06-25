@@ -12,6 +12,9 @@
 //===----------------------------------------------------------------------===//
 
 
+// @{ MYRISCVXInstrInfo_SDT_MYRISCVXCall
+def SDT_MYRISCVXCall       : SDTypeProfile<0, 1, [SDTCisVT<0, iPTR>]>;
+// @} MYRISCVXInstrInfo_SDT_MYRISCVXCall
 // @{ MYRISCVXInstrInfo_MYRISCVXSelectCC
 def SDT_MYRISCVXSelectCC   : SDTypeProfile<1, 5, [SDTCisSameAs<1, 2>,
                                                   SDTCisSameAs<0, 4>,
@@ -28,6 +31,27 @@ def MYRISCVXRet : SDNode<"MYRISCVXISD::Ret", SDTNone,
 def SelectCC : SDNode<"MYRISCVXISD::SELECT_CC", SDT_MYRISCVXSelectCC,
                       [SDNPInGlue]>;
 // @} MYRISCVXInstrInfo_SelectCC
+
+// @{ MYRISCVXInstrInfo_SDT_MYRISCVXCallSeq
+def SDT_MYRISCVXCallSeqStart : SDCallSeqStart<[SDTCisVT<0, XLenVT>, SDTCisVT<1, XLenVT>]>;
+def SDT_MYRISCVXCallSeqEnd   : SDCallSeqEnd  <[SDTCisVT<0, XLenVT>, SDTCisVT<1, XLenVT>]>;
+// @} MYRISCVXInstrInfo_SDT_MYRISCVXCallSeq
+
+
+// @{ MYRISCVXInstrInfo_MYRISCVXCall
+def MYRISCVXCall : SDNode<"MYRISCVXISD::CALL", SDT_MYRISCVXCall,
+                          [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue,
+                           SDNPVariadic]>;
+// @} MYRISCVXInstrInfo_MYRISCVXCall
+
+// @{ MYRISCVXInstrInfo_MYRISCVXCallSeqStart
+// These are target-independent nodes, but have target-specific formats.
+def MYRISCVXCallSeqStart : SDNode<"ISD::CALLSEQ_START", SDT_MYRISCVXCallSeqStart,
+                                  [SDNPHasChain, SDNPOutGlue]>;
+def MYRISCVXCallSeqEnd : SDNode<"ISD::CALLSEQ_END", SDT_MYRISCVXCallSeqEnd,
+                                [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue]>;
+// @} MYRISCVXInstrInfo_MYRISCVXCallSeqStart
+
 
 //===----------------------------------------------------------------------===//
 // MYRISCVX profiles and nodes
