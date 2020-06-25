@@ -37,6 +37,7 @@ add_llvm_target(MYRISCVXCodeGen
   MYRISCVXISelDAGToDAG.cpp
   MYRISCVXMatInt.cpp
   MYRISCVXDeleteRedundantJmp.cpp
+  MYRISCVXOffsetFusion.cpp
 )
 
 add_subdirectory(TargetInfo)

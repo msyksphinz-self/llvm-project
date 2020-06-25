@@ -133,6 +133,7 @@ class MYRISCVXPassConfig : public TargetPassConfig {
   // @} MYRISCVXTargetMachine_cpp_addInstSelector
 
   void addPreEmitPass() override;
+  void addPreRegAlloc() override;
 };
 } // namespace
 
@@ -152,4 +153,9 @@ bool MYRISCVXPassConfig::addInstSelector() {
 
 void MYRISCVXPassConfig::addPreEmitPass() {
   addPass(createMYRISCVXDeleteRedundantJmpPass());
+}
+
+
+void MYRISCVXPassConfig::addPreRegAlloc() {
+  addPass(createMYRISCVXOffsetFusionPass());
 }

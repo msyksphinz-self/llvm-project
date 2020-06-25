@@ -23,6 +23,7 @@ namespace llvm {
   class FunctionPass;
 
 FunctionPass *createMYRISCVXDeleteRedundantJmpPass();
+FunctionPass *createMYRISCVXOffsetFusionPass();
 
 } // end namespace llvm;
 
