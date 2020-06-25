@@ -46,6 +46,20 @@ class MYRISCVXFunctionInfo : public MachineFunctionInfo {
   /// representing a GOT entry for a global function.
   MachinePointerInfo callPtrInfo(const GlobalValue *GV);
 
+  /// True if function has a byval argument.
+  bool HasByvalArg;
+
+  /// Size of incoming argument area.
+  unsigned IncomingArgSize;
+
+  void setFormalArgInfo(unsigned Size, bool HasByval) {
+    IncomingArgSize = Size;
+    HasByvalArg = HasByval;
+  }
+
+  unsigned getIncomingArgSize() const { return IncomingArgSize; }
+  bool hasByvalArg() const { return HasByvalArg; }
+
  private:
   virtual void anchor();
 
