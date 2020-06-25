@@ -347,6 +347,21 @@ def BLTU    : CBranch12<0b1100011, 0b110, "bltu", setult, GPR>;
 def BGEU    : CBranch12<0b1100011, 0b111, "bgeu", setuge, GPR>;
 //@} MYRISCVXInstrInfo_BEQ
 
+// @{ MYRISCVXInstrInfo_BRANCH_PseudoInstructions
+def: InstAlias<"beqz $rs1, $simm12", (BEQ GPR:$rs1, ZERO,    brtarget12:$simm12)>;
+def: InstAlias<"bnez $rs1, $simm12", (BNE GPR:$rs1, ZERO,    brtarget12:$simm12)>;
+def: InstAlias<"blez $rs1, $simm12", (BGE ZERO,    GPR:$rs1, brtarget12:$simm12)>;
+def: InstAlias<"bgez $rs1, $simm12", (BGE GPR:$rs1, ZERO,    brtarget12:$simm12)>;
+def: InstAlias<"bltz $rs1, $simm12", (BLT GPR:$rs1, ZERO,    brtarget12:$simm12)>;
+def: InstAlias<"bgtz $rs1, $simm12", (BLT ZERO,    GPR:$rs1, brtarget12:$simm12)>;
+
+def: InstAlias<"bgt  $rs1, $rs2, $simm12", (BLT  GPR:$rs2, GPR:$rs1, brtarget12:$simm12)>;
+def: InstAlias<"ble  $rs1, $rs2, $simm12", (BGE  GPR:$rs2, GPR:$rs1, brtarget12:$simm12)>;
+def: InstAlias<"bgtu $rs1, $rs2, $simm12", (BLTU GPR:$rs2, GPR:$rs1, brtarget12:$simm12)>;
+def: InstAlias<"bleu $rs1, $rs2, $simm12", (BGEU GPR:$rs2, GPR:$rs1, brtarget12:$simm12)>;
+// @} MYRISCVXInstrInfo_BRANCH_PseudoInstructions
+
+
 //@{ MYRISCVXInstrInfo_PseudoBR
 // ブロックへのジャンプを検出すると, JAL命令への置き換えを行うパタン
 let isBarrier = 1, isBranch = 1, isTerminator = 1 in
@@ -767,3 +782,22 @@ multiclass BrcondPatsSlt<RegisterClass RC, Instruction BEQOp, Instruction BNEOp,
 
 defm : BrcondPatsSlt<GPR, BEQ, BNE, SLT, SLTU, SLTI, SLTIU, ZERO>;
 // @} MYRISCVXInstrInfo_BrcondPatsSlt
+
+
+// PseudoInstructions
+// @{ MYRISCVXInstrInfo_PseudoInstructions
+def: InstAlias<"nop",            (ADDI ZERO,    ZERO,      0      )>;
+def: InstAlias<"mv $rd, $rs1",   (ADDI GPR:$rd, GPR:$rs1,  0      )>;
+def: InstAlias<"not $rd, $rs1",  (XORI GPR:$rd, GPR:$rs1, -1      )>;
+def: InstAlias<"neg $rd, $rs1",  (SUB  GPR:$rd, ZERO,     GPR:$rs1)>;
+
+let Predicates = [IsRV64] in {
+  def: InstAlias<"negw $rd, $rs1",   (SUBW  GPR:$rd, ZERO,    GPR:$rs1)>;
+  def: InstAlias<"sext.w $rd, $rs1", (ADDIW GPR:$rd, GPR:$rs1,       0)>;
+} // Predicates = [IsRV64]
+
+def: InstAlias<"seqz $rd, $rs1", (SLTIU GPR:$rd, GPR:$rs1, 1       )>;
+def: InstAlias<"snez $rd, $rs1", (SLTU  GPR:$rd, ZERO,     GPR:$rs1)>;
+def: InstAlias<"sltz $rd, $rs1", (SLT   GPR:$rd, GPR:$rs1, ZERO    )>;
+def: InstAlias<"sgtz $rd, $rs1", (SLT   GPR:$rd, ZERO,     GPR:$rs1)>;
+// @} MYRISCVXInstrInfo_PseudoInstructions
