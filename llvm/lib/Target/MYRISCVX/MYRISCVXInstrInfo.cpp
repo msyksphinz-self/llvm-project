@@ -28,7 +28,9 @@ using namespace llvm;
 // Pin the vtable to this file.
 void MYRISCVXInstrInfo::anchor() {}
 
-MYRISCVXInstrInfo::MYRISCVXInstrInfo() {}
+MYRISCVXInstrInfo::MYRISCVXInstrInfo()
+    : MYRISCVXGenInstrInfo(MYRISCVX::ADJCALLSTACKDOWN, MYRISCVX::ADJCALLSTACKUP)
+{}
 
 /// Return the number of bytes of code the specified instruction may be.
 unsigned MYRISCVXInstrInfo::GetInstSizeInBytes(const MachineInstr &MI) const {
