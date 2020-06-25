@@ -30,6 +30,11 @@ namespace llvm {
       // Start the numbering from where ISD NodeType finishes.
       FIRST_NUMBER = ISD::BUILTIN_OP_END,
 
+      // @{ MYRISCVXISelLowering_h_CALL
+      // Jump and link (call)
+      CALL,
+      // @} MYRISCVXISelLowering_h_CALL
+
       // Tail call
       TailCall,
 
