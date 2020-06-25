@@ -22,6 +22,8 @@ namespace llvm {
   class MYRISCVXTargetMachine;
   class FunctionPass;
 
+FunctionPass *createMYRISCVXDeleteRedundantJmpPass();
+
 } // end namespace llvm;
 
 #endif
