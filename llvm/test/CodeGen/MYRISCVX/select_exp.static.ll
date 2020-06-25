@@ -18,8 +18,7 @@ define dso_local signext i32 @test_ternary(i32 signext %operation, i32 signext %
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 12(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	addi	x11, x0, 1
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	bne	x10, x11, $BB0_2
-; MYRVX32I_STATIC_MEDLOW-NEXT: 	j	$BB0_1
-; MYRVX32I_STATIC_MEDLOW-NEXT: $BB0_1:                                 # %cond.true
+; MYRVX32I_STATIC_MEDLOW-NEXT: # %bb.1:                                 # %cond.true
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 8(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x11, 4(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	add	x10, x10, x11
@@ -28,8 +27,7 @@ define dso_local signext i32 @test_ternary(i32 signext %operation, i32 signext %
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 12(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	addi	x11, x0, 2
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	bne	x10, x11, $BB0_4
-; MYRVX32I_STATIC_MEDLOW-NEXT: 	j	$BB0_3
-; MYRVX32I_STATIC_MEDLOW-NEXT: $BB0_3:                                 # %cond.true2
+; MYRVX32I_STATIC_MEDLOW-NEXT: # %bb.3:                                 # %cond.true2
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 8(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x11, 4(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	sub	x10, x10, x11
@@ -38,8 +36,7 @@ define dso_local signext i32 @test_ternary(i32 signext %operation, i32 signext %
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 12(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	addi	x11, x0, 3
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	bne	x10, x11, $BB0_6
-; MYRVX32I_STATIC_MEDLOW-NEXT: 	j	$BB0_5
-; MYRVX32I_STATIC_MEDLOW-NEXT: $BB0_5:                                 # %cond.true5
+; MYRVX32I_STATIC_MEDLOW-NEXT: # %bb.5:                                 # %cond.true5
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 8(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x11, 4(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	mul	x10, x10, x11
@@ -48,21 +45,16 @@ define dso_local signext i32 @test_ternary(i32 signext %operation, i32 signext %
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 12(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	addi	x11, x0, 4
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	bne	x10, x11, $BB0_8
-; MYRVX32I_STATIC_MEDLOW-NEXT: 	j	$BB0_7
-; MYRVX32I_STATIC_MEDLOW-NEXT: $BB0_7:                                 # %cond.true8
+; MYRVX32I_STATIC_MEDLOW-NEXT: # %bb.7:                                 # %cond.true8
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 8(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x11, 4(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	div	x10, x10, x11
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	j	$BB0_9
 ; MYRVX32I_STATIC_MEDLOW-NEXT: $BB0_8:                                 # %cond.false9
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 8(x2)
-; MYRVX32I_STATIC_MEDLOW-NEXT: 	j	$BB0_9
 ; MYRVX32I_STATIC_MEDLOW-NEXT: $BB0_9:                                 # %cond.end
-; MYRVX32I_STATIC_MEDLOW-NEXT: 	j	$BB0_10
 ; MYRVX32I_STATIC_MEDLOW-NEXT: $BB0_10:                                # %cond.end10
-; MYRVX32I_STATIC_MEDLOW-NEXT: 	j	$BB0_11
 ; MYRVX32I_STATIC_MEDLOW-NEXT: $BB0_11:                                # %cond.end12
-; MYRVX32I_STATIC_MEDLOW-NEXT: 	j	$BB0_12
 ; MYRVX32I_STATIC_MEDLOW-NEXT: $BB0_12:                                # %cond.end14
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	sw	x10, 0(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 0(x2)
@@ -79,8 +71,7 @@ define dso_local signext i32 @test_ternary(i32 signext %operation, i32 signext %
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lwu	x10, 12(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x11, x0, 1
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	bne	x10, x11, $BB0_2
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	j	$BB0_1
-; MYRVX64I_STATIC_MEDLOW-NEXT: $BB0_1:                                 # %cond.true
+; MYRVX64I_STATIC_MEDLOW-NEXT: # %bb.1:                                 # %cond.true
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lw	x10, 8(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lw	x11, 4(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	add	x10, x10, x11
@@ -89,8 +80,7 @@ define dso_local signext i32 @test_ternary(i32 signext %operation, i32 signext %
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lwu	x10, 12(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x11, x0, 2
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	bne	x10, x11, $BB0_4
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	j	$BB0_3
-; MYRVX64I_STATIC_MEDLOW-NEXT: $BB0_3:                                 # %cond.true2
+; MYRVX64I_STATIC_MEDLOW-NEXT: # %bb.3:                                 # %cond.true2
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lw	x10, 8(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lw	x11, 4(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	sub	x10, x10, x11
@@ -99,8 +89,7 @@ define dso_local signext i32 @test_ternary(i32 signext %operation, i32 signext %
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lwu	x10, 12(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x11, x0, 3
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	bne	x10, x11, $BB0_6
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	j	$BB0_5
-; MYRVX64I_STATIC_MEDLOW-NEXT: $BB0_5:                                 # %cond.true5
+; MYRVX64I_STATIC_MEDLOW-NEXT: # %bb.5:                                 # %cond.true5
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lw	x10, 8(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lw	x11, 4(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	mul	x10, x10, x11
@@ -109,21 +98,16 @@ define dso_local signext i32 @test_ternary(i32 signext %operation, i32 signext %
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lwu	x10, 12(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x11, x0, 4
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	bne	x10, x11, $BB0_8
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	j	$BB0_7
-; MYRVX64I_STATIC_MEDLOW-NEXT: $BB0_7:                                 # %cond.true8
+; MYRVX64I_STATIC_MEDLOW-NEXT: # %bb.7:                                 # %cond.true8
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lw	x10, 8(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lw	x11, 4(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	div	x10, x10, x11
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	j	$BB0_9
 ; MYRVX64I_STATIC_MEDLOW-NEXT: $BB0_8:                                 # %cond.false9
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lw	x10, 8(x2)
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	j	$BB0_9
 ; MYRVX64I_STATIC_MEDLOW-NEXT: $BB0_9:                                 # %cond.end
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	j	$BB0_10
 ; MYRVX64I_STATIC_MEDLOW-NEXT: $BB0_10:                                # %cond.end10
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	j	$BB0_11
 ; MYRVX64I_STATIC_MEDLOW-NEXT: $BB0_11:                                # %cond.end12
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	j	$BB0_12
 ; MYRVX64I_STATIC_MEDLOW-NEXT: $BB0_12:                                # %cond.end14
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	sw	x10, 0(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lw	x10, 0(x2)

@@ -13,21 +13,18 @@ define dso_local signext i32 @do_while_count(i32 signext %init) #0 {
 ; MYRVX32I_STATIC_MEDLOW:       # %bb.0:
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	addi	x2, x2, -4
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	sw	x10, 0(x2)
-; MYRVX32I_STATIC_MEDLOW-NEXT: 	j	$BB0_1
 ; MYRVX32I_STATIC_MEDLOW-NEXT: $BB0_1:                                 # %do.body
 ; MYRVX32I_STATIC_MEDLOW-NEXT:                                         # =>This Inner Loop Header: Depth=1
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 0(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	mul	x10, x10, x10
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	sw	x10, 0(x2)
-; MYRVX32I_STATIC_MEDLOW-NEXT: 	j	$BB0_2
-; MYRVX32I_STATIC_MEDLOW-NEXT: $BB0_2:                                 # %do.cond
+; MYRVX32I_STATIC_MEDLOW-NEXT: # %bb.2:                                 # %do.cond
 ; MYRVX32I_STATIC_MEDLOW-NEXT:                                         #   in Loop: Header=BB0_1 Depth=1
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 0(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	addi	x11, x0, 1000
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	slt	x10, x10, x11
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	bnez	x10, $BB0_1
-; MYRVX32I_STATIC_MEDLOW-NEXT: 	j	$BB0_3
-; MYRVX32I_STATIC_MEDLOW-NEXT: $BB0_3:                                 # %do.end
+; MYRVX32I_STATIC_MEDLOW-NEXT: # %bb.3:                                 # %do.end
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 0(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	addi	x2, x2, 4
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	ret
@@ -36,21 +33,18 @@ define dso_local signext i32 @do_while_count(i32 signext %init) #0 {
 ; MYRVX64I_STATIC_MEDLOW:       # %bb.0:
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x2, x2, -4
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	sw	x10, 0(x2)
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	j	$BB0_1
 ; MYRVX64I_STATIC_MEDLOW-NEXT: $BB0_1:                                 # %do.body
 ; MYRVX64I_STATIC_MEDLOW-NEXT:                                         # =>This Inner Loop Header: Depth=1
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lw	x10, 0(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	mul	x10, x10, x10
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	sw	x10, 0(x2)
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	j	$BB0_2
-; MYRVX64I_STATIC_MEDLOW-NEXT: $BB0_2:                                 # %do.cond
+; MYRVX64I_STATIC_MEDLOW-NEXT: # %bb.2:                                 # %do.cond
 ; MYRVX64I_STATIC_MEDLOW-NEXT:                                         #   in Loop: Header=BB0_1 Depth=1
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lw	x10, 0(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x11, x0, 1000
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	slt	x10, x10, x11
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	bnez	x10, $BB0_1
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	j	$BB0_3
-; MYRVX64I_STATIC_MEDLOW-NEXT: $BB0_3:                                 # %do.end
+; MYRVX64I_STATIC_MEDLOW-NEXT: # %bb.3:                                 # %do.end
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lw	x10, 0(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x2, x2, 4
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	ret

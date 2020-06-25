@@ -18,16 +18,13 @@ define dso_local signext i32 @test_switch(i32 signext %operation, i32 signext %a
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 12(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	addi	x11, x0, 1
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	beq	x10, x11, $BB0_4
-; MYRVX32I_STATIC_MEDLOW-NEXT: 	j	$BB0_1
-; MYRVX32I_STATIC_MEDLOW-NEXT: $BB0_1:                                 # %entry
+; MYRVX32I_STATIC_MEDLOW-NEXT: # %bb.1:                                 # %entry
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	addi	x11, x0, 2
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	beq	x10, x11, $BB0_5
-; MYRVX32I_STATIC_MEDLOW-NEXT: 	j	$BB0_2
-; MYRVX32I_STATIC_MEDLOW-NEXT: $BB0_2:                                 # %entry
+; MYRVX32I_STATIC_MEDLOW-NEXT: # %bb.2:                                 # %entry
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	addi	x11, x0, 3
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	beq	x10, x11, $BB0_6
-; MYRVX32I_STATIC_MEDLOW-NEXT: 	j	$BB0_3
-; MYRVX32I_STATIC_MEDLOW-NEXT: $BB0_3:                                 # %entry
+; MYRVX32I_STATIC_MEDLOW-NEXT: # %bb.3:                                 # %entry
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	addi	x11, x0, 4
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	beq	x10, x11, $BB0_7
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	j	$BB0_8
@@ -58,7 +55,6 @@ define dso_local signext i32 @test_switch(i32 signext %operation, i32 signext %a
 ; MYRVX32I_STATIC_MEDLOW-NEXT: $BB0_8:                                 # %sw.default
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 8(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	sw	x10, 0(x2)
-; MYRVX32I_STATIC_MEDLOW-NEXT: 	j	$BB0_9
 ; MYRVX32I_STATIC_MEDLOW-NEXT: $BB0_9:                                 # %sw.epilog
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 0(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	addi	x2, x2, 16
@@ -73,20 +69,17 @@ define dso_local signext i32 @test_switch(i32 signext %operation, i32 signext %a
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lwu	x10, 12(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x11, x0, 1
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	beq	x10, x11, $BB0_4
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	j	$BB0_1
-; MYRVX64I_STATIC_MEDLOW-NEXT: $BB0_1:                                 # %entry
+; MYRVX64I_STATIC_MEDLOW-NEXT: # %bb.1:                                 # %entry
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	slli	x11, x10, 32
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	srli	x11, x11, 32
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x12, x0, 2
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	beq	x11, x12, $BB0_5
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	j	$BB0_2
-; MYRVX64I_STATIC_MEDLOW-NEXT: $BB0_2:                                 # %entry
+; MYRVX64I_STATIC_MEDLOW-NEXT: # %bb.2:                                 # %entry
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	slli	x11, x10, 32
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	srli	x11, x11, 32
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x12, x0, 3
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	beq	x11, x12, $BB0_6
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	j	$BB0_3
-; MYRVX64I_STATIC_MEDLOW-NEXT: $BB0_3:                                 # %entry
+; MYRVX64I_STATIC_MEDLOW-NEXT: # %bb.3:                                 # %entry
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	slli	x10, x10, 32
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	srli	x10, x10, 32
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x11, x0, 4
@@ -119,7 +112,6 @@ define dso_local signext i32 @test_switch(i32 signext %operation, i32 signext %a
 ; MYRVX64I_STATIC_MEDLOW-NEXT: $BB0_8:                                 # %sw.default
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lw	x10, 8(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	sw	x10, 0(x2)
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	j	$BB0_9
 ; MYRVX64I_STATIC_MEDLOW-NEXT: $BB0_9:                                 # %sw.epilog
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lw	x10, 0(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x2, x2, 16
