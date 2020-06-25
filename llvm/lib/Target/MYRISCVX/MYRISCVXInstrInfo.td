@@ -608,6 +608,18 @@ def : Pat<(setne  GPR:$rs1, GPR:$rs2), (SLTU ZERO, (XOR GPR:$rs1, GPR:$rs2))>;
 def : Pat<(setugt GPR:$rs1, GPR:$rs2), (SLTU GPR:$rs2, GPR:$rs1)>;
 def : Pat<(setuge GPR:$rs1, GPR:$rs2), (XORI (SLTU GPR:$rs1, GPR:$rs2), 1)>;
 def : Pat<(setule GPR:$rs1, GPR:$rs2), (XORI (SLTU GPR:$rs2, GPR:$rs1), 1)>;
+
+
+// @{ MYRISCVXInstrInfo_PseudoCall
+let isCall = 1, Defs = [RA], isCodeGenOnly = 0 in {
+  def PseudoCALL : MYRISCVXPseudo<(outs), (ins simm20u:$target), "call\t$target", [(MYRISCVXCall simm20u:$target)]>;
+  def PseudoCALLReg : MYRISCVXPseudo<(outs), (ins GPR:$target), "call\t$target", [(MYRISCVXCall GPR:$target)]>;
+}
+
+def : Pat<(MYRISCVXCall tglobaladdr:$func),  (PseudoCALLReg tglobaladdr:$func)>;
+def : Pat<(MYRISCVXCall texternalsym:$func), (PseudoCALLReg texternalsym:$func)>;
+// @} MYRISCVXInstrInfo_PseudoCall
+
 def : Pat<(setgt  GPR:$rs1, GPR:$rs2), (SLT GPR:$rs2, GPR:$rs1)>;
 def : Pat<(setge  GPR:$rs1, GPR:$rs2), (XORI (SLT GPR:$rs1, GPR:$rs2), 1)>;
 def : Pat<(setle  GPR:$rs1, GPR:$rs2), (XORI (SLT GPR:$rs2, GPR:$rs1), 1)>;
