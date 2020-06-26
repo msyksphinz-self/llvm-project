@@ -46,6 +46,9 @@ class MYRISCVXOffsetFusionPass : public MachineFunctionPass {
 
   bool runOnMachineFunction(MachineFunction &Fn) {
 
+    MRI = &Fn.getRegInfo();
+    DeadInstrs.clear();
+
     for (MachineBasicBlock &MBB : Fn) {
       LLVM_DEBUG(dbgs() << "MBB: " << MBB.getName() << "\n");
 
@@ -68,11 +71,16 @@ class MYRISCVXOffsetFusionPass : public MachineFunctionPass {
                   HeadInst.getOperand(2).getImm() == 0) {
                 if (PrevInst->getOpcode() == MYRISCVX::ADDI &&
                     PrevInst->getOperand(0).getType() == MachineOperand::MO_Register &&
+                    MRI->hasOneUse(PrevInst->getOperand(0).getReg()) &&
                     HeadInst.getOperand(1).getType() == MachineOperand::MO_Register &&
                     PrevInst->getOperand(0).getReg() == HeadInst.getOperand(1).getReg()) {
-                  HeadInst.getOperand(2).setImm(PrevInst->getOperand(1).getImm());
-                  MBB.erase(PrevInst);
-                  LLVM_DEBUG(dbgs() << "  Replace Offset Calculation : " << PrevInst->getOperand(1).getImm() << '\n');
+                  HeadInst.RemoveOperand(2);
+                  MachineOperand &tmpOp = PrevInst->getOperand(2);
+                  HeadInst.addOperand(tmpOp);
+                  DeadInstrs.insert(PrevInst);
+                  // MBB.erase(PrevInst);
+                  // PrevInst->eraseFromParent();
+                  LLVM_DEBUG(dbgs() << "  Replace Offset Calculation : " << PrevInst->getOperand(2).getOffset() << '\n');
                 }
               }
           }
@@ -80,9 +88,18 @@ class MYRISCVXOffsetFusionPass : public MachineFunctionPass {
         PrevInst = &HeadInst;
       }
     }
+
+    // Delete dead instructions.
+    for (auto *MI : DeadInstrs) {
+      MI->eraseFromParent();
+    }
+
     return true;
   }
 
+ private:
+  MachineRegisterInfo *MRI;
+  std::set<MachineInstr *> DeadInstrs;
 };
 }
 
