@@ -79,7 +79,7 @@ class MYRISCVXOffsetFusionPass : public MachineFunctionPass {
                   HeadInst.addOperand(tmpOp);
                   DeadInstrs.insert(PrevInst);
                   // MBB.erase(PrevInst);
-                  // PrevInst->eraseFromParent();
+                  PrevInst->eraseFromParent();
                   LLVM_DEBUG(dbgs() << "  Replace Offset Calculation : " << PrevInst->getOperand(2).getOffset() << '\n');
                 }
               }
@@ -89,10 +89,10 @@ class MYRISCVXOffsetFusionPass : public MachineFunctionPass {
       }
     }
 
-    // Delete dead instructions.
-    for (auto *MI : DeadInstrs) {
-      MI->eraseFromParent();
-    }
+    // // Delete dead instructions.
+    // for (auto *MI : DeadInstrs) {
+    //   MI->eraseFromParent();
+    // }
 
     return true;
   }
