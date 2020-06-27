@@ -75,6 +75,10 @@ MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
   setOperationAction(ISD::CTLZ,  XLenVT, Expand);
   setOperationAction(ISD::CTPOP, XLenVT, Expand);
   //@} MYRISCVXTargetLowering_setOperationAction_DontGenerate
+
+  //@{ MYRISCVXTargetLowering_setOperationAction_GlobalAddress
+  setOperationAction(ISD::GlobalAddress, XLenVT, Custom);
+  //@} MYRISCVXTargetLowering_setOperationAction_GlobalAddress
 }
 // @} MYRISCVXTargetLowering
 
@@ -98,6 +102,77 @@ addLiveIn(MachineFunction &MF, unsigned PReg, const TargetRegisterClass *RC)
 //===----------------------------------------------------------------------===//
 
 #include "MYRISCVXGenCallingConv.inc"
+
+// @{ MYRISCVXTargetLowering_LowerOperation
+SDValue MYRISCVXTargetLowering::
+LowerOperation(SDValue Op, SelectionDAG &DAG) const
+{
+  switch (Op.getOpcode())
+  {
+    case ISD::GlobalAddress: return lowerGlobalAddress(Op, DAG);
+  }
+  return SDValue();
+}
+// @} MYRISCVXTargetLowering_LowerOperation
+
+
+// @{ MYRISCVXTargetLowering_lowerGlobalAddress
+SDValue MYRISCVXTargetLowering::lowerGlobalAddress(SDValue Op,
+                                                   SelectionDAG &DAG) const {
+  SDLoc DL(Op);
+  EVT Ty = Op.getValueType();
+  GlobalAddressSDNode *N = cast<GlobalAddressSDNode>(Op);
+  int64_t Offset = N->getOffset();
+  MVT XLenVT = Subtarget.getXLenVT();
+
+  // @{ MYRISCVXTargetLowering_lowerGlobalAddress_Static
+  if (!isPositionIndependent()) {
+    // static mode : %hi/%lo relocation
+    SDValue Addr = getAddrStatic(N, Ty, DAG);
+    if (Offset) {
+      return DAG.getNode(ISD::ADD, DL, Ty, Addr,
+                         DAG.getConstant(Offset, DL, XLenVT));
+    } else {
+      return Addr;
+    }
+  }
+  // @} MYRISCVXTargetLowering_lowerGlobalAddress_Static
+
+  // @{ MYRISCVXTargetLowering_lowerGlobalAddress_PIC
+  // SDValue got_addr = getAddrGlobalGOT(
+  //     N, Ty, DAG, MYRISCVXII::MO_GOT_HI20, MYRISCVXII::MO_PCREL_LO12_I,
+  //     DAG.getEntryNode(),
+  //     MachinePointerInfo::getGOT(DAG.getMachineFunction()));
+  // if (Offset) {
+  //   got_addr = DAG.getNode(ISD::ADD, DL, Ty, got_addr,
+  //                          DAG.getConstant(Offset, DL, XLenVT));
+  // }
+  SDValue Addr = getTargetNode(N, Ty, DAG, 0);
+  return SDValue(DAG.getMachineNode(MYRISCVX::PseudoLA, DL, Ty, Addr), 0);
+  // return DAG.getLoad(Ty, DL, DAG.getEntryNode(), got_addr,
+  //                    MachinePointerInfo::getGOT(DAG.getMachineFunction()));
+  // @} MYRISCVXTargetLowering_lowerGlobalAddress_PIC
+}
+// @} MYRISCVXTargetLowering_lowerGlobalAddress
+
+
+// @{ MYRISCVXTargetLowering_getTargetNode_Global
+SDValue MYRISCVXTargetLowering::getTargetNode(GlobalAddressSDNode *N, EVT Ty,
+                                              SelectionDAG &DAG,
+                                              unsigned Flag) const {
+  return DAG.getTargetGlobalAddress(N->getGlobal(), SDLoc(N), Ty, 0, Flag);
+}
+// @} MYRISCVXTargetLowering_getTargetNode
+
+
+// @{ MYRISCVXTargetLowering_getTargetNode_External
+SDValue MYRISCVXTargetLowering::getTargetNode(ExternalSymbolSDNode *N, EVT Ty,
+                                              SelectionDAG &DAG,
+                                              unsigned Flag) const {
+  return DAG.getTargetExternalSymbol(N->getSymbol(), Ty, Flag);
+}
+// @} MYRISCVXTargetLowering_getTargetNode_External
+
 
 //===----------------------------------------------------------------------===//
 //@            Formal Arguments Calling Convention Implementation
