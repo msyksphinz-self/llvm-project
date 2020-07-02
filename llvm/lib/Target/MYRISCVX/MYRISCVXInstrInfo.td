@@ -92,6 +92,15 @@ def bare_symbol : Operand<XLenVT> {
   let ParserMatchClass = BareSymbol;
 }
 
+def CallSymbol : AsmOperandClass {
+  let Name = "CallSymbol";
+  let RenderMethod = "addImmOperands";
+}
+
+// A bare symbol used in call/tail only.
+def call_symbol : Operand<XLenVT> {
+  let ParserMatchClass = CallSymbol;
+}
 
 // @{MYRISCVXInstrInfo_LO12_HI20
 // 変換関数を定義する：定数のうち下位の12ビットを抽出する関数
@@ -671,6 +680,17 @@ def : Pat<(setne  GPR:$rs1, GPR:$rs2), (SLTU ZERO, (XOR GPR:$rs1, GPR:$rs2))>;
 def : Pat<(setugt GPR:$rs1, GPR:$rs2), (SLTU GPR:$rs2, GPR:$rs1)>;
 def : Pat<(setuge GPR:$rs1, GPR:$rs2), (XORI (SLTU GPR:$rs1, GPR:$rs2), 1)>;
 def : Pat<(setule GPR:$rs1, GPR:$rs2), (XORI (SLTU GPR:$rs2, GPR:$rs1), 1)>;
+
+
+// @{ MYRISCVXInstrInfo_PseudoCall
+let isCall = 1, Defs = [RA], isCodeGenOnly = 0 in {
+  def PseudoCALL : MYRISCVXPseudo<(outs), (ins call_symbol:$target), "call\t$target", []>;
+}
+
+def : Pat<(MYRISCVXCall tglobaladdr:$func),  (PseudoCALL tglobaladdr:$func)>;
+def : Pat<(MYRISCVXCall texternalsym:$func), (PseudoCALL texternalsym:$func)>;
+// @} MYRISCVXInstrInfo_PseudoCall
+
 def : Pat<(setgt  GPR:$rs1, GPR:$rs2), (SLT GPR:$rs2, GPR:$rs1)>;
 def : Pat<(setge  GPR:$rs1, GPR:$rs2), (XORI (SLT GPR:$rs1, GPR:$rs2), 1)>;
 def : Pat<(setle  GPR:$rs1, GPR:$rs2), (XORI (SLT GPR:$rs2, GPR:$rs1), 1)>;
