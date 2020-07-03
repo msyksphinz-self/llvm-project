@@ -100,6 +100,10 @@ MCOperand MYRISCVXMCInstLower::LowerSymbolOperand(const MachineOperand &MO,
     case MachineOperand::MO_JumpTableIndex:
       Symbol = AsmPrinter.GetJTISymbol(MO.getIndex());
       break;
+    case MachineOperand::MO_ConstantPoolIndex:
+      Symbol = AsmPrinter.GetCPISymbol(MO.getIndex());
+      Offset += MO.getOffset();
+      break;
 
     default:
       llvm_unreachable("<unknown operand type>");
@@ -139,6 +143,7 @@ MCOperand MYRISCVXMCInstLower::LowerOperand(const MachineOperand& MO,
     case MachineOperand::MO_BlockAddress:
     case MachineOperand::MO_ExternalSymbol:
     case MachineOperand::MO_GlobalAddress:
+    case MachineOperand::MO_ConstantPoolIndex:
       return LowerSymbolOperand(MO, MOTy, offset);
     case MachineOperand::MO_RegisterMask:
       break;
