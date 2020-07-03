@@ -343,10 +343,11 @@ emitSelectPseudo(MachineInstr &MI,
 // @} MYRISCVXISelLowering_emitSelectPseudo
 
 
+// @{ MYRISCVXTargetLowering_getRegForInlineAsmConstraint
 std::pair<unsigned, const TargetRegisterClass *>
 MYRISCVXTargetLowering::getRegForInlineAsmConstraint(const TargetRegisterInfo *TRI,
-                                                  StringRef Constraint,
-                                                  MVT VT) const {
+                                                     StringRef Constraint,
+                                                     MVT VT) const {
   // First, see if this is a constraint that directly corresponds to a
   // MYRISCVX register class.
   if (Constraint.size() == 1) {
@@ -360,6 +361,8 @@ MYRISCVXTargetLowering::getRegForInlineAsmConstraint(const TargetRegisterInfo *T
 
   return TargetLowering::getRegForInlineAsmConstraint(TRI, Constraint, VT);
 }
+// @} MYRISCVXTargetLowering_getRegForInlineAsmConstraint
+
 
 unsigned
 MYRISCVXTargetLowering::getInlineAsmMemConstraint(StringRef ConstraintCode) const {
