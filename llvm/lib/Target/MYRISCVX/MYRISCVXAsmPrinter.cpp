@@ -131,6 +131,74 @@ void MYRISCVXAsmPrinter::emitStartOfAsmFile(Module &M) {
 }
 
 
+bool MYRISCVXAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
+                                      const char *ExtraCode, raw_ostream &OS) {
+  // First try the generic code, which knows about modifiers like 'c' and 'n'.
+  if (!AsmPrinter::PrintAsmOperand(MI, OpNo, ExtraCode, OS))
+    return false;
+
+  const MachineOperand &MO = MI->getOperand(OpNo);
+  if (ExtraCode && ExtraCode[0]) {
+    if (ExtraCode[1] != 0)
+      return true; // Unknown modifier.
+
+    switch (ExtraCode[0]) {
+    default:
+      return true; // Unknown modifier.
+    case 'z':      // Print zero register if zero, regular printing otherwise.
+      if (MO.isImm() && MO.getImm() == 0) {
+        OS << MYRISCVXInstPrinter::getRegisterName(MYRISCVX::ZERO);
+        return false;
+      }
+      break;
+    case 'i': // Literal 'i' if operand is not a register.
+      if (!MO.isReg())
+        OS << 'i';
+      return false;
+    }
+  }
+
+  switch (MO.getType()) {
+  case MachineOperand::MO_Immediate:
+    OS << MO.getImm();
+    return false;
+  case MachineOperand::MO_Register:
+    OS << MYRISCVXInstPrinter::getRegisterName(MO.getReg());
+    return false;
+  case MachineOperand::MO_GlobalAddress:
+    PrintSymbolOperand(MO, OS);
+    return false;
+  case MachineOperand::MO_BlockAddress: {
+    MCSymbol *Sym = GetBlockAddressSymbol(MO.getBlockAddress());
+    Sym->print(OS, MAI);
+    return false;
+  }
+  default:
+    break;
+  }
+
+  return true;
+}
+
+bool MYRISCVXAsmPrinter::PrintAsmMemoryOperand(const MachineInstr *MI,
+                                            unsigned OpNo,
+                                            const char *ExtraCode,
+                                            raw_ostream &OS) {
+  if (!ExtraCode) {
+    const MachineOperand &MO = MI->getOperand(OpNo);
+    // For now, we only support register memory operands in registers and
+    // assume there is no addend
+    if (!MO.isReg())
+      return true;
+
+    OS << "0(" << MYRISCVXInstPrinter::getRegisterName(MO.getReg()) << ")";
+    return false;
+  }
+
+  return AsmPrinter::PrintAsmMemoryOperand(MI, OpNo, ExtraCode, OS);
+}
+
+
 void MYRISCVXAsmPrinter::PrintDebugValueComment(const MachineInstr *MI,
                                                 raw_ostream &OS) {
   // TODO: implement
