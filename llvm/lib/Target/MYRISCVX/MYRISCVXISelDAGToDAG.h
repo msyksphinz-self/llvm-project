@@ -66,6 +66,9 @@ namespace llvm {
     // Complex Pattern.
     bool SelectAddrFI(SDValue Addr, SDValue &Base);
 
+    bool SelectInlineAsmMemoryOperand(const SDValue &Op, unsigned ConstraintID,
+                                      std::vector<SDValue> &OutOps) override;
+
     // getImm - Return a target constant with the specified value.
     inline SDValue getImm(const SDNode *Node, unsigned Imm) {
       return CurDAG->getTargetConstant(Imm, SDLoc(Node), Node->getValueType(0));
