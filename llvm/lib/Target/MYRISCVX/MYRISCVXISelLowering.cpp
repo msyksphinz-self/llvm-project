@@ -133,6 +133,12 @@ MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
   setMinimumJumpTableEntries(INT_MAX);
   // @} MYRISCVXTargetLowering_setMinimumJumpTableEntries
 
+  // Operations not directly supported by RISC-V
+  setOperationAction(ISD::BR_CC,             MVT::f32,   Expand);
+  setOperationAction(ISD::BR_CC,             MVT::f64,   Expand);
+  setOperationAction(ISD::SELECT_CC,         MVT::f32,   Expand);
+  setOperationAction(ISD::SELECT_CC,         MVT::f64,   Expand);
+
   setOperationAction(ISD::ConstantPool, MVT::i32, Custom);
   setOperationAction(ISD::ConstantPool, MVT::i64, Custom);
   setOperationAction(ISD::ConstantPool, MVT::f32, Custom);
