@@ -54,14 +54,18 @@ def MYRISCVXInstrInfo : InstrInfo;
 
 // @{ Add_MYRISCVX_td_MYRISCVXAsmParser
 // AsmParserで使用するMatcherを生成する
+// @{ Add_MYRISCVX_td_AllowDuplicateRegisterNames
 def MYRISCVXAsmParser : AsmParser {
   // AsmParserのParse時にAltNameで指定したレジスタ名も受け付ける
   let ShouldEmitMatchRegisterAltName = 1;
+  let AllowDuplicateRegisterNames = 1;
 }
+// @} Add_MYRISCVX_td_AllowDuplicateRegisterNames
 // @} Add_MYRISCVX_td_MYRISCVXAsmParser
 
 // @{ MYRISCVX_td_MYRISCVX
 // MYRISCVXターゲットアーキテクチャを作成する
+// @{ Add_MYRISCVX_td_Target_AssemblyParsers
 def MYRISCVX : Target {
   // MYRISCVXInstrInfoは上記で定義したもの. InstrInfoを継承している
   let InstructionSet = MYRISCVXInstrInfo;
