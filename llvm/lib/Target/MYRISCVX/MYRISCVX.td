@@ -48,13 +48,17 @@ include "MYRISCVXCallingConv.td"
 def MYRISCVXInstrInfo : InstrInfo;
 
 // @{ Add_MYRISCVX_td_MYRISCVXAsmParser
+// @{ Add_MYRISCVX_td_AllowDuplicateRegisterNames
 def MYRISCVXAsmParser : AsmParser {
   let ShouldEmitMatchRegisterAltName = 1;
+  let AllowDuplicateRegisterNames = 1;
 }
+// @} Add_MYRISCVX_td_AllowDuplicateRegisterNames
 // @} Add_MYRISCVX_td_MYRISCVXAsmParser
 
 // @{ MYRISCVX_td_MYRISCVX
 // MYRISCVXターゲットアーキテクチャを作成する
+// @{ Add_MYRISCVX_td_Target_AssemblyParsers
 def MYRISCVX : Target {
 // def MYRISCVXInstrInfo : InstrInfo as before.
   let InstructionSet = MYRISCVXInstrInfo;
