@@ -857,3 +857,7 @@ def CSRRWI : CSRI <0b1110011, 0b101, "csrrwi">;
 def CSRRSI : CSRI <0b1110011, 0b110, "csrrsi">;
 def CSRRCI : CSRI <0b1110011, 0b111, "csrrci">;
 // @} MYRISCVXInstrInfo_CSR
+
+
+// Floating Point Instructions
+include "MYRISCVXInstrInfoFD.td"
