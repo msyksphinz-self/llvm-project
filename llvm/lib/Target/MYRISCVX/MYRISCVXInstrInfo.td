@@ -11,6 +11,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+//@{ MYRISCVXInstrInfo_MYRISCVXRet
+// Return
+def MYRISCVXRet : SDNode<"MYRISCVXISD::Ret", SDTNone,
+                         [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
+//@} MYRISCVXInstrInfo_MYRISCVXRet
+
 //===----------------------------------------------------------------------===//
 // MYRISCVX profiles and nodes
 //===----------------------------------------------------------------------===//
@@ -110,6 +116,15 @@ class ArithLogicI<bits<7> opcode, bits<3> funct3,
 }
 //@} MYRISCVXInstrInfo_ArithLogicI
 
+// JALR is I-type but no OpNode
+class ArithLogicI_J<bits<7> opcode, bits<3> funct3,
+                  string instr_asm,
+                  Operand Od, RegisterClass RC> :
+  MYRISCVX_I<opcode, funct3, (outs RC:$rd), (ins RC:$rs1, Od:$simm12),
+  !strconcat(instr_asm, "\t$rd, $rs1, $simm12"), [], IIAlu> {
+}
+
+
 //@{ MYRISCVXInstrInfo_ArithLogicU
 // Arithmetic and logical instructions with 2 register and one immediate.
 class ArithLogicU<bits<7> opcode,
@@ -120,6 +135,14 @@ class ArithLogicU<bits<7> opcode,
 }
 //@} MYRISCVXInstrInfo_ArithLogicU
 //@} MYRISCVXInstrInfo_Instruction_Format
+
+
+//@{ MYRISCVXInstrInfo_jalr_variation
+def JALR : ArithLogicI_J<0b1100111, 0b000, "jalr", simm12, GPR>;
+def: InstAlias<"jr\t$rs",      (JALR ZERO, GPR:$rs, 0)>;
+def: InstAlias<"jalr\t$rs",    (JALR RA,   GPR:$rs, 0)>;
+def: InstAlias<"ret",          (JALR ZERO,      RA, 0), 2>;
+//@} MYRISCVXInstrInfo_jalr_variation
 
 
 //===----------------------------------------------------------------------===//
