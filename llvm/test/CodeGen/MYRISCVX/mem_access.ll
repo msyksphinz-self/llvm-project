@@ -11,7 +11,7 @@ define dso_local void @load_memory_test() #0 {
 ; MYRVX32I-NEXT:     lui x10, 1
 ; MYRVX32I-NEXT:     addi    x11, x10, 568
 ; MYRVX32I-NEXT:     lw  x12, 0(x11)
-; MYRVX32I-NEXT:     addi    x10, x10, 564
+; MYRVX32I-NEXT:     addi   x10, x10, 564
 ; MYRVX32I-NEXT:     lw  x12, 0(x10)
 ; MYRVX32I-NEXT:     lw  x12, 0(x10)
 ; MYRVX32I-NEXT:     lh  x12, 0(x10)
@@ -26,7 +26,7 @@ define dso_local void @load_memory_test() #0 {
 ; MYRVX64I-LABEL:load_memory_test:
 ; MYRVX64I:          # %bb.0:
 ; MYRVX64I-NEXT:     lui x10, 1
-; MYRVX64I-NEXT:     addi    x10, x10, 564
+; MYRVX64I-NEXT:     addiw   x10, x10, 564
 ; MYRVX64I-NEXT:     ld  x11, 0(x10)
 ; MYRVX64I-NEXT:     lw  x11, 0(x10)
 ; MYRVX64I-NEXT:     lh  x11, 0(x10)
@@ -73,7 +73,7 @@ define dso_local void @store_memory_test() #0 {
 ; MYRVX64I-LABEL:store_memory_test:
 ; MYRVX64I:         # %bb.0:
 ; MYRVX64I-NEXT:    lui x10, 1
-; MYRVX64I-NEXT:    addi    x10, x10, 564
+; MYRVX64I-NEXT:    addiw   x10, x10, 564
 ; MYRVX64I-NEXT:    addi    x11, x0, 1
 ; MYRVX64I-NEXT:    sd  x11, 0(x10)
 ; MYRVX64I-NEXT:    sw  x11, 0(x10)
