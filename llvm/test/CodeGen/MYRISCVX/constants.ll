@@ -45,7 +45,7 @@ define dso_local signext i32 @word_const() #0 {
 ; MYRVX64I-LABEL:word_const:
 ; MYRVX64I:         # %bb.0:
 ; MYRVX64I-NEXT:	lui x10, 74565
-; MYRVX64I-NEXT:	addi    x10, x10, 1656
+; MYRVX64I-NEXT:	addiw    x10, x10, 1656
 ; MYRVX64I-NEXT:	ret
 
 entry:
@@ -63,7 +63,7 @@ define dso_local signext i32 @word_const2() #0 {
 ; MYRVX64I-LABEL:word_const2:
 ; MYRVX64I:         # %bb.0:
 ; MYRVX64I-NEXT:	lui x10, 74566
-; MYRVX64I-NEXT:	addi    x10, x10, -1348
+; MYRVX64I-NEXT:	addiw    x10, x10, -1348
 ; MYRVX64I-NEXT:	ret
 
 entry:
