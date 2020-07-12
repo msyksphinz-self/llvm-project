@@ -1,6 +1,9 @@
 ; RUN: llc --march=myriscvx32 < %s \
 ; RUN:   | FileCheck -check-prefix=MYRVX32I %s
 
+; RUN: llc --march=myriscvx64 < %s \
+; RUN:   | FileCheck -check-prefix=MYRVX64I %s
+
 target datalayout = "e-m:e-p:64:64-i64:64-i128:128-n64-S128"
 target triple = "riscv64-unknown-unknown-elf"
 
@@ -40,6 +43,44 @@ define dso_local signext i32 @func_lot_arguments_O0(i32 signext %val1, i32 signe
 ;MYRVX32I-NEXT:        add     x10, x10, x11
 ;MYRVX32I-NEXT:        addi    x2, x2, 32
 ;MYRVX32I-NEXT:        ret
+
+
+;MYRVX64I-LABEL:func_lot_arguments_O0:
+;MYRVX64I:             # %bb.0:                                # %entry
+;MYRVX64I-NEXT:        addi    x2, x2, -40
+;MYRVX64I-NEXT:        ld      x5, 48(x2)
+;MYRVX64I-NEXT:        ld      x6, 40(x2)
+;MYRVX64I-NEXT:        sw      x10, 36(x2)
+;MYRVX64I-NEXT:        sw      x11, 32(x2)
+;MYRVX64I-NEXT:        sw      x12, 28(x2)
+;MYRVX64I-NEXT:        sw      x13, 24(x2)
+;MYRVX64I-NEXT:        sw      x14, 20(x2)
+;MYRVX64I-NEXT:        sw      x15, 16(x2)
+;MYRVX64I-NEXT:        sw      x16, 12(x2)
+;MYRVX64I-NEXT:        sw      x17, 8(x2)
+;MYRVX64I-NEXT:        sw      x6, 4(x2)
+;MYRVX64I-NEXT:        sw      x5, 0(x2)
+;MYRVX64I-NEXT:        lw      x10, 36(x2)
+;MYRVX64I-NEXT:        lw      x11, 32(x2)
+;MYRVX64I-NEXT:        add     x10, x10, x11
+;MYRVX64I-NEXT:        lw      x11, 28(x2)
+;MYRVX64I-NEXT:        add     x10, x10, x11
+;MYRVX64I-NEXT:        lw      x11, 24(x2)
+;MYRVX64I-NEXT:        add     x10, x10, x11
+;MYRVX64I-NEXT:        lw      x11, 20(x2)
+;MYRVX64I-NEXT:        add     x10, x10, x11
+;MYRVX64I-NEXT:        lw      x11, 16(x2)
+;MYRVX64I-NEXT:        add     x10, x10, x11
+;MYRVX64I-NEXT:        lw      x11, 12(x2)
+;MYRVX64I-NEXT:        add     x10, x10, x11
+;MYRVX64I-NEXT:        lw      x11, 8(x2)
+;MYRVX64I-NEXT:        add     x10, x10, x11
+;MYRVX64I-NEXT:        lw      x11, 4(x2)
+;MYRVX64I-NEXT:        add     x10, x10, x11
+;MYRVX64I-NEXT:        lw      x11, 0(x2)
+;MYRVX64I-NEXT:        addw    x10, x10, x11
+;MYRVX64I-NEXT:        addi    x2, x2, 40
+;MYRVX64I-NEXT:        ret
 
 entry:
   %val1.addr = alloca i32, align 4
@@ -101,6 +142,22 @@ define dso_local signext i32 @func_lot_arguments_O3(i32 signext %val1, i32 signe
 ;MYRVX32I-NEXT:        add     x10, x10, x6
 ;MYRVX32I-NEXT:        add     x10, x10, x5
 ;MYRVX32I-NEXT:        ret
+
+;MYRVX64I-LABEL:func_lot_arguments_O3:
+;MYRVX64I:           # %bb.0:                                # %entry
+;MYRVX64I-NEXT:        ld      x5, 8(x2)
+;MYRVX64I-NEXT:        ld      x6, 0(x2)
+;MYRVX64I-NEXT:        add     x10, x11, x10
+;MYRVX64I-NEXT:        add     x10, x10, x12
+;MYRVX64I-NEXT:        add     x10, x10, x13
+;MYRVX64I-NEXT:        add     x10, x10, x14
+;MYRVX64I-NEXT:        add     x10, x10, x15
+;MYRVX64I-NEXT:        add     x10, x10, x16
+;MYRVX64I-NEXT:        add     x10, x10, x17
+;MYRVX64I-NEXT:        add     x10, x10, x6
+;MYRVX64I-NEXT:        addw    x10, x10, x5
+;MYRVX64I-NEXT:        ret
+
 
 entry:
   %add = add nsw i32 %val2, %val1
