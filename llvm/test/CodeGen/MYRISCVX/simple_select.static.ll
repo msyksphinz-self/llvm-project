@@ -16,7 +16,7 @@ define dso_local signext i32 @simple_select_exp(i32 signext %op1, i32 signext %a
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	sw	x11, 8(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	sw	x12, 4(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 12(x2)
-; MYRVX32I_STATIC_MEDLOW-NEXT: 	beq	x10, x0, $BB0_2
+; MYRVX32I_STATIC_MEDLOW-NEXT: 	beqz	x10, $BB0_2
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	j	$BB0_1
 ; MYRVX32I_STATIC_MEDLOW-NEXT: $BB0_1:                                 # %cond.true
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 8(x2)
@@ -37,7 +37,7 @@ define dso_local signext i32 @simple_select_exp(i32 signext %op1, i32 signext %a
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	sw	x11, 8(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	sw	x12, 4(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lwu	x10, 12(x2)
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	beq	x10, x0, $BB0_2
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	beqz	x10, $BB0_2
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	j	$BB0_1
 ; MYRVX64I_STATIC_MEDLOW-NEXT: $BB0_1:                                 # %cond.true
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lw	x10, 8(x2)

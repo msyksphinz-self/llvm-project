@@ -73,7 +73,7 @@ define dso_local i64 @func_S128([2 x i64] %elem.coerce) local_unnamed_addr #0 {
 ; MYRVX64I_STATIC_MEDANY-NEXT:	sd	x1, 24(x2)              # 8-byte Folded Spill
 ; MYRVX64I_STATIC_MEDANY-NEXT:	sd	x2, 16(x2)              # 8-byte Folded Spill
 ; MYRVX64I_STATIC_MEDANY-NEXT:	sd	x9, 8(x2)               # 8-byte Folded Spill
-; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x9, x11, 0
+; MYRVX64I_STATIC_MEDANY-NEXT:	mv	x9, x11
 ; MYRVX64I_STATIC_MEDANY-NEXT:	call	func_S64
 ; MYRVX64I_STATIC_MEDANY-NEXT:	add	x10, x10, x9
 ; MYRVX64I_STATIC_MEDANY-NEXT:	ld	x9, 8(x2)               # 8-byte Folded Reload
@@ -99,7 +99,7 @@ define dso_local i64 @func_S256(%struct.S256* nocapture readonly %elem) local_un
 ; MYRVX64I_STATIC_MEDANY-NEXT:	sd	x1, 24(x2)              # 8-byte Folded Spill
 ; MYRVX64I_STATIC_MEDANY-NEXT:	sd	x2, 16(x2)              # 8-byte Folded Spill
 ; MYRVX64I_STATIC_MEDANY-NEXT:	sd	x9, 8(x2)               # 8-byte Folded Spill
-; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x9, x10, 0
+; MYRVX64I_STATIC_MEDANY-NEXT:	mv	x9, x10
 ; MYRVX64I_STATIC_MEDANY-NEXT:	ld	x11, 8(x9)
 ; MYRVX64I_STATIC_MEDANY-NEXT:	ld	x10, 0(x9)
 ; MYRVX64I_STATIC_MEDANY-NEXT:	call	func_S128
@@ -170,9 +170,9 @@ define dso_local signext i32 @func_S256_caller() local_unnamed_addr #2 {
 ; MYRVX64I_STATIC_MEDANY-NEXT:	slli	x10, x10, 12
 ; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x10, x10, -1948
 ; MYRVX64I_STATIC_MEDANY-NEXT:	sd	x10, 0(x2)
-; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x10, x2, 0
+; MYRVX64I_STATIC_MEDANY-NEXT:	mv	x10, x2
 ; MYRVX64I_STATIC_MEDANY-NEXT:	call	func_S256
-; MYRVX64I_STATIC_MEDANY-NEXT:	addiw	x10, x10, 0
+; MYRVX64I_STATIC_MEDANY-NEXT:	sext.w	x10, x10
 ; MYRVX64I_STATIC_MEDANY-NEXT:	ld	x2, 32(x2)              # 8-byte Folded Reload
 ; MYRVX64I_STATIC_MEDANY-NEXT:	ld	x1, 40(x2)              # 8-byte Folded Reload
 ; MYRVX64I_STATIC_MEDANY-NEXT:	addi	x2, x2, 48
