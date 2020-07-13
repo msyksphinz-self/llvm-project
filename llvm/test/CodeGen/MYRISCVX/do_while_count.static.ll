@@ -25,7 +25,7 @@ define dso_local signext i32 @do_while_count(i32 signext %init) #0 {
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 0(x2)
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	addi	x11, x0, 1000
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	slt	x10, x10, x11
-; MYRVX32I_STATIC_MEDLOW-NEXT: 	bne	x10, x0, $BB0_1
+; MYRVX32I_STATIC_MEDLOW-NEXT: 	bnez	x10, $BB0_1
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	j	$BB0_3
 ; MYRVX32I_STATIC_MEDLOW-NEXT: $BB0_3:                                 # %do.end
 ; MYRVX32I_STATIC_MEDLOW-NEXT: 	lw	x10, 0(x2)
@@ -48,7 +48,7 @@ define dso_local signext i32 @do_while_count(i32 signext %init) #0 {
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lw	x10, 0(x2)
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x11, x0, 1000
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	slt	x10, x10, x11
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	bne	x10, x0, $BB0_1
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	bnez	x10, $BB0_1
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	j	$BB0_3
 ; MYRVX64I_STATIC_MEDLOW-NEXT: $BB0_3:                                 # %do.end
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	lw	x10, 0(x2)
