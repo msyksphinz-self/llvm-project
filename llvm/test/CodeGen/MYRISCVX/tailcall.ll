@@ -18,21 +18,21 @@ define dso_local i32 @tail_call(i32 %a, i32 %b, i32 %c, i32 %d) local_unnamed_ad
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   sw      x18, 16(x2)             # 4-byte Folded Spill
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   sw      x19, 12(x2)             # 4-byte Folded Spill
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   sw      x20, 8(x2)              # 4-byte Folded Spill
-; MYRVX32I_STATIC_MEDLOW-NEXT:   addi    x9, x13, 0
-; MYRVX32I_STATIC_MEDLOW-NEXT:   addi    x18, x12, 0
-; MYRVX32I_STATIC_MEDLOW-NEXT:   addi    x19, x11, 0
+; MYRVX32I_STATIC_MEDLOW-NEXT:   mv    x9, x13
+; MYRVX32I_STATIC_MEDLOW-NEXT:   mv    x18, x12
+; MYRVX32I_STATIC_MEDLOW-NEXT:   mv    x19, x11
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   call    inc
-; MYRVX32I_STATIC_MEDLOW-NEXT:   addi    x20, x10, 0
-; MYRVX32I_STATIC_MEDLOW-NEXT:   addi    x10, x19, 0
+; MYRVX32I_STATIC_MEDLOW-NEXT:   mv    x20, x10
+; MYRVX32I_STATIC_MEDLOW-NEXT:   mv    x10, x19
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   call    inc
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   add     x19, x10, x20
-; MYRVX32I_STATIC_MEDLOW-NEXT:   addi    x10, x18, 0
+; MYRVX32I_STATIC_MEDLOW-NEXT:   mv    x10, x18
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   call    inc
-; MYRVX32I_STATIC_MEDLOW-NEXT:   addi    x18, x10, 0
-; MYRVX32I_STATIC_MEDLOW-NEXT:   addi    x10, x9, 0
+; MYRVX32I_STATIC_MEDLOW-NEXT:   mv    x18, x10
+; MYRVX32I_STATIC_MEDLOW-NEXT:   mv    x10, x9
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   call    inc
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   add     x11, x10, x18
-; MYRVX32I_STATIC_MEDLOW-NEXT:   addi    x10, x19, 0
+; MYRVX32I_STATIC_MEDLOW-NEXT:   mv    x10, x19
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   call    tail_call_func
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   lw      x20, 8(x2)              # 4-byte Folded Reload
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   lw      x19, 12(x2)             # 4-byte Folded Reload
@@ -52,21 +52,21 @@ define dso_local i32 @tail_call(i32 %a, i32 %b, i32 %c, i32 %d) local_unnamed_ad
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	sd	x18, 16(x2)             # 8-byte Folded Spill
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	sd	x19, 8(x2)              # 8-byte Folded Spill
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	sd	x20, 0(x2)              # 8-byte Folded Spill
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x9, x13, 0
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x18, x12, 0
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x19, x11, 0
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	mv	x9, x13
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	mv	x18, x12
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	mv	x19, x11
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	call	inc
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x20, x10, 0
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x10, x19, 0
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	mv	x20, x10
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	mv	x10, x19
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	call	inc
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	add	x19, x10, x20
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x10, x18, 0
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	mv	x10, x18
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	call	inc
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x18, x10, 0
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x10, x9, 0
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	mv	x18, x10
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	mv	x10, x9
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	call	inc
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	add	x11, x10, x18
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x10, x19, 0
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	mv	x10, x19
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	call	tail_call_func
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	ld	x20, 0(x2)              # 8-byte Folded Reload
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	ld	x19, 8(x2)              # 8-byte Folded Reload
@@ -101,21 +101,21 @@ define dso_local i32 @tail_call_tail(i32 %a, i32 %b, i32 %c, i32 %d) local_unnam
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   sw      x18, 16(x2)             # 4-byte Folded Spill
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   sw      x19, 12(x2)             # 4-byte Folded Spill
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   sw      x20, 8(x2)              # 4-byte Folded Spill
-; MYRVX32I_STATIC_MEDLOW-NEXT:   addi    x9, x13, 0
-; MYRVX32I_STATIC_MEDLOW-NEXT:   addi    x18, x12, 0
-; MYRVX32I_STATIC_MEDLOW-NEXT:   addi    x19, x11, 0
+; MYRVX32I_STATIC_MEDLOW-NEXT:   mv    x9, x13
+; MYRVX32I_STATIC_MEDLOW-NEXT:   mv    x18, x12
+; MYRVX32I_STATIC_MEDLOW-NEXT:   mv    x19, x11
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   call    inc
-; MYRVX32I_STATIC_MEDLOW-NEXT:   addi    x20, x10, 0
-; MYRVX32I_STATIC_MEDLOW-NEXT:   addi    x10, x19, 0
+; MYRVX32I_STATIC_MEDLOW-NEXT:   mv    x20, x10
+; MYRVX32I_STATIC_MEDLOW-NEXT:   mv    x10, x19
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   call    inc
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   add     x19, x10, x20
-; MYRVX32I_STATIC_MEDLOW-NEXT:   addi    x10, x18, 0
+; MYRVX32I_STATIC_MEDLOW-NEXT:   mv    x10, x18
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   call    inc
-; MYRVX32I_STATIC_MEDLOW-NEXT:   addi    x18, x10, 0
-; MYRVX32I_STATIC_MEDLOW-NEXT:   addi    x10, x9, 0
+; MYRVX32I_STATIC_MEDLOW-NEXT:   mv    x18, x10
+; MYRVX32I_STATIC_MEDLOW-NEXT:   mv    x10, x9
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   call    inc
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   add     x11, x10, x18
-; MYRVX32I_STATIC_MEDLOW-NEXT:   addi    x10, x19, 0
+; MYRVX32I_STATIC_MEDLOW-NEXT:   mv    x10, x19
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   lw      x20, 8(x2)              # 4-byte Folded Reload
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   lw      x19, 12(x2)             # 4-byte Folded Reload
 ; MYRVX32I_STATIC_MEDLOW-NEXT:   lw      x18, 16(x2)             # 4-byte Folded Reload
@@ -135,21 +135,21 @@ define dso_local i32 @tail_call_tail(i32 %a, i32 %b, i32 %c, i32 %d) local_unnam
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	sd	x18, 16(x2)             # 8-byte Folded Spill
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	sd	x19, 8(x2)              # 8-byte Folded Spill
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	sd	x20, 0(x2)              # 8-byte Folded Spill
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x9, x13, 0
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x18, x12, 0
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x19, x11, 0
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	mv	x9, x13
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	mv	x18, x12
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	mv	x19, x11
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	call	inc
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x20, x10, 0
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x10, x19, 0
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	mv	x20, x10
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	mv	x10, x19
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	call	inc
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	add	x19, x10, x20
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x10, x18, 0
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	mv	x10, x18
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	call	inc
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x18, x10, 0
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x10, x9, 0
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	mv	x18, x10
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	mv	x10, x9
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	call	inc
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	add	x11, x10, x18
-; MYRVX64I_STATIC_MEDLOW-NEXT: 	addi	x10, x19, 0
+; MYRVX64I_STATIC_MEDLOW-NEXT: 	mv	x10, x19
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	ld	x20, 0(x2)              # 8-byte Folded Reload
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	ld	x19, 8(x2)              # 8-byte Folded Reload
 ; MYRVX64I_STATIC_MEDLOW-NEXT: 	ld	x18, 16(x2)             # 8-byte Folded Reload
