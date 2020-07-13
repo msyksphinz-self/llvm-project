@@ -14,7 +14,7 @@ define dso_local signext i32 @long_value() #0 {
 ;MYRVX32I-LABEL:long_value:
 ;MYRVX32I:      # %bb.0:
 ;MYRVX32I-NEXT:	addi	x2, x2, -8
-;MYRVX32I-NEXT:	addi	x10, x2, 0
+;MYRVX32I-NEXT:	mv	x10, x2
 ;MYRVX32I-NEXT:	ori	x10, x10, 4
 ;MYRVX32I-NEXT:	lui	x11, 4660
 ;MYRVX32I-NEXT:	addi	x11, x11, 1383
@@ -22,7 +22,7 @@ define dso_local signext i32 @long_value() #0 {
 ;MYRVX32I-NEXT:	lui	x10, 563901
 ;MYRVX32I-NEXT:	addi	x10, x10, -529
 ;MYRVX32I-NEXT:	sw	x10, 0(x2)
-;MYRVX32I-NEXT:	addi	x10, x0, 0
+;MYRVX32I-NEXT:	mv	x10, x0
 ;MYRVX32I-NEXT:	addi	x2, x2, 8
 ;MYRVX32I-NEXT:	ret
 
@@ -39,7 +39,7 @@ define dso_local signext i32 @long_value() #0 {
 ;MYRVX64I-NEXT:	slli	x10, x10, 12
 ;MYRVX64I-NEXT:	addi	x10, x10, -529
 ;MYRVX64I-NEXT:	sd	x10, 0(x2)
-;MYRVX64I-NEXT:	addi	x10, x0, 0
+;MYRVX64I-NEXT:	mv	x10, x0
 ;MYRVX64I-NEXT:	addi	x2, x2, 8
 ;MYRVX64I-NEXT:	ret
 
