@@ -23,7 +23,7 @@ define dso_local signext i32 @rotate_left(i32 signext %a) local_unnamed_addr #0 
 ; MYRVX64I-NEXT:	srli	x11, x10, 2
 ; MYRVX64I-NEXT:	slli	x10, x10, 30
 ; MYRVX64I-NEXT:	or	x10, x10, x11
-; MYRVX64I-NEXT:	addiw	x10, x10, 0
+; MYRVX64I-NEXT:	sext.w	x10, x10
 ; MYRVX64I-NEXT:	ret
 
 entry:

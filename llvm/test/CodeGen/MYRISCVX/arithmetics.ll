@@ -58,7 +58,7 @@ define dso_local signext i32 @arithmetics() #0 {
 ;MYRVX32I-NEXT:	lw	x11, 52(x2)
 ;MYRVX32I-NEXT:	sra	x10, x10, x11
 ;MYRVX32I-NEXT:	sw	x10, 0(x2)
-;MYRVX32I-NEXT:	addi	x10, x0, 0
+;MYRVX32I-NEXT:	mv	x10, x0
 ;MYRVX32I-NEXT:	addi	x2, x2, 56
 ;MYRVX32I-NEXT:	ret
 
@@ -112,7 +112,7 @@ define dso_local signext i32 @arithmetics() #0 {
 ;MYRVX64I-NEXT:	lwu	x11, 52(x2)
 ;MYRVX64I-NEXT:	sra	x10, x10, x11
 ;MYRVX64I-NEXT:	sw	x10, 0(x2)
-;MYRVX64I-NEXT:	addi	x10, x0, 0
+;MYRVX64I-NEXT:	mv	x10, x0
 ;MYRVX64I-NEXT:	addi	x2, x2, 56
 ;MYRVX64I-NEXT:	ret
 
