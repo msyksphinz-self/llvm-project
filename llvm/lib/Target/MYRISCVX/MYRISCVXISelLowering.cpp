@@ -63,8 +63,10 @@ const char *MYRISCVXTargetLowering::getTargetNodeName(unsigned Opcode) const {
 // @{ MYRISCVXTargetLowering_setOperationAction_Branch_Select
 // @{ MYRISCVXTargetLowering_setOperationAction_Select
 // @{ MYRISCVXTargetLowering_setOperationAction_vararg
+// @{ MYRISCVXISelLowering_addRegisterClass_FPR_SRegClass
 MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
                                                const MYRISCVXSubtarget &STI)
+  // @{ MYRISCVXISelLowering_addRegisterClass_FPR_SRegClass ...
     : TargetLowering(TM), Subtarget(STI), ABI(TM.getABI()) {
   //@{ MYRISCVXTargetLowering_setOperationAction_DontGenerate ...
   //@{ MYRISCVXTargetLowering_setOperationAction_GlobalAddress ...
@@ -74,8 +76,13 @@ MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
 
   MVT XLenVT = Subtarget.getXLenVT();
 
+  // @} MYRISCVXISelLowering_addRegisterClass_FPR_SRegClass ...
   // Set up the register classes.
   addRegisterClass(XLenVT, &MYRISCVX::GPRRegClass);
+
+  addRegisterClass(MVT::f32, &MYRISCVX::FPR_SRegClass);
+  addRegisterClass(MVT::f64, &MYRISCVX::FPR_DRegClass);
+  // @} MYRISCVXISelLowering_addRegisterClass_FPR_SRegClass
 
   //- Set .align 2
   // It will emit .align 2 later
