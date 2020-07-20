@@ -40,6 +40,21 @@ def simm32: Operand<XLenVT>, ImmLeaf<XLenVT, [{return isInt<32>(Imm);}]>;
 // @} MYRISCVXInstrInfo_Operand_Definition_simm32
 //@} MYRISCVXInstrInfo_Operand_Definition
 
+
+// @{MYRISCVXInstrInfo_LO12_HI20
+// 変換関数を定義する：定数のうち下位の12ビットを抽出する関数
+def LO12sext : SDNodeXForm<imm, [{
+  return CurDAG->getTargetConstant(SignExtend64<12>(N->getZExtValue()),
+                                   SDLoc(N), N->getValueType(0));
+}]>;
+
+// 変換関数を定義する：定数のうち上位の20ビットを抽出する関数
+def HI20 : SDNodeXForm<imm, [{
+  return getImm(N, ((N->getZExtValue()+0x800) >> 12) & 0xfffff);
+}]>;
+// @}MYRISCVXInstrInfo_LO12_HI20
+
+
 // shamt field must fit in 5 bits.
 def immZExt_Xlen : Operand<XLenVT>, ImmLeaf<XLenVT, [{
   return Subtarget->is64Bit() ? isUInt<6>(Imm) : isUInt<5>(Imm);
@@ -130,3 +145,19 @@ def ADD  : ArithLogicR<0b0110011, 0b000, 0b0000000, "add", add, GPR>;
 //===----------------------------------------------------------------------===//
 //  Arbitrary patterns that map to one or more instructions
 //===----------------------------------------------------------------------===//
+// Small immediates
+
+// @{MYRISCVXInstrInfo_Pat_simm12
+// 12ビットの定数を生成するパタン
+def : Pat<(simm12:$in), (ADDI ZERO, simm12:$in)>;
+// @}MYRISCVXInstrInfo_Pat_simm12
+
+// @{MYRISCVXInstrInfo_Pat_simm20u
+// 下位12ビットが0の定数を生成するパタン
+def : Pat<(simm20u:$in), (LUI (HI20 imm:$in))>;
+// @}MYRISCVXInstrInfo_Pat_simm20u
+// @{MYRISCVXInstrInfo_Pat_simm32
+// 一般的な32ビットの定数を生成するパタン
+def : Pat<(simm32:$imm),
+          (ADDI (LUI (HI20 imm:$imm)), (LO12sext imm:$imm))>;
+// @}MYRISCVXInstrInfo_Pat_simm32
