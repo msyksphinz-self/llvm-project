@@ -1,0 +1,43 @@
+;===- ./lib/Target/MYRISCVX/LLVMBuild.txt ----------------------*- Conf -*--===;
+;
+;                     The LLVM Compiler Infrastructure
+;
+; This file is distributed under the University of Illinois Open Source
+; License. See LICENSE.TXT for details.
+;
+;===------------------------------------------------------------------------===;
+;
+; This is an LLVMBuild description file for the components in this subdirectory.
+;
+; For more information on the LLVMBuild system, please see:
+;
+;   http://llvm.org/docs/LLVMBuild.html
+;
+;===------------------------------------------------------------------------===;
+
+; @{ MYRISCVX_LLVMBuild.txt
+[common]
+subdirectories = MCTargetDesc TargetInfo
+
+[component_0]
+# component_0のLLVMターゲットの定義を行っている。
+type = TargetGroup
+name = MYRISCVX
+parent = Target
+
+[component_1]
+# component_1はライブラリの定義を行っている。名前はMYRISCVXCodeGen。
+# ビルド後にlib/libLLVMMYRISCVXCodeGen.a 共有ライブラリが生成される。
+type = Library
+name = MYRISCVXCodeGen
+parent = MYRISCVX
+required_libraries =
+  CodeGen Core MC
+  MYRISCVXDesc
+  MYRISCVXInfo
+  SelectionDAG
+  Support
+  Target
+
+add_to_library_groups = MYRISCVX
+; @} MYRISCVX_LLVMBuild.txt
