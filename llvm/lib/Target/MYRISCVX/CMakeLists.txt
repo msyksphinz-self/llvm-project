@@ -16,6 +16,7 @@ add_public_tablegen_target(MYRISCVXCommonTableGen)
 # MYRISCVXCodeGen should match with LLVMBuild.txt MYRISCVXCodeGen
 add_llvm_target(MYRISCVXCodeGen
   MYRISCVXTargetMachine.cpp
+  MYRISCVXSubtarget.cpp
 )
 
 add_subdirectory(TargetInfo)
