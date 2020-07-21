@@ -26,6 +26,8 @@
 #include "llvm/Support/FormattedStream.h"
 #include "llvm/Support/TargetRegistry.h"
 
+#include "MCTargetDesc/MYRISCVXMCAsmInfo.h"
+
 using namespace llvm;
 
 // @{ MYRISCVXMC_TargetDesc_cpp_AddInclude
