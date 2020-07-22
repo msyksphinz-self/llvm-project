@@ -37,3 +37,31 @@ unsigned MYRISCVXInstrInfo::GetInstSizeInBytes(const MachineInstr &MI) const {
       return MI.getDesc().getSize();
   }
 }
+
+
+//@{ MYRISCVXInstrInfo_expandPostRA
+/// Expand Pseudo instructions into real backend instructions
+bool MYRISCVXInstrInfo::expandPostRAPseudo(MachineInstr &MI) const {
+  //@expandPostRAPseudo-body
+  MachineBasicBlock &MBB = *MI.getParent();
+
+  switch (MI.getDesc().getOpcode()) {
+    default:
+      return false;
+    case MYRISCVX::RetRA:     // MYRISCVX::RetRAノードの場合はexpandRetRA()に飛ぶ
+      expandRetRA(MBB, MI);
+      break;
+  }
+
+  MBB.erase(MI);
+  return true;
+}
+
+
+void MYRISCVXInstrInfo::expandRetRA(MachineBasicBlock &MBB,
+                                    MachineBasicBlock::iterator I) const {
+  // expandRetRAでは、MYRISCVX::RetRAノードをret命令(=JALR x0,ra,0)に変換する
+  BuildMI(MBB, I, I->getDebugLoc(), get(MYRISCVX::JALR))
+      .addReg(MYRISCVX::ZERO).addReg(MYRISCVX::RA).addImm(0);
+}
+//@} MYRISCVXInstrInfo_expandPostRA
