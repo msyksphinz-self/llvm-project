@@ -18,11 +18,14 @@ define dso_local signext i32 @func_caller() #0 {
 ; MYRVX32I_STATIC_MEDLOW-NEXT:         addi    x2, x2, -16
 ; MYRVX32I_STATIC_MEDLOW-NEXT:         sw      x1, 12(x2)              # 4-byte Folded Spill
 ; MYRVX32I_STATIC_MEDLOW-NEXT:         sw      x2, 8(x2)               # 4-byte Folded Spill
-; MYRVX32I_STATIC_MEDLOW-NEXT:         lla     x10, a
+; MYRVX32I_STATIC_MEDLOW-NEXT:         lui     x10, %hi(a)
+; MYRVX32I_STATIC_MEDLOW-NEXT:         addi    x10, x10, %lo(a)
 ; MYRVX32I_STATIC_MEDLOW-NEXT:         lw      x10, 0(x10)
-; MYRVX32I_STATIC_MEDLOW-NEXT:         lla     x11, b
+; MYRVX32I_STATIC_MEDLOW-NEXT:         lui     x11, %hi(b)
+; MYRVX32I_STATIC_MEDLOW-NEXT:         addi    x11, x11, %lo(b)
 ; MYRVX32I_STATIC_MEDLOW-NEXT:         lw      x11, 0(x11)
-; MYRVX32I_STATIC_MEDLOW-NEXT:         lla     x12, c
+; MYRVX32I_STATIC_MEDLOW-NEXT:         lui     x12, %hi(c)
+; MYRVX32I_STATIC_MEDLOW-NEXT:         addi    x12, x12, %lo(c)
 ; MYRVX32I_STATIC_MEDLOW-NEXT:         lw      x12, 0(x12)
 ; MYRVX32I_STATIC_MEDLOW-NEXT:         mv      x2, x2
 ; MYRVX32I_STATIC_MEDLOW-NEXT:         call    func_callee
@@ -38,11 +41,14 @@ define dso_local signext i32 @func_caller() #0 {
 ; MYRVX64I_STATIC_MEDLOW-NEXT:         addi    x2, x2, -16
 ; MYRVX64I_STATIC_MEDLOW-NEXT:         sd      x1, 8(x2)               # 8-byte Folded Spill
 ; MYRVX64I_STATIC_MEDLOW-NEXT:         sd      x2, 0(x2)               # 8-byte Folded Spill
-; MYRVX64I_STATIC_MEDLOW-NEXT:         lla     x10, a
+; MYRVX64I_STATIC_MEDLOW-NEXT:         lui     x10, %hi(a)
+; MYRVX64I_STATIC_MEDLOW-NEXT:         addi    x10, x10, %lo(a)
 ; MYRVX64I_STATIC_MEDLOW-NEXT:         lw      x10, 0(x10)
-; MYRVX64I_STATIC_MEDLOW-NEXT:         lla     x11, b
+; MYRVX64I_STATIC_MEDLOW-NEXT:         lui     x11, %hi(b)
+; MYRVX64I_STATIC_MEDLOW-NEXT:         addi    x11, x11, %lo(b)
 ; MYRVX64I_STATIC_MEDLOW-NEXT:         lw      x11, 0(x11)
-; MYRVX64I_STATIC_MEDLOW-NEXT:         lla     x12, c
+; MYRVX64I_STATIC_MEDLOW-NEXT:         lui     x12, %hi(c)
+; MYRVX64I_STATIC_MEDLOW-NEXT:         addi    x12, x12, %lo(c)
 ; MYRVX64I_STATIC_MEDLOW-NEXT:         lw      x12, 0(x12)
 ; MYRVX64I_STATIC_MEDLOW-NEXT:         mv      x2, x2
 ; MYRVX64I_STATIC_MEDLOW-NEXT:         call    func_callee
