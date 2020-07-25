@@ -17,7 +17,10 @@ define signext i32 @int_array() #0 {
 ; MYRVX32I_PIC_MEDLOW-LABEL:int_array:
 ; MYRVX32I_PIC_MEDLOW:       # %bb.0:
 ; MYRVX32I_PIC_MEDLOW-NEXT:	addi	x2, x2, -24
-; MYRVX32I_PIC_MEDLOW-NEXT:	la	x10, $__const.int_array.array
+; MYRVX32I_PIC_MEDLOW-NEXT:	$BB0_1: # %entry
+; MYRVX32I_PIC_MEDLOW-NEXT:	        # Label of block must be emitted
+; MYRVX32I_PIC_MEDLOW-NEXT:	auipc   x10, %got_pcrel_hi($__const.int_array.array)
+; MYRVX32I_PIC_MEDLOW-NEXT:	lw      x10, %pcrel_lo($BB0_1)(x10)
 ; MYRVX32I_PIC_MEDLOW-NEXT:	lw	x11, 12(x10)
 ; MYRVX32I_PIC_MEDLOW-NEXT:	sw	x11, 20(x2)
 ; MYRVX32I_PIC_MEDLOW-NEXT:	lw	x11, 8(x10)
@@ -51,7 +54,10 @@ define signext i32 @int_array() #0 {
 ; MYRVX32I_PIC_MEDANY-LABEL:int_array:
 ; MYRVX32I_PIC_MEDANY:       # %bb.0:
 ; MYRVX32I_PIC_MEDANY-NEXT:	addi	x2, x2, -24
-; MYRVX32I_PIC_MEDANY-NEXT:	la	x10, $__const.int_array.array
+; MYRVX32I_PIC_MEDANY-NEXT:	$BB0_1: # %entry
+; MYRVX32I_PIC_MEDANY-NEXT:	        # Label of block must be emitted
+; MYRVX32I_PIC_MEDANY-NEXT:	auipc   x10, %got_pcrel_hi($__const.int_array.array)
+; MYRVX32I_PIC_MEDANY-NEXT:	lw      x10, %pcrel_lo($BB0_1)(x10)
 ; MYRVX32I_PIC_MEDANY-NEXT:	lw	x11, 12(x10)
 ; MYRVX32I_PIC_MEDANY-NEXT:	sw	x11, 20(x2)
 ; MYRVX32I_PIC_MEDANY-NEXT:	lw	x11, 8(x10)
@@ -86,7 +92,10 @@ define signext i32 @int_array() #0 {
 ; MYRVX64I_PIC_MEDLOW-LABEL:int_array:
 ; MYRVX64I_PIC_MEDLOW:	    # %bb.0:
 ; MYRVX64I_PIC_MEDLOW-NEXT:	addi    x2, x2, -24
-; MYRVX64I_PIC_MEDLOW-NEXT:	la      x10, $__const.int_array.array
+; MYRVX64I_PIC_MEDLOW-NEXT:	$BB0_1: # %entry
+; MYRVX64I_PIC_MEDLOW-NEXT:	        # Label of block must be emitted
+; MYRVX64I_PIC_MEDLOW-NEXT:	auipc   x10, %got_pcrel_hi($__const.int_array.array)
+; MYRVX64I_PIC_MEDLOW-NEXT:	ld      x10, %pcrel_lo($BB0_1)(x10)
 ; MYRVX64I_PIC_MEDLOW-NEXT:	lwu     x11, 8(x10)
 ; MYRVX64I_PIC_MEDLOW-NEXT:	lwu     x12, 12(x10)
 ; MYRVX64I_PIC_MEDLOW-NEXT:	slli    x12, x12, 32
@@ -125,7 +134,10 @@ define signext i32 @int_array() #0 {
 ; MYRVX64I_PIC_MEDANY-LABEL:int_array:
 ; MYRVX64I_PIC_MEDANY:      # %bb.0:
 ; MYRVX64I_PIC_MEDANY-NEXT: addi    x2, x2, -24
-; MYRVX64I_PIC_MEDANY-NEXT: la      x10, $__const.int_array.array
+; MYRVX64I_PIC_MEDANY-NEXT:	$BB0_1: # %entry
+; MYRVX64I_PIC_MEDANY-NEXT:	        # Label of block must be emitted
+; MYRVX64I_PIC_MEDANY-NEXT:	auipc   x10, %got_pcrel_hi($__const.int_array.array)
+; MYRVX64I_PIC_MEDANY-NEXT:	ld      x10, %pcrel_lo($BB0_1)(x10)
 ; MYRVX64I_PIC_MEDANY-NEXT: lwu     x11, 8(x10)
 ; MYRVX64I_PIC_MEDANY-NEXT: lwu     x12, 12(x10)
 ; MYRVX64I_PIC_MEDANY-NEXT: slli    x12, x12, 32
