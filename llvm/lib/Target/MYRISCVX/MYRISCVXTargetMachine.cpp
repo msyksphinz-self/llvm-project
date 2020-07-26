@@ -133,7 +133,11 @@ class MYRISCVXPassConfig : public TargetPassConfig {
   bool addInstSelector() override;
   // @} MYRISCVXTargetMachine_cpp_addInstSelector
 
+  // @{ MYRISCVXTargetMachine_cpp_addPreEmitPass2
+  void addPreEmitPass2() override;
+
 };
+  // @{ MYRISCVXTargetMachine_cpp_addPreEmitPass2 ...
 } // namespace
 
 TargetPassConfig *MYRISCVXTargetMachine::createPassConfig(PassManagerBase &PM) {
@@ -148,3 +152,10 @@ bool MYRISCVXPassConfig::addInstSelector() {
   return false;
 }
 // @} MYRISCVXTargetMachine_cpp_addInstSelector_impl
+
+
+// @} MYRISCVXTargetMachine_cpp_addPreEmitPass2 ...
+void MYRISCVXPassConfig::addPreEmitPass2() {
+  addPass(createMYRISCVXExpandPseudoPass());
+}
+// @} MYRISCVXTargetMachine_cpp_addPreEmitPass2
