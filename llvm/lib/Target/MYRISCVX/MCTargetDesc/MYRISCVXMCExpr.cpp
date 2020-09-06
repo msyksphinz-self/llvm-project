@@ -1,0 +1,110 @@
+//===-- MYRISCVXMCExpr.cpp - MYRISCVX specific MC expression classes --------------===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is distributed under the University of Illinois Open Source
+// License. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
+
+#include "MYRISCVX.h"
+
+#include "MYRISCVXMCExpr.h"
+#include "llvm/MC/MCAsmInfo.h"
+#include "llvm/MC/MCAssembler.h"
+#include "llvm/MC/MCContext.h"
+#include "llvm/MC/MCObjectStreamer.h"
+#include "llvm/MC/MCSymbolELF.h"
+
+using namespace llvm;
+
+#define DEBUG_TYPE "MYRISCVXmcexpr"
+
+const MYRISCVXMCExpr *MYRISCVXMCExpr::create(MYRISCVXMCExpr::MYRISCVXExprKind Kind,
+                                             const MCExpr *Expr, MCContext &Ctx) {
+  return new (Ctx) MYRISCVXMCExpr(Kind, Expr);
+}
+
+const MYRISCVXMCExpr *MYRISCVXMCExpr::create(const MCSymbol *Symbol, MYRISCVXMCExpr::MYRISCVXExprKind Kind,
+                                             MCContext &Ctx) {
+  const MCSymbolRefExpr *MCSym =
+      MCSymbolRefExpr::create(Symbol, MCSymbolRefExpr::VK_None, Ctx);
+  return new (Ctx) MYRISCVXMCExpr(Kind, MCSym);
+}
+
+
+//@{ MYRISCVXMCExpr_printImpl
+void MYRISCVXMCExpr::printImpl(raw_ostream &OS, const MCAsmInfo *MAI) const {
+  int64_t AbsVal;
+
+  switch (Kind) {
+    case VK_MYRISCVX_None:
+      llvm_unreachable("VK_MYRISCVX_None and VK_MYRISCVX_Special are invalid");
+      break;
+    case VK_MYRISCVX_HI20:
+      OS << "%hi";
+      break;
+    case VK_MYRISCVX_LO12_I:
+      OS << "%lo";
+      break;
+    case VK_MYRISCVX_LO12_S:
+      OS << "%lo";
+      break;
+    case VK_MYRISCVX_CALL:
+    case VK_MYRISCVX_CALL_PLT:
+      if (Expr->evaluateAsAbsolute(AbsVal))
+        OS << AbsVal;
+      else
+        Expr->print(OS, MAI, true);
+      return;
+    case VK_MYRISCVX_GOT_HI20:
+      OS << "%got_pcrel_hi";
+      break;
+    case VK_MYRISCVX_PCREL_HI20:
+      OS << "%pcrel_hi";
+      break;
+    case VK_MYRISCVX_PCREL_LO12_I:
+      OS << "%pcrel_lo";
+      break;
+    case VK_MYRISCVX_PCREL_LO12_S:
+      OS << "%pcrel_lo";
+      break;
+  }
+
+  OS << '(';
+  if (Expr->evaluateAsAbsolute(AbsVal))
+    OS << AbsVal;
+  else
+    Expr->print(OS, MAI, true);
+  OS << ')';
+}
+//@} MYRISCVXMCExpr_printImpl
+
+bool
+MYRISCVXMCExpr::evaluateAsRelocatableImpl(MCValue &Res,
+                                          const MCAsmLayout *Layout,
+                                          const MCFixup *Fixup) const {
+  return getSubExpr()->evaluateAsRelocatable(Res, Layout, Fixup);
+}
+
+void MYRISCVXMCExpr::visitUsedExpr(MCStreamer &Streamer) const {
+  Streamer.visitUsedExpr(*getSubExpr());
+}
+
+void MYRISCVXMCExpr::fixELFSymbolsInTLSFixups(MCAssembler &Asm) const {
+  switch (getKind()) {
+    case VK_MYRISCVX_None:
+      llvm_unreachable("VK_MYRISCVX_None and VK_MYRISCVX_Special are invalid");
+      break;
+    case VK_MYRISCVX_HI20:
+    case VK_MYRISCVX_LO12_I:
+    case VK_MYRISCVX_LO12_S:
+    case VK_MYRISCVX_CALL:
+    case VK_MYRISCVX_CALL_PLT:
+    case VK_MYRISCVX_GOT_HI20:
+    case VK_MYRISCVX_PCREL_HI20:
+    case VK_MYRISCVX_PCREL_LO12_I:
+    case VK_MYRISCVX_PCREL_LO12_S:
+      break;
+  }
+}
