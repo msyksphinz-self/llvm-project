@@ -12,6 +12,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "MYRISCVXMCTargetDesc.h"
+#include "MYRISCVXTargetStreamer.h"
+#include "MCTargetDesc/MYRISCVXInstPrinter.h"
+#include "MYRISCVXMCAsmInfo.h"
 
 #include "llvm/MC/MachineLocation.h"
 #include "llvm/MC/MCELFStreamer.h"
@@ -106,9 +109,21 @@ static MCInstrAnalysis *createMYRISCVXMCInstrAnalysis(const MCInstrInfo *Info) {
 // @} MYRISCVXMC_TargetDesc_cpp_MYRISCVXMCInstrAnalysis
 
 
+// @{ MYISCVXMCTarget_cpp_createMYRISCVXAsmTargetStreamer
+static MCTargetStreamer *createMYRISCVXAsmTargetStreamer(MCStreamer &S,
+                                                         formatted_raw_ostream &OS,
+                                                         MCInstPrinter *InstPrint,
+                                                         bool isVerboseAsm) {
+  return new MYRISCVXTargetAsmStreamer(S, OS);
+}
+// @} MYISCVXMCTarget_cpp_createMYRISCVXAsmTargetStreamer
+
+
 // @{ MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC
+// @{ MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_Asm
 extern "C" void LLVMInitializeMYRISCVXTargetMC() {
   for (Target *T : {&getTheMYRISCVX32Target(), &getTheMYRISCVX64Target()}) {
+    // @{ MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_Asm ...
     // MCASmInfoクラスを登録する
     RegisterMCAsmInfoFn X(*T, createMYRISCVXMCAsmInfo);
 
@@ -121,11 +136,17 @@ extern "C" void LLVMInitializeMYRISCVXTargetMC() {
     // MCSubtargetInfoクラスを登録する
     TargetRegistry::RegisterMCSubtargetInfo(*T,
 	                                        createMYRISCVXMCSubtargetInfo);
+    // @} MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_Asm ...
     // MCInstrAnalysisクラスを登録する
     TargetRegistry::RegisterMCInstrAnalysis(*T, createMYRISCVXMCInstrAnalysis);
     // MCInstPrinterクラスを登録する
     TargetRegistry::RegisterMCInstPrinter(*T,
 	                                      createMYRISCVXMCInstPrinter);
+
+    // Register the Assembly Target streamer.
+    TargetRegistry::RegisterAsmTargetStreamer(*T, createMYRISCVXAsmTargetStreamer);
+
   }
 }
+// @} MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_Asm
 // @} MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC
