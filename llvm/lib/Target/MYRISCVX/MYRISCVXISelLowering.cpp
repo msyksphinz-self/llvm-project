@@ -54,9 +54,12 @@ const char *MYRISCVXTargetLowering::getTargetNodeName(unsigned Opcode) const {
 
 
 // @{ MYRISCVXTargetLowering
+//@{ MYRISCVXTargetLowering_setOperationAction_DontGenerate
 MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
                                                const MYRISCVXSubtarget &STI)
     : TargetLowering(TM), Subtarget(STI), ABI(TM.getABI()) {
+  //@{ MYRISCVXTargetLowering_setOperationAction_DontGenerate ...
+
   MVT XLenVT = Subtarget.getXLenVT();
 
   // Set up the register classes.
@@ -68,6 +71,13 @@ MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
   // must, computeRegisterProperties - Once all of the register classes are
   //  added, this allows us to compute derived properties we expose.
   computeRegisterProperties(STI.getRegisterInfo());
+
+  //@} MYRISCVXTargetLowering_setOperationAction_DontGenerate ...
+  setOperationAction(ISD::ROTL, XLenVT, Expand);
+  setOperationAction(ISD::ROTR, XLenVT, Expand);
+  setOperationAction(ISD::CTLZ,  XLenVT, Expand);
+  setOperationAction(ISD::CTPOP, XLenVT, Expand);
+  //@} MYRISCVXTargetLowering_setOperationAction_DontGenerate
 }
 // @} MYRISCVXTargetLowering
 
