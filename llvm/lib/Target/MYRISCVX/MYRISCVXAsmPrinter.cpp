@@ -47,10 +47,16 @@ bool MYRISCVXAsmPrinter::runOnMachineFunction(MachineFunction &MF) {
   return true;
 }
 
+// @{ MYRISCVXAsmPrinter_cpp_EmitInstruction_PseudoExpansionLowering
 // @{ MYRISCVXAsmPrinter_cpp_EmitInstruction
 // @{ MYRISCVXAsmPrinter_cpp_EmitInstruction_MCInstLower
 void MYRISCVXAsmPrinter::EmitInstruction(const MachineInstr *MI) {
   // @{ MYRISCVXAsmPrinter_cpp_EmitInstruction_MCInstLower ...
+  // 命令出力時に、まずは疑似命令出力のチェックを行う。
+  if (emitPseudoExpansionLowering(*OutStreamer, MI))
+    return;
+  // @} MYRISCVXAsmPrinter_cpp_EmitInstruction_PseudoExpansionLowering
+
   if (MI->isDebugValue()) {
     SmallString<128> Str;
     raw_svector_ostream OS(Str);
@@ -66,6 +72,18 @@ void MYRISCVXAsmPrinter::EmitInstruction(const MachineInstr *MI) {
 }
 // @} MYRISCVXAsmPrinter_cpp_EmitInstruction_MCInstLower
 // @} MYRISCVXAsmPrinter_cpp_EmitInstruction
+
+
+bool MYRISCVXAsmPrinter::lowerOperand(const MachineOperand &MO, MCOperand &MCOp) {
+  MCOp = MCInstLowering.LowerOperand(MO);
+  return MCOp.isValid();
+}
+
+// @{ MYRISCVXAsmPrinter_cpp_EmitInstruction_PseudoLowering_inc
+// 疑似命令への置き換えパタンは自動的に生成されているので、
+// 自動さ生成されたソースコードをincludeしておく。
+#include "MYRISCVXGenMCPseudoLowering.inc"
+// @} MYRISCVXAsmPrinter_cpp_EmitInstruction_PseudoLowering_inc
 
 
 /// Emit Set directives.

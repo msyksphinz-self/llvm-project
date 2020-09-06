@@ -48,7 +48,7 @@ const char *MYRISCVXTargetLowering::getTargetNodeName(unsigned Opcode) const {
     case MYRISCVXISD::DivRem:            return "MYRISCVXISD::DivRem";
     case MYRISCVXISD::DivRemU:           return "MYRISCVXISD::DivRemU";
     case MYRISCVXISD::Wrapper:           return "MYRISCVXISD::Wrapper";
-    default:                         return NULL;
+    default:                             return NULL;
   }
 }
 
@@ -56,11 +56,13 @@ const char *MYRISCVXTargetLowering::getTargetNodeName(unsigned Opcode) const {
 // @{ MYRISCVXTargetLowering
 //@{ MYRISCVXTargetLowering_setOperationAction_DontGenerate
 //@{ MYRISCVXTargetLowering_setOperationAction_GlobalAddress
+// @{ MYRISCVXTargetLowering_setOperationAction_Branch_Select
 MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
                                                const MYRISCVXSubtarget &STI)
     : TargetLowering(TM), Subtarget(STI), ABI(TM.getABI()) {
   //@{ MYRISCVXTargetLowering_setOperationAction_DontGenerate ...
   //@{ MYRISCVXTargetLowering_setOperationAction_GlobalAddress ...
+  // @{ MYRISCVXTargetLowering_setOperationAction_Branch_Select ...
 
   MVT XLenVT = Subtarget.getXLenVT();
 
@@ -84,6 +86,15 @@ MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
   //@} MYRISCVXTargetLowering_setOperationAction_GlobalAddress ...
   setOperationAction(ISD::GlobalAddress, XLenVT, Custom);
   //@} MYRISCVXTargetLowering_setOperationAction_GlobalAddress
+
+  // @} MYRISCVXTargetLowering_setOperationAction_Branch_Select ...
+  // Branch Instructions
+  setOperationAction(ISD::BR_CC,     XLenVT,     Expand);
+  setOperationAction(ISD::BR_JT,     MVT::Other, Expand);
+
+  setOperationAction(ISD::SELECT,    XLenVT,     Custom);   // SELECTはカスタム関数を定義して生成する
+  setOperationAction(ISD::SELECT_CC, XLenVT,     Expand);   // SELECT_CCは生成を抑制する
+  // @} MYRISCVXTargetLowering_setOperationAction_Branch_Select
 }
 // @} MYRISCVXTargetLowering
 
