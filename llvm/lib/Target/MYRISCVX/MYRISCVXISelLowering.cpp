@@ -60,6 +60,7 @@ const char *MYRISCVXTargetLowering::getTargetNodeName(unsigned Opcode) const {
 //@{ MYRISCVXTargetLowering_setOperationAction_GlobalAddress
 // @{ MYRISCVXTargetLowering_setOperationAction_Branch_Select
 // @{ MYRISCVXTargetLowering_setOperationAction_Select
+// @{ MYRISCVXTargetLowering_setOperationAction_vararg
 MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
                                                const MYRISCVXSubtarget &STI)
     : TargetLowering(TM), Subtarget(STI), ABI(TM.getABI()) {
@@ -67,6 +68,7 @@ MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
   //@{ MYRISCVXTargetLowering_setOperationAction_GlobalAddress ...
   // @{ MYRISCVXTargetLowering_setOperationAction_Branch_Select ...
   // @{ MYRISCVXTargetLowering_setOperationAction_Select ...
+  // @{ MYRISCVXTargetLowering_setOperationAction_vararg ...
 
   MVT XLenVT = Subtarget.getXLenVT();
 
@@ -102,6 +104,21 @@ MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
   // @} MYRISCVXTargetLowering_setOperationAction_Select
   // @} MYRISCVXTargetLowering_setOperationAction_Branch_Select
 
+  // @} MYRISCVXTargetLowering_setOperationAction_vararg ...
+  // 可変長引数のためのノード設定。
+  setOperationAction(ISD::VASTART,   MVT::Other, Custom);
+
+  setOperationAction(ISD::VAARG,     MVT::Other, Expand);
+  setOperationAction(ISD::VACOPY,    MVT::Other, Expand);
+  setOperationAction(ISD::VAEND,     MVT::Other, Expand);
+  // @} MYRISCVXTargetLowering_setOperationAction_vararg
+
+  // @{ MYRISCVXTargetLowering_setOperationAction_stack
+  // Use the default for now
+  setOperationAction(ISD::STACKSAVE,    MVT::Other, Expand);
+  setOperationAction(ISD::STACKRESTORE, MVT::Other, Expand);
+  // @} MYRISCVXTargetLowering_setOperationAction_stack
+
   // @{ MYRISCVXTargetLowering_setMinimumJumpTableEntries
   // テーブルジャンプの生成を抑制するのには、生成条件のエントリ数を最大にしておくと
   // 常に生成されなくなる。
@@ -133,6 +150,7 @@ addLiveIn(MachineFunction &MF, unsigned PReg, const TargetRegisterClass *RC)
 
 // @{ MYRISCVXTargetLowering_LowerOperation
 // @{ MYRISCVXTargetLowering_LowerOperation_SELECT
+// @{ MYRISCVXTargetLowering_LowerOperation_VASTART
 SDValue MYRISCVXTargetLowering::
 LowerOperation(SDValue Op, SelectionDAG &DAG) const
 {
@@ -142,6 +160,9 @@ LowerOperation(SDValue Op, SelectionDAG &DAG) const
     case ISD::SELECT       : return lowerSELECT(Op, DAG);
 // @} MYRISCVXTargetLowering_LowerOperation_SELECT
     case ISD::GlobalAddress: return lowerGlobalAddress(Op, DAG);
+    // VASTARTノードはカスタム関数で処理する
+    case ISD::VASTART      : return lowerVASTART       (Op, DAG);
+// @} MYRISCVXTargetLowering_LowerOperation_VASTART
   }
   return SDValue();
 }
@@ -614,6 +635,7 @@ getOpndList(SmallVectorImpl<SDValue> &Ops,
 /// and generate load operations for arguments places on the stack.
 // @{ MYRISCVXISelLowering_LowerFormalArguments
 // @{ MYRISCVXISelLowering_LowerFormalArguments_Head
+// @{ MYRISCVXISelLowering_LowerFormalArguments_IsVarArg
 SDValue
 MYRISCVXTargetLowering::LowerFormalArguments(SDValue Chain,
                                              CallingConv::ID CallConv,
@@ -623,6 +645,7 @@ MYRISCVXTargetLowering::LowerFormalArguments(SDValue Chain,
                                              SmallVectorImpl<SDValue> &InVals)
 // @} MYRISCVXISelLowering_LowerFormalArguments_Head
 const {
+  // @{ MYRISCVXISelLowering_LowerFormalArguments_IsVarArg ...
   MachineFunction &MF = DAG.getMachineFunction();
   MachineFrameInfo &MFI = MF.getFrameInfo();
   MYRISCVXFunctionInfo *MYRISCVXFI = MF.getInfo<MYRISCVXFunctionInfo>();
@@ -708,6 +731,12 @@ const {
     // @} MYRISCVXISelLowering_LowerFormalArguments_MemLoc
   }
 
+  // @} MYRISCVXISelLowering_LowerFormalArguments_IsVarArg ...
+  // 可変長引数ならば、writeVarArgRegsに飛んで引数をスタックに格納していく。
+  if (IsVarArg)
+    writeVarArgRegs(OutChains, Chain, DL, DAG, CCInfo);
+  // @} MYRISCVXISelLowering_LowerFormalArguments_IsVarArg
+
   // All stores are grouped in one node to allow the matching between
   // the size of Ins and InVals. This only happens when on varg functions
   if (!OutChains.empty()) {
@@ -779,3 +808,71 @@ MYRISCVXTargetLowering::LowerReturn(SDValue Chain,
   // @} MYRISCVXISelLowering_LowerReturn_RET
 }
 // @} MYRISCVXISelLowering_LowerReturn
+
+
+// @{ MYRISCVXISelLowering_lowerVASTART
+SDValue MYRISCVXTargetLowering::lowerVASTART(SDValue Op, SelectionDAG &DAG) const {
+  MachineFunction &MF = DAG.getMachineFunction();
+  MYRISCVXFunctionInfo *FuncInfo = MF.getInfo<MYRISCVXFunctionInfo>();
+
+  SDLoc DL = SDLoc(Op);
+  SDValue FI = DAG.getFrameIndex(FuncInfo->getVarArgsFrameIndex(),
+                                 getPointerTy(MF.getDataLayout()));
+
+  // vastart just stores the address of the VarArgsFrameIndex slot into the
+  // memory location argument.
+  const Value *SV = cast<SrcValueSDNode>(Op.getOperand(2))->getValue();
+  return DAG.getStore(Op.getOperand(0), DL, FI, Op.getOperand(1),
+                      MachinePointerInfo(SV));
+}
+// @} MYRISCVXISelLowering_lowerVASTART
+
+
+// @{ MYRISCVXISelLowering_writeVarArgRegs
+void MYRISCVXTargetLowering::writeVarArgRegs(std::vector<SDValue> &OutChains,
+                                             SDValue Chain, const SDLoc &DL,
+                                             SelectionDAG &DAG,
+                                             CCState &State) const {
+  ArrayRef<MCPhysReg> ArgRegs = ABI.GetVarArgRegs();
+  unsigned Idx = State.getFirstUnallocated(ArgRegs);
+  unsigned RegSizeInBytes = Subtarget.getGPRSizeInBytes();
+  MVT RegTy = MVT::getIntegerVT(RegSizeInBytes * 8);
+  const TargetRegisterClass *RC = getRegClassFor(RegTy);
+  MachineFunction &MF = DAG.getMachineFunction();
+  MachineFrameInfo &MFI = MF.getFrameInfo();
+  MYRISCVXFunctionInfo *MYRISCVXFI = MF.getInfo<MYRISCVXFunctionInfo>();
+
+  // Offset of the first variable argument from stack pointer.
+  int VaArgOffset;
+
+  if (ArgRegs.size() == Idx)
+    VaArgOffset = alignTo(State.getNextStackOffset(), RegSizeInBytes);
+  else {
+    VaArgOffset =
+        (int)ABI.GetCalleeAllocdArgSizeInBytes(State.getCallingConv()) -
+        (int)(RegSizeInBytes * (ArgRegs.size() - Idx));
+  }
+
+  // Record the frame index of the first variable argument
+  // which is a value necessary to VASTART.
+  int FI = MFI.CreateFixedObject(RegSizeInBytes, VaArgOffset, true);
+  MYRISCVXFI->setVarArgsFrameIndex(FI);
+
+  for (unsigned I = Idx; I < ArgRegs.size();
+       ++I, VaArgOffset += RegSizeInBytes) {
+
+    // レジスタを経由して渡された引数をすべてスタックに積み上げていく。
+    LLVM_DEBUG(dbgs() << "writeVarArgRegs I = " << I << '\n');
+
+    unsigned Reg = addLiveIn(MF, ArgRegs[I], RC);
+    SDValue ArgValue = DAG.getCopyFromReg(Chain, DL, Reg, RegTy);
+    FI = MFI.CreateFixedObject(RegSizeInBytes, VaArgOffset, true);
+    SDValue PtrOff = DAG.getFrameIndex(FI, getPointerTy(DAG.getDataLayout()));
+    SDValue Store =
+        DAG.getStore(Chain, DL, ArgValue, PtrOff, MachinePointerInfo());
+    cast<StoreSDNode>(Store.getNode())->getMemOperand()->setValue(
+        (Value *)nullptr);
+    OutChains.push_back(Store);
+  }
+}
+// @} MYRISCVXISelLowering_writeVarArgRegs
