@@ -29,6 +29,7 @@
 #include "llvm/Support/FormattedStream.h"
 #include "llvm/Support/TargetRegistry.h"
 
+#include "MCTargetDesc/MYRISCVXELFStreamer.h"
 #include "MCTargetDesc/MYRISCVXMCAsmInfo.h"
 #include "MCTargetDesc/MYRISCVXInstPrinter.h"
 
@@ -103,6 +104,13 @@ class MYRISCVXMCInstrAnalysis : public MCInstrAnalysis {
 };
 }
 
+// @{ MYISCVXMCTarget_cpp_createMYRISCVXObjectTargetStreamer
+static MCTargetStreamer
+*createMYRISCVXObjectTargetStreamer(MCStreamer &S, const MCSubtargetInfo &STI) {
+  return new MYRISCVXTargetELFStreamer(S, STI);
+}
+// @} MYISCVXMCTarget_cpp_createMYRISCVXObjectTargetStreamer
+
 static MCInstrAnalysis *createMYRISCVXMCInstrAnalysis(const MCInstrInfo *Info) {
   return new MYRISCVXMCInstrAnalysis(Info);
 }
@@ -146,6 +154,18 @@ extern "C" void LLVMInitializeMYRISCVXTargetMC() {
     // Register the Assembly Target streamer.
     TargetRegistry::RegisterAsmTargetStreamer(*T, createMYRISCVXAsmTargetStreamer);
 
+    // @{ MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_Object
+    // オブジェクトファイルのTarget Streamerを登録する
+    TargetRegistry::RegisterObjectTargetStreamer(*T, createMYRISCVXObjectTargetStreamer);
+
+    // MC Code Emitterを登録する
+    TargetRegistry::RegisterMCCodeEmitter(*T, createMYRISCVXMCCodeEmitter);
+
+    // @{ MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_RegisterMCAsmBackend
+    // MCAsmBackendを登録する
+    TargetRegistry::RegisterMCAsmBackend(*T, createMYRISCVXAsmBackend);
+    // @} MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_RegisterMCAsmBackend
+    // @} MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_Object
   }
 }
 // @} MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_Asm
