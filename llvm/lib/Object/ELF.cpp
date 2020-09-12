@@ -19,9 +19,11 @@ using namespace object;
 
 #define ELF_RELOC(name, value) STRINGIFY_ENUM_CASE(ELF, name)
 
+// @{ ELF_cpp_EM_MYRISCVX
 StringRef llvm::object::getELFRelocationTypeName(uint32_t Machine,
                                                  uint32_t Type) {
   switch (Machine) {
+// @{ ELF_cpp_EM_MYRISCVX ...
   case ELF::EM_X86_64:
     switch (Type) {
 #include "llvm/BinaryFormat/ELFRelocs/x86_64.def"
@@ -145,6 +147,15 @@ StringRef llvm::object::getELFRelocationTypeName(uint32_t Machine,
       break;
     }
     break;
+// @} ELF_cpp_EM_MYRISCVX ...
+  case ELF::EM_MYRISCVX:
+    switch (Type) {
+#include "llvm/BinaryFormat/ELFRelocs/MYRISCVX.def"
+    default:
+      break;
+    }
+    break;
+    // @} ELF_cpp_EM_MYRISCVX
   default:
     break;
   }
