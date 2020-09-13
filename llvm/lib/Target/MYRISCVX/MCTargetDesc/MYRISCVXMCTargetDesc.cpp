@@ -1,4 +1,4 @@
-//===-- MYRISCVXMCTargetDesc.cpp - MYRISCVX Target Descriptions -------------------===//
+//===-- MYRISCVXMCTargetDesc.cpp - MYRISCVX Target Descriptions ------------===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -65,6 +65,30 @@ static MCSubtargetInfo *createMYRISCVXMCSubtargetInfo(const Triple &TT,
 }
 // @} MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCSubtargetInfo
 
+// @{MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCAsmInfo
+static MCAsmInfo *createMYRISCVXMCAsmInfo(const MCRegisterInfo &MRI,
+                                          const Triple &TT,
+                                          const MCTargetOptions &Options) {
+  MCAsmInfo *MAI = new MYRISCVXMCAsmInfo(TT);
+
+  unsigned SP = MRI.getDwarfRegNum(MYRISCVX::SP, true);
+  MCCFIInstruction Inst = MCCFIInstruction::cfiDefCfa(nullptr, SP, 0);
+  MAI->addInitialFrameState(Inst);
+
+  return MAI;
+}
+// @}MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCAsmInfo
+
+// @{MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCInstPrinter
+static MCInstPrinter *createMYRISCVXMCInstPrinter(const Triple &T,
+                                                  unsigned SyntaxVariant,
+                                                  const MCAsmInfo &MAI,
+                                                  const MCInstrInfo &MII,
+                                                  const MCRegisterInfo &MRI) {
+ return new MYRISCVXInstPrinter(MAI, MII, MRI);
+}
+// @}MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCInstPrinter
+
 namespace {
 
 // @{ MYRISCVXMC_TargetDesc_cpp_MYRISCVXMCInstrAnalysis
@@ -79,6 +103,27 @@ static MCInstrAnalysis *createMYRISCVXMCInstrAnalysis(const MCInstrInfo *Info) {
 }
 // @} MYRISCVXMC_TargetDesc_cpp_MYRISCVXMCInstrAnalysis
 
-extern "C" void LLVMInitializeMYRISCVXTargetMC() {
 
+// @{ MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC
+extern "C" void LLVMInitializeMYRISCVXTargetMC() {
+  for (Target *T : {&getTheMYRISCVX32Target(), &getTheMYRISCVX64Target()}) {
+    // MCASmInfoクラスを登録する
+    RegisterMCAsmInfoFn X(*T, createMYRISCVXMCAsmInfo);
+
+    // MCInstInfoクラスを登録する
+    TargetRegistry::RegisterMCInstrInfo(*T, createMYRISCVXMCInstrInfo);
+
+    // MCRegisterInfoクラスを登録する
+    TargetRegistry::RegisterMCRegInfo(*T, createMYRISCVXMCRegisterInfo);
+
+    // MCSubtargetInfoクラスを登録する
+    TargetRegistry::RegisterMCSubtargetInfo(*T,
+	                                        createMYRISCVXMCSubtargetInfo);
+    // MCInstrAnalysisクラスを登録する
+    TargetRegistry::RegisterMCInstrAnalysis(*T, createMYRISCVXMCInstrAnalysis);
+    // MCInstPrinterクラスを登録する
+    TargetRegistry::RegisterMCInstPrinter(*T,
+	                                      createMYRISCVXMCInstPrinter);
+  }
 }
+// @} MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC
