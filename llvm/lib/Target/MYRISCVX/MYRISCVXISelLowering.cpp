@@ -132,6 +132,18 @@ MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
   // 常に生成されなくなる
   setMinimumJumpTableEntries(INT_MAX);
   // @} MYRISCVXTargetLowering_setMinimumJumpTableEntries
+
+  setOperationAction(ISD::ConstantPool, MVT::i32, Custom);
+  setOperationAction(ISD::ConstantPool, MVT::i64, Custom);
+  setOperationAction(ISD::ConstantPool, MVT::f32, Custom);
+  setOperationAction(ISD::ConstantPool, MVT::f64, Custom);
+
+  // RISCV doesn't have extending float->double load/store.  Set LoadExtAction
+  // for f32, f16
+  for (MVT VT : MVT::fp_valuetypes()) {
+    setLoadExtAction(ISD::EXTLOAD, VT, MVT::f32, Expand);
+    setLoadExtAction(ISD::EXTLOAD, VT, MVT::f16, Expand);
+  }
 }
 // @} MYRISCVXTargetLowering
 
@@ -165,6 +177,7 @@ LowerOperation(SDValue Op, SelectionDAG &DAG) const
   // SelectionDAGのノード種類をチェック
   switch (Op.getOpcode())
   {
+    case ISD::ConstantPool : return lowerConstantPool(Op, DAG);
     // SELECTノードはカスタム関数で処理する
     case ISD::SELECT       : return lowerSELECT(Op, DAG);
 // @} MYRISCVXTargetLowering_LowerOperation_SELECT
@@ -240,6 +253,29 @@ lowerSELECT(SDValue Op, SelectionDAG &DAG) const
 // @} MYRISCVXTargetLowering_lowerSELECT
 
 
+SDValue MYRISCVXTargetLowering::lowerConstantPool(SDValue Op,
+                                                  SelectionDAG &DAG) const {
+  SDLoc DL(Op);
+  EVT Ty = Op.getValueType();
+  ConstantPoolSDNode *N = cast<ConstantPoolSDNode>(Op);
+  int64_t Offset = N->getOffset();
+  MVT XLenVT = Subtarget.getXLenVT();
+
+  if (!isPositionIndependent()) {
+    SDValue Addr = getAddrStatic(N, Ty, DAG);
+    if (Offset) {
+      return DAG.getNode(ISD::ADD, DL, Ty, Addr,
+                         DAG.getConstant(Offset, DL, XLenVT));
+    } else {
+      return Addr;
+    }
+  } else {
+    SDValue Addr = getTargetNode(N, Ty, DAG, 0);
+    return SDValue(DAG.getMachineNode(MYRISCVX::PseudoLA, DL, Ty, Addr), 0);
+  }
+}
+
+
 // @{ MYRISCVXTargetLowering_getTargetNode_Global
 SDValue MYRISCVXTargetLowering::getTargetNode(GlobalAddressSDNode *N, EVT Ty,
                                               SelectionDAG &DAG,
@@ -256,6 +292,14 @@ SDValue MYRISCVXTargetLowering::getTargetNode(ExternalSymbolSDNode *N, EVT Ty,
   return DAG.getTargetExternalSymbol(N->getSymbol(), Ty, Flag);
 }
 // @} MYRISCVXTargetLowering_getTargetNode_External
+
+
+SDValue MYRISCVXTargetLowering::getTargetNode(ConstantPoolSDNode *N, EVT Ty,
+                                              SelectionDAG &DAG,
+                                              unsigned Flags) const {
+  return DAG.getTargetConstantPool(N->getConstVal(), Ty, N->getAlign(),
+                                   N->getOffset(), Flags);
+}
 
 
 // Return the RISC-V branch opcode that matches the given DAG integer
