@@ -56,6 +56,39 @@ class MYRISCVXInstrInfo : public MYRISCVXGenInstrInfo {
                      MachineBasicBlock::iterator II, const DebugLoc &DL,
                      unsigned DstReg, unsigned *NewImm) const;
 
+  void storeRegToStackSlot(MachineBasicBlock &MBB,
+                           MachineBasicBlock::iterator MBBI,
+                           Register SrcReg, bool isKill, int FrameIndex,
+                           const TargetRegisterClass *RC,
+                           const TargetRegisterInfo *TRI) const override {
+    storeRegToStack(MBB, MBBI, SrcReg, isKill, FrameIndex, RC, TRI, 0);
+  }
+
+  void loadRegFromStackSlot(MachineBasicBlock &MBB,
+                            MachineBasicBlock::iterator MBBI,
+                            Register DestReg, int FrameIndex,
+                            const TargetRegisterClass *RC,
+                            const TargetRegisterInfo *TRI) const override {
+    loadRegFromStack(MBB, MBBI, DestReg, FrameIndex, RC, TRI, 0);
+  }
+
+  MachineMemOperand *GetMemOperand(MachineBasicBlock &MBB, int FI,
+                                   MachineMemOperand::Flags Flags) const;
+
+  void storeRegToStack(MachineBasicBlock &MBB,
+                       MachineBasicBlock::iterator MI,
+                       Register SrcReg, bool isKill, int FrameIndex,
+                       const TargetRegisterClass *RC,
+                       const TargetRegisterInfo *TRI,
+                       int64_t Offset) const;
+
+  void loadRegFromStack(MachineBasicBlock &MBB,
+                        MachineBasicBlock::iterator MI,
+                        Register DestReg, int FrameIndex,
+                        const TargetRegisterClass *RC,
+                        const TargetRegisterInfo *TRI,
+                        int64_t Offset) const;
+
  protected:
 };
 }
