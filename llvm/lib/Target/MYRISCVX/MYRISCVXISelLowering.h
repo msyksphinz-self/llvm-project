@@ -155,10 +155,14 @@ namespace llvm {
     SDValue getTargetNode(ExternalSymbolSDNode *N, EVT Ty, SelectionDAG &DAG,
                           unsigned Flag) const;
 
+    // Create a ConstantNode node.
+    SDValue getTargetNode(ConstantPoolSDNode *N, EVT Ty, SelectionDAG &DAG,
+                          unsigned Flag) const;
+
     // Lower Operand specifics
     SDValue lowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
     SDValue lowerSELECT(SDValue Op, SelectionDAG &DAG) const;
-
+    SDValue lowerConstantPool(SDValue Op, SelectionDAG &DAG) const;
 
     SDValue
     LowerCall(TargetLowering::CallLoweringInfo &CLI,
