@@ -28,6 +28,56 @@
 
 using namespace llvm;
 
+// @{ MYRISCVXMC_TargetDesc_cpp_AddInclude
+#define GET_INSTRINFO_MC_DESC
+#include "MYRISCVXGenInstrInfo.inc"
+
+#define GET_SUBTARGETINFO_MC_DESC
+#include "MYRISCVXGenSubtargetInfo.inc"
+
+#define GET_REGINFO_MC_DESC
+#include "MYRISCVXGenRegisterInfo.inc"
+// @} MYRISCVXMC_TargetDesc_cpp_AddInclude
+
+// @{ MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCInstrInfo
+static MCInstrInfo *createMYRISCVXMCInstrInfo() {
+  MCInstrInfo *X = new MCInstrInfo();
+  InitMYRISCVXMCInstrInfo(X); // defined in MYRISCVXGenInstrInfo.inc
+  return X;
+}
+// @} MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCInstrInfo
+
+// @{ MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCRegisterInfo
+static MCRegisterInfo *createMYRISCVXMCRegisterInfo(const Triple &TT) {
+  MCRegisterInfo *X = new MCRegisterInfo();
+  InitMYRISCVXMCRegisterInfo(X, MYRISCVX::RA); // defined in MYRISCVXGenRegisterInfo.inc
+  return X;
+}
+// @} MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCRegisterInfo
+
+// @{ MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCSubtargetInfo
+static MCSubtargetInfo *createMYRISCVXMCSubtargetInfo(const Triple &TT,
+                                                      StringRef CPU, StringRef FS) {
+  if (CPU.empty())
+    CPU = TT.isArch64Bit() ? "cpu-rv64" : "cpu-rv32";
+  return createMYRISCVXMCSubtargetInfoImpl(TT, CPU, FS);
+}
+// @} MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCSubtargetInfo
+
+namespace {
+
+// @{ MYRISCVXMC_TargetDesc_cpp_MYRISCVXMCInstrAnalysis
+class MYRISCVXMCInstrAnalysis : public MCInstrAnalysis {
+ public:
+  MYRISCVXMCInstrAnalysis(const MCInstrInfo *Info) : MCInstrAnalysis(Info) {}
+};
+}
+
+static MCInstrAnalysis *createMYRISCVXMCInstrAnalysis(const MCInstrInfo *Info) {
+  return new MYRISCVXMCInstrAnalysis(Info);
+}
+// @} MYRISCVXMC_TargetDesc_cpp_MYRISCVXMCInstrAnalysis
+
 extern "C" void LLVMInitializeMYRISCVXTargetMC() {
 
 }
