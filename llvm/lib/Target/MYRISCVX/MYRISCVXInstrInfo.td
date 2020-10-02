@@ -27,6 +27,12 @@ def MYRISCVXRet : SDNode<"MYRISCVXISD::Ret", SDTNone,
                          [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 //@} MYRISCVXInstrInfo_MYRISCVXRet
 
+// @{ MYRISCVXInstrInfo_MYRISCVXTailCall
+// Tail call
+def MYRISCVXTailCall : SDNode<"MYRISCVXISD::TailCall", SDT_MYRISCVXCall,
+                               [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue, SDNPVariadic]>;
+// @} MYRISCVXInstrInfo_MYRISCVXTailCall
+
 // @{ MYRISCVXInstrInfo_SelectCC
 def SelectCC : SDNode<"MYRISCVXISD::SELECT_CC", SDT_MYRISCVXSelectCC,
                       [SDNPInGlue]>;
@@ -267,6 +273,14 @@ class StoreMemory<bits<7> opcode, bits<3> funct3, string instr_asm, RegisterClas
      [], IIStore>;
 //@} MYRISCVXInstrInfo_LoadMemory_StoreMemory
 
+//@{ MYRISCVXInstrInfo_PseudoTailCall
+let isCall = 1, isTerminator = 1, isReturn = 1, isBarrier = 1, hasDelaySlot = 0,
+    hasExtraSrcRegAllocReq = 1 in {
+  def PseudoTAILCALL : MYRISCVXPseudo<(outs), (ins call_symbol:$target), "tail\t$target", []>;
+}
+//@} MYRISCVXInstrInfo_PseudoTailCall
+
+
 //===----------------------------------------------------------------------===//
 // Pattern fragment for load/store
 //===----------------------------------------------------------------------===//
@@ -395,6 +409,12 @@ let Defs = [SP], Uses = [SP], hasSideEffects = 1 in {
 let hasSideEffects = 0 in
 def CPRESTORE : MYRISCVXPseudo<(outs), (ins simm12:$loc, GPR:$gp),
                             ".cprestore\t$loc", []>;
+
+// @{ MYRISCVXInstrInfo_MYRISCVXTailCall_Convert
+// カスタムTail CallノードはTail疑似命令に変換される
+def : Pat<(MYRISCVXTailCall tglobaladdr:$dst),  (PseudoTAILCALL tglobaladdr:$dst)>;
+def : Pat<(MYRISCVXTailCall texternalsym:$dst), (PseudoTAILCALL texternalsym:$dst)>;
+// @} MYRISCVXInstrInfo_MYRISCVXTailCall_Convert
 
 //===----------------------------------------------------------------------===//
 // Instruction definition
