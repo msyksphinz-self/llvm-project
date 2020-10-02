@@ -27,6 +27,7 @@
 #include "llvm/Support/TargetRegistry.h"
 
 #include "MCTargetDesc/MYRISCVXMCAsmInfo.h"
+#include "MCTargetDesc/MYRISCVXInstPrinter.h"
 
 using namespace llvm;
 
