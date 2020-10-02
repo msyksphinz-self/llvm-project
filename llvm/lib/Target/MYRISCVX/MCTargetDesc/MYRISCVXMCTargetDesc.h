@@ -20,8 +20,22 @@ namespace llvm {
 class Target;
 class Triple;
 
-extern Target TheMYRISCVXTarget;
-extern Target TheMYRISCVXelTarget;
+Target &getTheMYRISCVX32Target();
+Target &getTheMYRISCVX64Target();
+
+// @{ MYRISCVXMC_TargetDesc_h_AddInclude
+// MYRISCVXGenRegisterInfo.inc / MYRISCVXGenInstrInfo.inc / 
+// MYRISCVXGenSubtargetInfo.inc からヘッダファイルに必要な情報を抽出する
+#define GET_REGINFO_ENUM
+#include "MYRISCVXGenRegisterInfo.inc"
+
+#define GET_INSTRINFO_ENUM
+#include "MYRISCVXGenInstrInfo.inc"
+
+#define GET_SUBTARGETINFO_ENUM
+#include "MYRISCVXGenSubtargetInfo.inc"
+// @} MYRISCVXMC_TargetDesc_h_AddInclude
+
 
 } // End llvm namespace
 
