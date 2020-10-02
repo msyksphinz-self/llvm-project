@@ -37,6 +37,8 @@ using namespace llvm;
 
 #define DEBUG_TYPE "MYRISCVX-lower"
 
+STATISTIC(NumTailCalls, "Number of tail calls");
+
 const char *MYRISCVXTargetLowering::getTargetNodeName(unsigned Opcode) const {
   switch (Opcode) {
     case MYRISCVXISD::CALL:              return "MYRISCVXISD::CALL";
@@ -368,6 +370,7 @@ MYRISCVXTargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
 
 // @{ MYRISCVXISelLowering_LowerCall
 // @{ MYRISCVXISelLowering_LowerCall_GlobalAddressSDNode
+// @{ MYRISCVXISellowering_LowerCall_TailCall
 SDValue
 MYRISCVXTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
                                   SmallVectorImpl<SDValue> &InVals) const {
@@ -379,7 +382,9 @@ MYRISCVXTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
   SmallVectorImpl<ISD::InputArg> &Ins   = CLI.Ins;
   SDValue Chain                         = CLI.Chain;
   SDValue Callee                        = CLI.Callee;
+  // @} MYRISCVXISellowering_LowerCall_TailCall ...
   bool &IsTailCall                      = CLI.IsTailCall;
+  // @{ MYRISCVXISellowering_LowerCall_TailCall ...
   CallingConv::ID CallConv              = CLI.CallConv;
   bool IsVarArg                         = CLI.IsVarArg;
 
@@ -401,6 +406,16 @@ MYRISCVXTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
 
   // Get a count of how many bytes are to be pushed on the stack.
   unsigned NextStackOffset = CCInfo.getNextStackOffset();
+
+  // 末尾最適化が本当に適用可能かチェックする
+  if (IsTailCall)
+    IsTailCall = isEligibleForTailCallOptimization(CCInfo, NextStackOffset,
+                                                   *MF.getInfo<MYRISCVXFunctionInfo>());
+
+  if (IsTailCall) {
+    ++NumTailCalls;
+  }
+  // @} MYRISCVXISellowering_LowerCall_TailCall
 
   // Chain is the output chain of the last Load/Store or CopyToReg node.
   // ByValChain is the output chain of the last Memcpy node created for copying
@@ -512,6 +527,13 @@ MYRISCVXTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
   // 引数をレジスタに置くためのDAGを生成する
   getOpndList(Ops, RegsToPass, IsPICCall, GlobalOrExternal, InternalLinkage,
               CLI, Callee, Chain);
+
+  //@{ MYRISCVXISelLowering_LowerCall_IsTailCall_DAG_getNode
+  // カスタムTailCallノードを挿入
+  if (IsTailCall) {
+    return DAG.getNode(MYRISCVXISD::TailCall, DL, MVT::Other, Ops);
+  }
+  //@} MYRISCVXISelLowering_LowerCall_IsTailCall_DAG_getNode
 
   // @{ MYRISCVXISelLowering_LowerCall_MYRISCVXISD_CALL
   Chain = DAG.getNode(MYRISCVXISD::CALL, DL, NodeTys, Ops);
@@ -672,6 +694,9 @@ const {
                  ArgLocs, *DAG.getContext());
   CCInfo.AnalyzeFormalArguments (Ins, CC_MYRISCVX);
   // @} MYRISCVXISelLowering_LowerFormalArguments_AnalyzeFormalarguments
+
+  MYRISCVXFI->setFormalArgInfo(CCInfo.getNextStackOffset(),
+                               CCInfo.getInRegsParamsCount() > 0);
 
   Function::const_arg_iterator FuncArg =
       DAG.getMachineFunction().getFunction().arg_begin();
@@ -854,6 +879,7 @@ SDValue MYRISCVXTargetLowering::lowerVASTART(SDValue Op, SelectionDAG &DAG) cons
 
 
 // @{ MYRISCVXISelLowering_writeVarArgRegs
+// @{ MYRISCVXISelLowering_writeVarArgRegs_Loop
 void MYRISCVXTargetLowering::writeVarArgRegs(std::vector<SDValue> &OutChains,
                                              SDValue Chain, const SDLoc &DL,
                                              SelectionDAG &DAG,
@@ -866,6 +892,8 @@ void MYRISCVXTargetLowering::writeVarArgRegs(std::vector<SDValue> &OutChains,
   MachineFunction &MF = DAG.getMachineFunction();
   MachineFrameInfo &MFI = MF.getFrameInfo();
   MYRISCVXFunctionInfo *MYRISCVXFI = MF.getInfo<MYRISCVXFunctionInfo>();
+
+  // @{ MYRISCVXISelLowering_writeVarArgRegs_Loop ...
 
   // Offset of the first variable argument from stack pointer.
   int VaArgOffset;
@@ -883,6 +911,7 @@ void MYRISCVXTargetLowering::writeVarArgRegs(std::vector<SDValue> &OutChains,
   int FI = MFI.CreateFixedObject(RegSizeInBytes, VaArgOffset, true);
   MYRISCVXFI->setVarArgsFrameIndex(FI);
 
+  // @} MYRISCVXISelLowering_writeVarArgRegs_Loop ...
   for (unsigned I = Idx; I < ArgRegs.size();
        ++I, VaArgOffset += RegSizeInBytes) {
 
@@ -900,4 +929,24 @@ void MYRISCVXTargetLowering::writeVarArgRegs(std::vector<SDValue> &OutChains,
     OutChains.push_back(Store);
   }
 }
+// @} MYRISCVXISelLowering_writeVarArgRegs_Loop
 // @} MYRISCVXISelLowering_writeVarArgRegs
+
+
+/// isEligibleForTailCallOptimization - Check whether the call is eligible
+/// for tail call optimization.
+// @{ MYRISCVXISelLowering_isEligibleForTailCallOptimization
+bool MYRISCVXTargetLowering::
+isEligibleForTailCallOptimization(
+    CCState &CCInfo,
+    unsigned NextStackOffset, const MYRISCVXFunctionInfo& FI) const {
+
+  // ByVal引数（構造体など）を持っている場合は適用不可能
+  if (CCInfo.getInRegsParamsCount() > 0 || FI.hasByvalArg())
+    return false;
+
+  // 呼び出し先の関数のスタックサイズが呼び出し元のスタックサイズよりも大きい場合は
+  // 適用不可能
+  return NextStackOffset <= FI.getIncomingArgSize();
+}
+// @} MYRISCVXISelLowering_isEligibleForTailCallOptimization
