@@ -64,6 +64,8 @@ namespace llvm {
     bool is64Bit() const { return HasRV64; }
     // @} MYRISCVXSubtarget_is64Bit
 
+    unsigned getGPRSizeInBytes() const { return is64Bit() ? 8 : 4; }
+
     /// This constructor initializes the data members to match that
     /// of the specified triple.
     MYRISCVXSubtarget(const Triple &TT, StringRef &CPU, StringRef &TuneCPU, StringRef &FS,
@@ -89,6 +91,11 @@ namespace llvm {
     }
     const MYRISCVXTargetLowering *getTargetLowering() const override { return &TLInfo; }
     const InstrItineraryData *getInstrItineraryData() const override { return &InstrItins; }
+
+    bool isABI_LP32()    const { return getXLenVT() == MVT::i32 && getABI().IsLP();    }
+    bool isABI_STACK32() const { return getXLenVT() == MVT::i32 && getABI().IsSTACK(); }
+    bool isABI_LP64()    const { return getXLenVT() == MVT::i64 && getABI().IsLP();    }
+    bool isABI_STACK64() const { return getXLenVT() == MVT::i64 && getABI().IsSTACK(); }
   };
 } // End llvm namespace
 
