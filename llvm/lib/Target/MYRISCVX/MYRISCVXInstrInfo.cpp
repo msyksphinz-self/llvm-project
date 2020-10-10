@@ -64,10 +64,17 @@ storeRegToStack(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
   DebugLoc DL;
   MachineMemOperand *MMO = GetMemOperand(MBB, FI, MachineMemOperand::MOStore);
 
-  unsigned Opc = TRI->getRegSizeInBits(MYRISCVX::GPRRegClass) == 32 ?
-      MYRISCVX::SW : MYRISCVX::SD;
+  unsigned Opc;
+  if (MYRISCVX::GPRRegClass.hasSubClassEq(RC))
+    Opc = TRI->getRegSizeInBits(MYRISCVX::GPRRegClass) == 32 ?
+        MYRISCVX::SW : MYRISCVX::SD;
+  else if (MYRISCVX::FPR_SRegClass.hasSubClassEq(RC))
+    Opc = MYRISCVX::FSW;
+  else if (MYRISCVX::FPR_DRegClass.hasSubClassEq(RC))
+    Opc = MYRISCVX::FSD;
+  else
+    llvm_unreachable("Can't store this register to stack slot");
 
-  assert(Opc && "Register class not handled!");
   BuildMI(MBB, I, DL, get(Opc)).addReg(SrcReg, getKillRegState(isKill))
       .addFrameIndex(FI).addImm(Offset).addMemOperand(MMO);
 }
@@ -82,9 +89,18 @@ loadRegFromStack(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
   DebugLoc DL;
   if (I != MBB.end()) DL = I->getDebugLoc();
   MachineMemOperand *MMO = GetMemOperand(MBB, FI, MachineMemOperand::MOLoad);
-  unsigned Opc = TRI->getRegSizeInBits(MYRISCVX::GPRRegClass) == 32 ?
-      MYRISCVX::LW : MYRISCVX::LD;
-  assert(Opc && "Register class not handled!");
+
+  unsigned Opc;
+  if (MYRISCVX::GPRRegClass.hasSubClassEq(RC))
+    Opc = TRI->getRegSizeInBits(MYRISCVX::GPRRegClass) == 32 ?
+        MYRISCVX::LW : MYRISCVX::LD;
+  else if (MYRISCVX::FPR_SRegClass.hasSubClassEq(RC))
+    Opc = MYRISCVX::FLW;
+  else if (MYRISCVX::FPR_DRegClass.hasSubClassEq(RC))
+    Opc = MYRISCVX::FLD;
+  else
+    llvm_unreachable("Can't store this register to stack slot");
+
   BuildMI(MBB, I, DL, get(Opc), DestReg).addFrameIndex(FI).addImm(Offset)
       .addMemOperand(MMO);
 }

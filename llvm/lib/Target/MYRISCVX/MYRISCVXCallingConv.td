@@ -29,6 +29,7 @@ def CSR_LP32 : CalleeSavedRegs<(add RA, SP, FP, S1, (sequence "S%u", 2, 11))>;
 // MYRISCVX LP32/STACK32 Calling Convention
 //===----------------------------------------------------------------------===//
 
+// @{ MYRISCVXCallingConv_CC_LP32_FP
 // @{ MYRISCVXCallingConv_CC_LP32
 // RV32の引数渡しConventionを定義する
 def CC_LP32 : CallingConv<[
@@ -37,11 +38,20 @@ def CC_LP32 : CallingConv<[
 
   // i32型の引数はA0 - A7のレジスタに割り当てる
   CCIfType<[i32], CCAssignToReg<[A0, A1, A2, A3, A4, A5, A6, A7]>>,
+  // Single Floating-Point arguments are passed in FP registers
+  CCIfType<[f32], CCAssignToReg<[F10_S, F11_S, F12_S, F13_S, F14_S, F15_S, F16_S, F17_S]>>,
+  // Double Floating-Point arguments are passed in FP registers
+  CCIfType<[f64], CCAssignToReg<[F10_D, F11_D, F12_D, F13_D, F14_D, F15_D, F16_D, F17_D]>>,
 
   // 引数をスタックに割り当てる場合は4バイトサイズ, 4バイトアラインで配置する
-  CCIfType<[i32], CCAssignToStack<4, 4>>
+  CCIfType<[i32], CCAssignToStack<4, 4>>,
+  // 単精度浮動小数点数は4バイトのメモリを割り当て, 4バイトアラインで配置する
+  CCIfType<[f32], CCAssignToStack<4, 4>>,
+  // 倍精度浮動小数点数は8バイトのメモリを割り当て, 8バイトアラインで配置する
+  CCIfType<[f64], CCAssignToStack<8, 8>>
 ]>;
 // @} MYRISCVXCallingConv_CC_LP32
+// @} MYRISCVXCallingConv_CC_LP32_FP
 
 // @{ MYRISCVXCallingConv_CC_STACK32
 def CC_STACK32 : CallingConv<[
@@ -66,10 +76,18 @@ def CC_LP64 : CallingConv<[
 
   // i32/i64型の引数はA0 - A7のレジスタに割り当てる
   CCIfType<[i32, i64], CCAssignToReg<[A0, A1, A2, A3, A4, A5, A6, A7]>>,
+  // Single Floating-Point arguments are passed in FP registers
+  CCIfType<[f32], CCAssignToReg<[F10_S, F11_S, F12_S, F13_S, F14_S, F15_S, F16_S, F17_S]>>,
+  // Double Floating-Point arguments are passed in FP registers
+  CCIfType<[f64], CCAssignToReg<[F10_D, F11_D, F12_D, F13_D, F14_D, F15_D, F16_D, F17_D]>>,
 
   // 引数をスタックに割り当てる場合は型に応じて確保するサイズとバイトアラインを指定する
   CCIfType<[i32], CCAssignToStack<4, 4>>,
-  CCIfType<[i64], CCAssignToStack<8, 8>>
+  CCIfType<[i64], CCAssignToStack<8, 8>>,
+  // 単精度浮動小数点数は4バイトのメモリを割り当て, 4バイトアラインで配置する
+  CCIfType<[f32], CCAssignToStack<4, 4>>,
+  // 倍精度浮動小数点数は8バイトのメモリを割り当て, 8バイトアラインで配置する
+  CCIfType<[f64], CCAssignToStack<8, 8>>
 ]>;
 // @} MYRISCVXCallingConv_CC_LP64
 
@@ -104,9 +122,15 @@ def CC_MYRISCVX : CallingConv<[
 // @{ MYRISCVXCallingConv_RetCC_LP32
 // RetCC_LP32はRV32用の戻り値に関する規約
 // 戻り値をA0/A1に格納する
+// @{ MYRISCVXCallingConv_RetCC_LP32_FP
 def RetCC_LP32 : CallingConv<[
-  CCIfType<[i32], CCAssignToReg<[A0, A1]>>
+  CCIfType<[i32], CCAssignToReg<[A0, A1]>>,
+
+  // Floating-Point are return in registers FA0, FA1
+  CCIfType<[f32], CCAssignToReg<[F10_S]>>,
+  CCIfType<[f64], CCAssignToReg<[F10_D]>>
 ]>;
+// @} MYRISCVXCallingConv_RetCC_LP32_FP
 // @} MYRISCVXCallingConv_RetCC_LP32
 
 //===----------------------------------------------------------------------===//
@@ -117,7 +141,11 @@ def RetCC_LP32 : CallingConv<[
 // RetCC_LP64はRV64用の戻り値に関する規約
 // 戻り値をA0/A1に格納する
 def RetCC_LP64 : CallingConv<[
-  CCIfType<[i32, i64], CCAssignToReg<[A0, A1]>>
+  CCIfType<[i32, i64], CCAssignToReg<[A0, A1]>>,
+
+  // Floating-Point are return in registers FA0, FA1
+  CCIfType<[f32], CCAssignToReg<[F10_S]>>,
+  CCIfType<[f64], CCAssignToReg<[F10_D]>>
 ]>;
 // @} MYRISCVXCallingConv_RetCC_LP64
 
