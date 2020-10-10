@@ -69,6 +69,9 @@ bool MYRISCVXDAGToDAGISel::SelectAddrFI(SDValue Addr, SDValue &Base) {
 // @{ MYRISCVXISelDAGToDAG_cpp_Select
 void MYRISCVXDAGToDAGISel::Select(SDNode *Node) {
   unsigned Opcode = Node->getOpcode();
+  MVT XLenVT = Subtarget->getXLenVT();
+  SDLoc DL(Node);
+  EVT VT = Node->getValueType(0);
 
   LLVM_DEBUG(errs() << "Selecting: "; Node->dump(CurDAG); errs() << "\n");
 
@@ -82,6 +85,16 @@ void MYRISCVXDAGToDAGISel::Select(SDNode *Node) {
   // 特殊な変換が必要であればここで処理する
   switch(Opcode) {
     default: break;
+      // @{ MYRISCVXISelDAGToDAG_cpp_Select_FrameIndex
+      // FrameIndexの変換：フレームアドレスの計算を加加算命令で置き換える
+    case ISD::FrameIndex: {
+      SDValue Imm = CurDAG->getTargetConstant(0, DL, XLenVT);
+      int FI = cast<FrameIndexSDNode>(Node)->getIndex();
+      SDValue TFI = CurDAG->getTargetFrameIndex(FI, VT);
+      ReplaceNode(Node, CurDAG->getMachineNode(MYRISCVX::ADDI, DL, VT, TFI, Imm));
+      return;
+      // @} MYRISCVXISelDAGToDAG_cpp_Select_FrameIndex
+    }
   }
 
   // デフォルトでは以下の関数が呼び出されて変換が行われる
