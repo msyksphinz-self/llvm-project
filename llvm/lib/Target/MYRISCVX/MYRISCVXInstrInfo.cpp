@@ -38,6 +38,23 @@ unsigned MYRISCVXInstrInfo::GetInstSizeInBytes(const MachineInstr &MI) const {
   }
 }
 
+// @{ MYRISCVXInstrInfo_copyPhysReg
+// copyPhysRegsはレジスタ間コピーを行うためのノードを生成する
+// MYRISCVXの場合はADDI rd,rs,0で所望のコピーが行える
+void MYRISCVXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
+                                    MachineBasicBlock::iterator MBBI,
+                                    const DebugLoc &DL, MCRegister DstReg,
+                                    MCRegister SrcReg, bool KillSrc) const {
+  if (MYRISCVX::GPRRegClass.contains(DstReg, SrcReg)) {
+    BuildMI(MBB, MBBI, DL, get(MYRISCVX::ADDI), DstReg)
+        .addReg(SrcReg, getKillRegState(KillSrc))
+        .addImm(0);
+    return;
+  }
+  llvm_unreachable("Doesn't support Floating Point");
+}
+// @} MYRISCVXInstrInfo_copyPhysReg
+
 //@{ MYRISCVXInstrInfo_expandPostRA
 /// 疑似命令を本物の命令に変換するための関数
 bool MYRISCVXInstrInfo::expandPostRAPseudo(MachineInstr &MI) const {
