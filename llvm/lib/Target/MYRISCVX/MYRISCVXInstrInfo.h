@@ -34,6 +34,10 @@ class MYRISCVXInstrInfo : public MYRISCVXGenInstrInfo {
 
   static const MYRISCVXInstrInfo *create(MYRISCVXSubtarget &STI);
 
+  void copyPhysReg(MachineBasicBlock &MBB, MachineBasicBlock::iterator MBBI,
+                   const DebugLoc &DL, MCRegister DstReg, MCRegister SrcReg,
+                   bool KillSrc) const override;
+
   /// Return the number of bytes of code the specified instruction may be.
   unsigned GetInstSizeInBytes(const MachineInstr &MI) const;
 
