@@ -24,6 +24,7 @@ add_llvm_target(MYRISCVXCodeGen
   MYRISCVXSubtarget.cpp
   MYRISCVXRegisterInfo.cpp
   MYRISCVXFrameLowering.cpp
+  MYRISCVXInstrInfo.cpp
 )
 
 add_subdirectory(TargetInfo)
