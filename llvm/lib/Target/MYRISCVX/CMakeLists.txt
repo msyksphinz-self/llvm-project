@@ -15,6 +15,11 @@ tablegen(LLVM MYRISCVXGenCallingConv.inc -gen-callingconv)
 # @} MYRISCVX_CMakeLists_CallingConv_TableGen
 # @}MYRISCVX_CMakeLists_TableGen
 
+tablegen(LLVM MYRISCVXGenCodeEmitter.inc -gen-emitter)
+tablegen(LLVM MYRISCVXGenMCCodeEmitter.inc -gen-emitter)
+
+tablegen(LLVM MYRISCVXGenAsmWriter.inc -gen-asm-writer)
+
 # MYRISCVXCommonTableGenを定義しなければならない
 add_public_tablegen_target(MYRISCVXCommonTableGen)
 
@@ -28,6 +33,7 @@ add_llvm_target(MYRISCVXCodeGen
   MYRISCVXISelLowering.cpp
   MYRISCVXMachineFunction.cpp
   MYRISCVXTargetObjectFile.cpp
+  MYRISCVXAsmPrinter.cpp
 )
 
 add_subdirectory(TargetInfo)

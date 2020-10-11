@@ -29,12 +29,16 @@ parent = Target
 # component_1はライブラリの定義を行っている. 名前はMYRISCVXCodeGen
 # ビルド後にlib/libLLVMMYRISCVXCodeGen.a 共有ライブラリが生成される
 type = Library
+# Please enable asmprinter
+has_asmprinter = 1
+
 name = MYRISCVXCodeGen
 parent = MYRISCVX
 required_libraries =
   CodeGen Core MC
   MYRISCVXDesc
   MYRISCVXInfo
+  AsmPrinter
   SelectionDAG
   Support
   Target
