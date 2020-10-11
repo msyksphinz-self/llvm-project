@@ -74,6 +74,17 @@ MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
 //  Lower helper functions
 //===----------------------------------------------------------------------===//
 
+// addLiveIn - This helper function adds the specified physical register to the
+// MachineFunction as a live in value.  It also creates a corresponding
+// virtual register for it.
+static unsigned
+addLiveIn(MachineFunction &MF, unsigned PReg, const TargetRegisterClass *RC)
+{
+  unsigned VReg = MF.getRegInfo().createVirtualRegister(RC);
+  MF.getRegInfo().addLiveIn(PReg, VReg);
+  return VReg;
+}
+
 //===----------------------------------------------------------------------===//
 //  Misc Lower Operation implementation
 //===----------------------------------------------------------------------===//
@@ -84,6 +95,7 @@ MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
 //@            Formal Arguments Calling Convention Implementation
 //===----------------------------------------------------------------------===//
 // @{ MYRISCVXISelLowering_LowerFormalArguments
+// @{ MYRISCVXISelLowering_LowerFormalArguments_Head
 /// LowerFormalArguments()
 // 引数渡しにおいて、引数を渡す方法を実装する
 SDValue
@@ -93,12 +105,100 @@ MYRISCVXTargetLowering::LowerFormalArguments(SDValue Chain,
                                              const SmallVectorImpl<ISD::InputArg> &Ins,
                                              const SDLoc &DL, SelectionDAG &DAG,
                                              SmallVectorImpl<SDValue> &InVals)
+// @} MYRISCVXISelLowering_LowerFormalArguments_Head
 const {
-  // ここではまだ何も実装しない
-  // 多くの場合は、
-  //  - 引数を受け取った物理レジスタを仮想的なレジスタに移す作業
-  //  - スタックを経由した引数を仮想的なレジスタに移す作業
-  // が含まれる
+  MachineFunction &MF = DAG.getMachineFunction();
+  MachineFrameInfo &MFI = MF.getFrameInfo();
+  MYRISCVXFunctionInfo *MYRISCVXFI = MF.getInfo<MYRISCVXFunctionInfo>();
+
+  MYRISCVXFI->setVarArgsFrameIndex(0);
+
+  // @{ MYRISCVXISelLowering_LowerFormalArguments_AnalyzeFormalarguments
+  // 引数をレジスタに割り当てるのか、スタックに割り当てるのかを決定する
+  SmallVector<CCValAssign, 16> ArgLocs;
+  CCState CCInfo(CallConv, IsVarArg, DAG.getMachineFunction(),
+                 ArgLocs, *DAG.getContext());
+  CCInfo.AnalyzeFormalArguments (Ins, CC_MYRISCVX);
+  // @} MYRISCVXISelLowering_LowerFormalArguments_AnalyzeFormalarguments
+
+  Function::const_arg_iterator FuncArg =
+      DAG.getMachineFunction().getFunction().arg_begin();
+
+  // スタックに引数を格納するためのストアチェインを格納するためのベクタ
+  std::vector<SDValue> OutChains;
+
+  unsigned CurArgIdx = 0;
+  CCInfo.rewindByValRegsInfo();
+
+  // @{ MYRISCVXISelLowering_LowerFormalArguments_Loop
+  // @{ MYRISCVXISelLowering_LowerFormalArguments_RegLoc
+  for (unsigned i = 0, e = ArgLocs.size(); i != e; ++i) {
+    CCValAssign &VA = ArgLocs[i];
+    // @{ MYRISCVXISelLowering_LowerFormalArguments_RegLoc ...
+    if (Ins[i].isOrigArg()) {
+      std::advance(FuncArg, Ins[i].getOrigArgIndex() - CurArgIdx);
+      CurArgIdx = Ins[i].getOrigArgIndex();
+    }
+    // @} MYRISCVXISelLowering_LowerFormalArguments_RegLoc ...
+    // @} MYRISCVXISelLowering_LowerFormalArguments_Loop
+    EVT ValVT = VA.getValVT();
+
+    // @{ MYRISCVXISelLowering_LowerFormalArguments_RegLoc
+    bool IsRegLoc = VA.isRegLoc();
+
+    if (IsRegLoc) {
+      // レジスタに引数を割り当てる場合：
+      MVT RegVT = VA.getLocVT();
+      unsigned ArgReg = VA.getLocReg();
+      const TargetRegisterClass *RC = getRegClassFor(RegVT);
+
+      // レジスタに配置された引数を、仮想的な変数に乗せ換えるために
+      // getCopyFromRegを使用する
+      unsigned Reg = addLiveIn(DAG.getMachineFunction(), ArgReg, RC);
+      SDValue ArgValue = DAG.getCopyFromReg(Chain, DL, Reg, RegVT);
+
+      if (VA.getLocInfo() != CCValAssign::Full) {
+        unsigned Opcode = 0;
+        if (VA.getLocInfo() == CCValAssign::SExt)
+          Opcode = ISD::AssertSext;
+        else if (VA.getLocInfo() == CCValAssign::ZExt)
+          Opcode = ISD::AssertZext;
+        if (Opcode)
+          ArgValue = DAG.getNode(Opcode, DL, RegVT, ArgValue,
+                                 DAG.getValueType(ValVT));
+        ArgValue = DAG.getNode(ISD::TRUNCATE, DL, ValVT, ArgValue);
+      }
+      InVals.push_back(ArgValue);
+      // @} MYRISCVXISelLowering_LowerFormalArguments_RegLoc
+      // @{ MYRISCVXISelLowering_LowerFormalArguments_MemLoc
+    } else {
+      // スタックに引数を割り当てる場合：
+      MVT LocVT = VA.getLocVT();
+
+      // sanity check
+      assert(VA.isMemLoc());
+
+      // スタックポインタのオフセットはスタックフレームからの相対距離で計算される
+      int FI = MFI.CreateFixedObject(ValVT.getSizeInBits()/8,
+                                     VA.getLocMemOffset(), true);
+
+      // スタックからの引数をロードするためのロード命令を生成する
+      SDValue FIN = DAG.getFrameIndex(FI, getPointerTy(DAG.getDataLayout()));
+      SDValue Load = DAG.getLoad(
+          LocVT, DL, Chain, FIN,
+          MachinePointerInfo::getFixedStack(DAG.getMachineFunction(), FI));
+      InVals.push_back(Load);
+      OutChains.push_back(Load.getValue(1));
+    }
+    // @} MYRISCVXISelLowering_LowerFormalArguments_MemLoc
+  }
+
+  // 全ての引数スタック退避命令を1つのグループにまとめ上げる
+  if (!OutChains.empty()) {
+    OutChains.push_back(Chain);
+    Chain = DAG.getNode(ISD::TokenFactor, DL, MVT::Other, OutChains);
+  }
+
   return Chain;
 }
 // @} MYRISCVXISelLowering_LowerFormalArguments
