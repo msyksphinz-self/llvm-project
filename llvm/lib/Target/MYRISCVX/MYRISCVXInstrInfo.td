@@ -153,6 +153,38 @@ def: InstAlias<"ret",          (JALR ZERO,      RA, 0), 2>;
 //@} MYRISCVXInstrInfo_jalr_variation
 
 
+//@{ MYRISCVXInstrInfo_LoadMemory_StoreMemory
+// メモリロードストアのためのテンプレートを作成
+let canFoldAsLoad = 1 in
+class LoadMemory<bits<7> opcode, bits<3> funct3, string instr_asm, RegisterClass RC>:
+  MYRISCVX_I<opcode, funct3, (outs RC:$rd), (ins GPR:$rs1, simm12:$simm12),
+     !strconcat(instr_asm, "\t$rd, ${simm12}(${rs1})"),
+     [], IILoad>;
+
+class StoreMemory<bits<7> opcode, bits<3> funct3, string instr_asm, RegisterClass RC>:
+  MYRISCVX_S<opcode, funct3, (outs), (ins RC:$rs2, GPR:$rs1, simm12:$simm12),
+     !strconcat(instr_asm, "\t$rs2, ${simm12}(${rs1})"),
+     [], IIStore>;
+//@} MYRISCVXInstrInfo_LoadMemory_StoreMemory
+
+//===----------------------------------------------------------------------===//
+// Pattern fragment for load/store
+//===----------------------------------------------------------------------===//
+
+//@{ MYRISCVXInstrInfo_AlignedLoad_AlignedStore
+class AlignedLoad<PatFrag Node> :
+  PatFrag<(ops node:$ptr), (Node node:$ptr), [{
+  LoadSDNode *LD = cast<LoadSDNode>(N);
+  return LD->getMemoryVT().getSizeInBits()/8 <= LD->getAlignment();
+}]>;
+
+class AlignedStore<PatFrag Node> :
+  PatFrag<(ops node:$val, node:$ptr), (Node node:$val, node:$ptr), [{
+  StoreSDNode *SD = cast<StoreSDNode>(N);
+  return SD->getMemoryVT().getSizeInBits()/8 <= SD->getAlignment();
+}]>;
+//@} MYRISCVXInstrInfo_AlignedLoad_AlignedStore
+
 //===----------------------------------------------------------------------===//
 // Instruction definition
 //===----------------------------------------------------------------------===//
@@ -179,6 +211,39 @@ let isReturn=1, isTerminator=1, hasDelaySlot=0, isBarrier=1, hasCtrlDep=1 in
 //===----------------------------------------------------------------------===//
 //  Arbitrary patterns that map to one or more instructions
 //===----------------------------------------------------------------------===//
+
+// @{ MYRISCVXInstrInfo_LoadStore_PatFrags
+// AlignedLoad / AlignStoreを継承してロードストアのためのOpNodeを生成する
+def load_a          : AlignedLoad<load>;
+def sextloadi8_a    : AlignedLoad<sextloadi8>;
+def zextloadi8_a    : AlignedLoad<zextloadi8>;
+def sextloadi16_a   : AlignedLoad<sextloadi16>;
+def zextloadi16_a   : AlignedLoad<zextloadi16>;
+def extloadi16_a    : AlignedLoad<extloadi16>;
+def sextloadi32_a   : AlignedLoad<sextloadi32>;
+def zextloadi32_a   : AlignedLoad<zextloadi32>;
+def extloadi32_a    : AlignedLoad<extloadi32>;
+
+def store_a         : AlignedStore<store>;
+def truncstorei8_a  : AlignedStore<truncstorei8>;
+def truncstorei16_a : AlignedStore<truncstorei16>;
+def truncstorei32_a : AlignedStore<truncstorei32>;
+// @} MYRISCVXInstrInfo_LoadStore_PatFrags
+
+
+// @{ MYRISCVXInstrInfo_td_MemoryInsts
+/// メモリアクセス命令の定義
+def LW  : LoadMemory <0b0000011, 0b010, "lw",  GPR>;
+def SW  : StoreMemory<0b0100011, 0b010, "sw",  GPR>;
+def LB  : LoadMemory <0b0000011, 0b000, "lb",  GPR>;
+def LBU : LoadMemory <0b0000011, 0b100, "lbu", GPR>;
+def SB  : StoreMemory<0b0100011, 0b000, "sb",  GPR>;
+def LH  : LoadMemory <0b0000011, 0b001, "lh",  GPR>;
+def LHU : LoadMemory <0b0000011, 0b101, "lhu", GPR>;
+def SH  : StoreMemory<0b0100011, 0b001, "sh",  GPR>;
+// @} MYRISCVXInstrInfo_td_MemoryInsts
+
+
 // Small immediates
 
 // @{MYRISCVXInstrInfo_Pat_simm12
@@ -195,3 +260,61 @@ def : Pat<(simm20u:$in), (LUI (HI20 imm:$in))>;
 def : Pat<(simm32:$imm),
           (ADDI (LUI (HI20 imm:$imm)), (LO12sext imm:$imm))>;
 // @}MYRISCVXInstrInfo_Pat_simm32
+
+
+// Addr for Frame
+def : Pat<(add (XLenVT addr_fi:$rs1), simm12:$simm12),
+          (ADDI (XLenVT addr_fi:$rs1), simm12:$simm12)>;
+
+// @{MYRISCVXInstrInfo_td_MemoryPattern_Define
+// メモリアクセスのためのパタン定義
+// multiclassは複数のパタン定義をまとめ上げることができる
+multiclass LoadPattern<PatFrag LoadOp, MYRISCVXInst Inst> {
+  def : Pat<(LoadOp GPR:$rs1)                          , (Inst GPR:$rs1, 0)                  >;
+  def : Pat<(LoadOp addr_fi:$rs1)                      , (Inst addr_fi:$rs1, 0)              >;
+  def : Pat<(LoadOp (add GPR:$rs1, simm12:$simm12))    , (Inst GPR:$rs1, simm12:$simm12)     >;
+  def : Pat<(LoadOp (add addr_fi:$rs1, simm12:$simm12)), (Inst addr_fi:$rs1, simm12:$simm12) >;
+}
+
+multiclass StorePattern<PatFrag StoreOp, MYRISCVXInst Inst, RegisterClass RC> {
+  def : Pat<(StoreOp RC:$rs2, GPR:$rs1)                          , (Inst RC:$rs2, GPR:$rs1, 0)                 >;
+  def : Pat<(StoreOp RC:$rs2, addr_fi:$rs1)                      , (Inst RC:$rs2, addr_fi:$rs1, 0)             >;
+  def : Pat<(StoreOp RC:$rs2, (add GPR:$rs1, simm12:$simm12))    , (Inst RC:$rs2, GPR:$rs1, simm12:$simm12)    >;
+  def : Pat<(StoreOp RC:$rs2, (add addr_fi:$rs1, simm12:$simm12)), (Inst RC:$rs2, addr_fi:$rs1, simm12:$simm12)>;
+}
+// @}MYRISCVXInstrInfo_td_MemoryPattern_Define
+
+// @{ MYRISCVXInstrInfo_td_MemoryPattern_Impl
+// メモリアクセスのためのノードとMYRISCVXの命令を関連付ける
+defm : LoadPattern<sextloadi8  , LB>;
+defm : LoadPattern<extloadi8   , LB>;
+defm : LoadPattern<sextloadi16 , LH>;
+defm : LoadPattern<extloadi16  , LH>;
+defm : LoadPattern<load        , LW>, Requires<[IsRV32]>;
+defm : LoadPattern<zextloadi8  , LBU>;
+defm : LoadPattern<zextloadi16 , LHU>;
+
+defm : StorePattern<truncstorei8  , SB, GPR>;
+defm : StorePattern<truncstorei16 , SH, GPR>;
+defm : StorePattern<store         , SW, GPR>, Requires<[IsRV32]>;
+// @} MYRISCVXInstrInfo_td_MemoryPattern_Impl
+
+
+// @{ MYRISCVXInstrInfo_td_MemoryPattern64
+// RV64のときは以下の命令を追加で定義する
+let Predicates = [IsRV64] in {
+  def LD  : LoadMemory <0b0000011, 0b011, "ld",  GPR>;
+  def SD  : StoreMemory<0b0100011, 0b011, "sd",  GPR>;
+  def LWU : LoadMemory <0b0000011, 0b110, "lwu", GPR>;
+
+  /// Loads
+  defm : LoadPattern<sextloadi32 , LW>;
+  defm : LoadPattern<extloadi32  , LW>;
+  defm : LoadPattern<zextloadi32 , LWU>;
+  defm : LoadPattern<load        , LD>;
+
+  /// Stores
+  defm : StorePattern<truncstorei32 , SW, GPR>;
+  defm : StorePattern<store         , SD, GPR>;
+} // Predicates = [IsRV64]
+// @} MYRISCVXInstrInfo_td_MemoryPattern64
