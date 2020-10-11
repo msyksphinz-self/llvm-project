@@ -108,6 +108,7 @@ const {
 //@              Return Value Calling Convention Implementation
 //===----------------------------------------------------------------------===//
 // @{ MYRISCVXISelLowering_LowerReturn
+// @{ MYRISCVXISelLowering_LowerReturn_MYRISCVXRet
 // LowerReturn()
 // LLVM IRのreturn文をどのようにSelectionDAGに置き換えるかをここで指定する
 SDValue
@@ -116,10 +117,12 @@ MYRISCVXTargetLowering::LowerReturn(SDValue Chain,
                                     const SmallVectorImpl<ISD::OutputArg> &Outs,
                                     const SmallVectorImpl<SDValue> &OutVals,
                                     const SDLoc &DL, SelectionDAG &DAG) const {
-  // ここではまだ何も実装しない
-  // 多くの場合は、
-  //  戻り値を持っている仮想レジスタを物理レジスタに移す作業
-  // が含まれる
-  return Chain;
+   // MYRISCVXISD::Retノードを生成し、ノードには
+   //  - 戻り値を格納しているChain
+   //  - 戻りアドレスを格納しているRAレジスタ
+   // を接続する
+   return DAG.getNode(MYRISCVXISD::Ret, DL, MVT::Other,
+                      Chain, DAG.getRegister(MYRISCVX::RA, Subtarget.getXLenVT()));
 }
+// @} MYRISCVXISelLowering_LowerReturn_MYRISCVXRet
 // @} MYRISCVXISelLowering_LowerReturn
