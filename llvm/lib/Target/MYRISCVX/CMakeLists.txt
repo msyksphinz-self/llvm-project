@@ -22,6 +22,7 @@ add_public_tablegen_target(MYRISCVXCommonTableGen)
 add_llvm_target(MYRISCVXCodeGen
   MYRISCVXTargetMachine.cpp
   MYRISCVXSubtarget.cpp
+  MYRISCVXRegisterInfo.cpp
 )
 
 add_subdirectory(TargetInfo)
