@@ -78,12 +78,69 @@ getReservedRegs(const MachineFunction &MF) const {
 // @} MYRISCVXRegisterInfo_getReservedRegs
 
 // @{ MYRISCVXRegisterInfo_eliminateFrameIndex
+// @{ MYRISCVXRegisterInfo_eliminateFrameIndex_Implemented
+// eliminateFrameIndexでは関数内での変数参照に使用される仮想的なオフセットを
+// 具体的なオフセット計算に置き換える
 void MYRISCVXRegisterInfo::
 eliminateFrameIndex(MachineBasicBlock::iterator II, int SPAdj,
                     unsigned FIOperandNum, RegScavenger *RS) const {
-  // フレームインデックスを削除するための関数
-  // ここではまだ実装しない
+  MachineInstr &MI = *II;
+  MachineFunction &MF = *MI.getParent()->getParent();
+  MachineFrameInfo MFI = MF.getFrameInfo();
+
+  // @{ eliminateFrameIndex_FindFrameIndex
+  // フレームインデックスを使用しているオペランドを探す
+  unsigned i = 0;
+  while (!MI.getOperand(i).isFI()) {
+    ++i;
+    assert(i < MI.getNumOperands() &&
+           "Instr doesn't have FrameIndex operand!");
+  }
+  // @} eliminateFrameIndex_FindFrameIndex
+
+  // @{ MYRISCVXRegisterInfo_eliminateFrameIndex_Implemented ...
+  LLVM_DEBUG(errs() << "\nFunction : " << MF.getFunction().getName() << "\n";
+             errs() << "<--------->\n" << MI);
+  // @} MYRISCVXRegisterInfo_eliminateFrameIndex_Implemented ...
+
+  // @{ eliminateFrameIndex_getOffset
+  int FrameIndex = MI.getOperand(i).getIndex();
+  // スタックフレームのサイズと, フレームインデックスからのオフセットを取得
+  uint64_t stackSize = MF.getFrameInfo().getStackSize();
+  int64_t spOffset = MF.getFrameInfo().getObjectOffset(FrameIndex);
+  // @} eliminateFrameIndex_getOffset
+
+  // @{ MYRISCVXRegisterInfo_eliminateFrameIndex_Implemented ...
+  LLVM_DEBUG(errs() << "FrameIndex : " << FrameIndex << "\n"
+             << "spOffset   : " << spOffset << "\n"
+             << "stackSize  : " << stackSize << "\n");
+  // @} MYRISCVXRegisterInfo_eliminateFrameIndex_Implemented ...
+
+  // スタックフレーム内の変数はSPレジスタを基準にして参照する
+  unsigned FrameReg = MYRISCVX::SP;
+
+  // スタックポインタからのオフセットを計算する
+  // @{ eliminateFrameIndex_calcOffset
+  int64_t Offset;
+  Offset  = spOffset + (int64_t)stackSize;
+  Offset += MI.getOperand(i+1).getImm();
+  // @} eliminateFrameIndex_calcOffset
+
+  // @{ MYRISCVXRegisterInfo_eliminateFrameIndex_Implemented ...
+  LLVM_DEBUG(errs() << "Offset     : " << Offset << "\n" << "<--------->\n");
+
+  if (!MI.isDebugValue() && !isInt<12>(Offset)) {
+	assert("(!MI.isDebugValue() && !isInt<16>(Offset))");
+  }
+  // @} MYRISCVXRegisterInfo_eliminateFrameIndex_Implemented ...
+
+  // @{ eliminateFrameIndex_changeMI
+  // スタックフレームの参照をスタックフレームと新たに計算したオフセットに置き換える
+  MI.getOperand(i+0).ChangeToRegister(FrameReg, false);
+  MI.getOperand(i+1).ChangeToImmediate(Offset);
+  // @} eliminateFrameIndex_changeMI
 }
+// @} MYRISCVXRegisterInfo_eliminateFrameIndex_Implemented
 // @} MYRISCVXRegisterInfo_eliminateFrameIndex
 
 // @{ MYRISCVXRegisterInfo_requiresRegisterScavenging
