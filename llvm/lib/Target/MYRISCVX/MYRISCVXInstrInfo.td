@@ -784,6 +784,13 @@ defm : BrcondPatsSlt<GPR, BEQ, BNE, SLT, SLTU, SLTI, SLTIU, ZERO>;
 // @} MYRISCVXInstrInfo_BrcondPatsSlt
 
 
+// @{ MYRISCVXInstrInfo_LoadImm32
+class LoadImm32< string instr_asm, Operand Od, RegisterClass RC> :
+  MYRISCVXAsmPseudoInst<(outs RC:$rd), (ins Od:$imm32),
+                     !strconcat(instr_asm, "\t$rd, $imm32")> ;
+def LoadImm32Reg : LoadImm32<"li", simm32, GPR>;
+// @} MYRISCVXInstrInfo_LoadImm32
+
 // PseudoInstructions
 // @{ MYRISCVXInstrInfo_PseudoInstructions
 def: InstAlias<"nop",            (ADDI ZERO,    ZERO,      0      )>;
