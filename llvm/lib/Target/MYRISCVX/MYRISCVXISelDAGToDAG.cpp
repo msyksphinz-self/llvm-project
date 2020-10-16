@@ -13,6 +13,7 @@
 
 #include "MYRISCVXISelDAGToDAG.h"
 #include "MYRISCVX.h"
+#include "MYRISCVXMatInt.h"
 
 #include "MYRISCVXMachineFunction.h"
 #include "MYRISCVXRegisterInfo.h"
@@ -64,8 +65,35 @@ bool MYRISCVXDAGToDAGISel::SelectAddrFI(SDValue Addr, SDValue &Base) {
 }
 
 
+// @{ MYRISCVXISelDAGToDAG_cpp_selectImm
+static SDNode *selectImm(SelectionDAG *CurDAG, const SDLoc &DL, int64_t Imm,
+                         MVT XLenVT) {
+  MYRISCVXMatInt::InstSeq Seq;
+  MYRISCVXMatInt::generateInstSeq(Imm, XLenVT == MVT::i64, Seq);
+
+  // @{ MYRISCVXISelDAGToDAG_cpp_selectImm ...
+  SDNode *Result = nullptr;
+  SDValue SrcReg = CurDAG->getRegister(MYRISCVX::ZERO, XLenVT);
+  for (MYRISCVXMatInt::Inst &Inst : Seq) {
+    SDValue SDImm = CurDAG->getTargetConstant(Inst.Imm, DL, XLenVT);
+    if (Inst.Opc == MYRISCVX::LUI)
+      Result = CurDAG->getMachineNode(MYRISCVX::LUI, DL, XLenVT, SDImm);
+    else
+      Result = CurDAG->getMachineNode(Inst.Opc, DL, XLenVT, SrcReg, SDImm);
+
+    // Only the first instruction has X0 as its source.
+    SrcReg = SDValue(Result, 0);
+  }
+  // @} MYRISCVXISelDAGToDAG_cpp_selectImm ...
+
+  return Result;
+}
+// @} MYRISCVXISelDAGToDAG_cpp_selectImm
+
+
 /// Select instructions not customized! Used for
 /// expanded, promoted and normal instructions
+// @{ MYRISCVXISelDAGToDAG_cpp_Select_Constant
 // @{ MYRISCVXISelDAGToDAG_cpp_Select
 void MYRISCVXDAGToDAGISel::Select(SDNode *Node) {
   unsigned Opcode = Node->getOpcode();
@@ -73,6 +101,7 @@ void MYRISCVXDAGToDAGISel::Select(SDNode *Node) {
   SDLoc DL(Node);
   EVT VT = Node->getValueType(0);
 
+  // @{ MYRISCVXISelDAGToDAG_cpp_Select_Constant ...
   LLVM_DEBUG(errs() << "Selecting: "; Node->dump(CurDAG); errs() << "\n");
 
   // すでに命令ノードに置き換わっている場合は変換の必要はない
@@ -83,8 +112,19 @@ void MYRISCVXDAGToDAGISel::Select(SDNode *Node) {
   }
 
   // 特殊な変換が必要であればここで処理する
+  // @{ MYRISCVXISelDAGToDAG_cpp_Select_Constant ...
   switch(Opcode) {
     default: break;
+    case ISD::Constant: {
+      auto ConstNode = cast<ConstantSDNode>(Node);
+      int64_t Imm = ConstNode->getSExtValue();
+      if (XLenVT == MVT::i64) {
+        ReplaceNode(Node, selectImm(CurDAG, SDLoc(Node), Imm, XLenVT));
+        return;
+      }
+      break;
+    }
+      // @} MYRISCVXISelDAGToDAG_cpp_Select_Constant
       // @{ MYRISCVXISelDAGToDAG_cpp_Select_FrameIndex
       // FrameIndexの変換：フレームアドレスの計算を加加算命令で置き換える
     case ISD::FrameIndex: {
