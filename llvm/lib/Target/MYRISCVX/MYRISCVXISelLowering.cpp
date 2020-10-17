@@ -48,6 +48,7 @@ const char *MYRISCVXTargetLowering::getTargetNodeName(unsigned Opcode) const {
     case MYRISCVXISD::DivRem:            return "MYRISCVXISD::DivRem";
     case MYRISCVXISD::DivRemU:           return "MYRISCVXISD::DivRemU";
     case MYRISCVXISD::Wrapper:           return "MYRISCVXISD::Wrapper";
+    case MYRISCVXISD::SELECT_CC:         return "MYRISCVXISD::SELECT_CC";
     default:                             return NULL;
   }
 }
@@ -123,12 +124,16 @@ addLiveIn(MachineFunction &MF, unsigned PReg, const TargetRegisterClass *RC)
 #include "MYRISCVXGenCallingConv.inc"
 
 // @{ MYRISCVXTargetLowering_LowerOperation
+// @{ MYRISCVXTargetLowering_LowerOperation_SELECT
 SDValue MYRISCVXTargetLowering::
 LowerOperation(SDValue Op, SelectionDAG &DAG) const
 {
   // SelectionDAGのノード種類をチェック
   switch (Op.getOpcode())
   {
+    // SELECTノードはカスタム関数で処理する
+    case ISD::SELECT       : return lowerSELECT(Op, DAG);
+// @} MYRISCVXTargetLowering_LowerOperation_SELECT
     // GlobalAddressノードであれば, lowerGlobalAddress()を呼び出す
     // GlobalAddressノードはあらかじめsetOperationAction()でカスタム処理を呼び出すように設定してある
     case ISD::GlobalAddress: return lowerGlobalAddress(Op, DAG);
@@ -169,6 +174,34 @@ SDValue MYRISCVXTargetLowering::lowerGlobalAddress(SDValue Op,
 // @} MYRISCVXTargetLowering_lowerGlobalAddress_PIC
 // @} MYRISCVXTargetLowering_lowerGlobalAddress
 
+// @{ MYRISCVXTargetLowering_lowerSELECT
+SDValue MYRISCVXTargetLowering::
+lowerSELECT(SDValue Op, SelectionDAG &DAG) const
+{
+  // やっていることは, SELECTノードをMYRISCVXカスタムのSELECT_CCノードに置き換えている
+  // LLVMでデフォルトで定義されているSELECT_CCノードとは異なるので注意
+  // MYRISCVXISD::SELECT_CCから独自の生成パタンで命令に落とし込むための下準備
+  SDValue CondV = Op.getOperand(0);    // 条件判定のための値
+  SDValue TrueV = Op.getOperand(1);    // 条件がTrueの場合に選択される値
+  SDValue FalseV = Op.getOperand(2);   // 条件がFalseの場合に選択される値
+  SDLoc DL(Op);
+
+  MVT XLenVT = Subtarget.getXLenVT();
+
+  // (select condv, truev, falsev)
+  // -> (MYRISCVXISD::SELECT_CC condv, zero, setne, truev, falsev)
+  SDValue Zero = DAG.getConstant(0, DL, XLenVT);              // 定数ゼロのためのSelectionDAGノード
+  SDValue SetNE = DAG.getConstant(ISD::SETNE, DL, XLenVT);    // NEQ演算のためのSelectionDAGノード
+
+  SDVTList VTs = DAG.getVTList(Op.getValueType(), MVT::Glue);
+  // (NEQ(条件値, ZERO), True値, False値)という引数リストが作成される
+  SDValue Ops[] = {CondV, Zero, SetNE, TrueV, FalseV};
+
+  // MYRISCVXISD::SELECT_CCの引数としてOpsが設定されこのDAGノードが返される
+  return DAG.getNode(MYRISCVXISD::SELECT_CC, DL, VTs, Ops);
+}
+// @} MYRISCVXTargetLowering_lowerSELECT
+
 
 // @{ MYRISCVXTargetLowering_getTargetNode_Global
 SDValue MYRISCVXTargetLowering::getTargetNode(GlobalAddressSDNode *N, EVT Ty,
@@ -186,6 +219,123 @@ SDValue MYRISCVXTargetLowering::getTargetNode(ExternalSymbolSDNode *N, EVT Ty,
   return DAG.getTargetExternalSymbol(N->getSymbol(), Ty, Flag);
 }
 // @} MYRISCVXTargetLowering_getTargetNode_External
+
+
+// Return the RISC-V branch opcode that matches the given DAG integer
+// condition code. The CondCode must be one of those supported by the RISC-V
+// ISA (see normaliseSetCC).
+// @{ MYRISCVXISelLowering_getBranchOpcodeForIntCondCode
+unsigned MYRISCVXTargetLowering::getBranchOpcodeForIntCondCode (ISD::CondCode CC) {
+  switch (CC) {
+  default:
+    llvm_unreachable("Unsupported CondCode");
+  case ISD::SETEQ:
+    return MYRISCVX::BEQ;
+  case ISD::SETNE:
+    return MYRISCVX::BNE;
+  case ISD::SETLT:
+    return MYRISCVX::BLT;
+  case ISD::SETGE:
+    return MYRISCVX::BGE;
+  case ISD::SETULT:
+    return MYRISCVX::BLTU;
+  case ISD::SETUGE:
+    return MYRISCVX::BGEU;
+  }
+}
+// @} MYRISCVXISelLowering_getBranchOpcodeForIntCondCode
+
+
+// @{ MYRISCVXISelLowering_emitSelectPseudo
+MachineBasicBlock *MYRISCVXTargetLowering::
+emitSelectPseudo(MachineInstr &MI,
+                 MachineBasicBlock *BB) {
+  // SELECT IRを変換するため関数
+  // MIの入力オペランドには以下のデータが揃っている
+  // MI.getOperand(0) : SELECT結果を書き込むレジスタ
+  // MI.getOperand(1) : LHS比較用データ
+  // MI.getOperand(2) : RHS比較用データ
+  // MI.getOperand(3) : 比較演算
+  // MI.getOperand(4) : 比較結果がTrue時のデータ
+  // MI.getOperand(5) : 比較結果がFalse時のデータ
+
+  // @{ MYRISCVXISelLowering_emitSelectPseudo ...
+
+  const TargetInstrInfo &TII = *BB->getParent()->getSubtarget().getInstrInfo();
+  const BasicBlock *LLVM_BB = BB->getBasicBlock();
+  DebugLoc DL = MI.getDebugLoc();
+  MachineFunction::iterator I = ++BB->getIterator();
+
+  MachineBasicBlock *HeadMBB = BB;
+  MachineFunction *F = BB->getParent();
+  MachineBasicBlock *TailMBB = F->CreateMachineBasicBlock(LLVM_BB);
+  MachineBasicBlock *IfFalseMBB = F->CreateMachineBasicBlock(LLVM_BB);
+
+  F->insert(I, IfFalseMBB);
+  F->insert(I, TailMBB);
+
+  TailMBB->splice(TailMBB->begin(), HeadMBB,
+                  std::next(MachineBasicBlock::iterator(MI)), HeadMBB->end());
+
+  // @} MYRISCVXISelLowering_emitSelectPseudo ...
+
+  TailMBB->transferSuccessorsAndUpdatePHIs(HeadMBB);
+  // HeadMBBはIfFalseMBBとTailMBBに繋がっている
+  HeadMBB->addSuccessor(IfFalseMBB);
+  HeadMBB->addSuccessor(TailMBB);
+
+  // 比較演算の準備
+  unsigned LHS = MI.getOperand(1).getReg();
+  unsigned RHS = MI.getOperand(2).getReg();
+  auto CC = static_cast<ISD::CondCode>(MI.getOperand(3).getImm());
+  unsigned Opcode = getBranchOpcodeForIntCondCode(CC);
+
+  // @{ MYRISCVXISelLowering_emitSelectPseudo_BuildMI
+  // 比較演算用のMachineInstrを作る
+  // LHSとrHSをOpcodeに基づき比較し, 比較が成立すればTailMBBに飛ぶ
+  // HeadMBBにこの比較演算を取り付ける
+  BuildMI(HeadMBB, DL, TII.get(Opcode))
+    .addReg(LHS)
+    .addReg(RHS)
+    .addMBB(TailMBB);
+  // @} MYRISCVXISelLowering_emitSelectPseudo_BuildMI
+
+  // @{ MYRISCVXISelLowering_emitSelectPseudo_addSuccessor
+  // IfFalseMBBに到達すると単純にTailMBBに再度ジャンプする
+  IfFalseMBB->addSuccessor(TailMBB);
+  // @} MYRISCVXISelLowering_emitSelectPseudo_addSuccessor
+
+  // @{ MYRISCVXISelLowering_emitSelectPseudo_BuildMI2
+  // PHI演算のポイント：HeadMBBからやってきた場合はTrueV(GetOperand(4)のデータ)を選択する
+  //                    IfFalseBBからやってきた場合はFalseV(GetOperand(5)のデータ)を選択する
+  //
+  // %Result = phi [ %TrueValue, HeadMBB ], [ %FalseValue, IfFalseMBB ]
+  BuildMI(*TailMBB, TailMBB->begin(), DL, TII.get(MYRISCVX::PHI),
+          MI.getOperand(0).getReg())
+      .addReg(MI.getOperand(4).getReg())
+      .addMBB(HeadMBB)
+      .addReg(MI.getOperand(5).getReg())
+      .addMBB(IfFalseMBB);
+  // @} MYRISCVXISelLowering_emitSelectPseudo_BuildMI2
+  MI.eraseFromParent();
+  return TailMBB;
+}
+// @} MYRISCVXISelLowering_emitSelectPseudo
+
+
+// @{ MYRISCVXISelLowering_EmitInstrWithCustomInserter
+MachineBasicBlock *
+MYRISCVXTargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
+                                                    MachineBasicBlock *BB) const {
+
+  switch (MI.getOpcode()) {
+    default:
+      llvm_unreachable("Unexpected instr type to insert");
+    case MYRISCVX::Select_GPR_Using_CC_GPR:
+      return emitSelectPseudo(MI, BB);
+  }
+}
+// @} MYRISCVXISelLowering_EmitInstrWithCustomInserter
 
 
 //===----------------------------------------------------------------------===//
