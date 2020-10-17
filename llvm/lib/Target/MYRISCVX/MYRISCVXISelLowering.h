@@ -16,6 +16,7 @@
 #define LLVM_LIB_TARGET_MYRISCVX_MYRISCVXISELLOWERING_H
 
 #include "MCTargetDesc/MYRISCVXABIInfo.h"
+#include "MCTargetDesc/MYRISCVXBaseInfo.h"
 #include "MYRISCVX.h"
 #include "llvm/CodeGen/CallingConvLower.h"
 #include "llvm/CodeGen/SelectionDAG.h"
@@ -80,19 +81,47 @@ namespace llvm {
     static const MYRISCVXTargetLowering *create(const MYRISCVXTargetMachine &TM,
                                                 const MYRISCVXSubtarget &STI);
 
+    /// LowerOperation - Provide custom lowering hooks for some operations.
+    SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
+
     /// getTargetNodeName - This method returns the name of a target specific
     //  DAG node.
     const char *getTargetNodeName(unsigned Opcode) const override;
 
- protected:
+    // @{ MYRISCVXTargetLowering_getAddrStatic
+    template<class NodeTy>
+    SDValue getAddrStatic(NodeTy *N, EVT Ty, SelectionDAG &DAG) const {
+      SDLoc DL(N);
+      switch (getTargetMachine().getCodeModel()) {
+        default:
+          report_fatal_error("Unsupported code model for lowering");
+        case CodeModel::Small: {
+          // MedLow コードモデルの場合：
+          // LUI + ADDI命令のシーケンスを出力する
+          SDValue AddrHi = getTargetNode(N, Ty, DAG, MYRISCVXII::MO_HI20);
+          SDValue AddrLo = getTargetNode(N, Ty, DAG, MYRISCVXII::MO_LO12_I);
+          SDValue MNHi = SDValue(DAG.getMachineNode(MYRISCVX::LUI, DL, Ty, AddrHi), 0);
+          return SDValue(DAG.getMachineNode(MYRISCVX::ADDI, DL, Ty, MNHi, AddrLo), 0);
+        }
+        case CodeModel::Medium: {
+          // Medany コードモデルの場合：
+          // LLA疑似命令をそのまま出力する
+          SDValue Addr = getTargetNode(N, Ty, DAG, 0);
+          return SDValue(DAG.getMachineNode(MYRISCVX::PseudoLLA, DL, Ty, Addr), 0);
+        }
+      }
+    }
+    // @} MYRISCVXTargetLowering_getAddrStatic
+
+   protected:
 
     /// ByValArgInfo - Byval argument information.
     struct ByValArgInfo {
       unsigned FirstIdx; // Index of the first register used.
       unsigned NumRegs;  // Number of registers used for this argument.
-      unsigned Address;  // Offset of the stack area used to pass this argument.
+      unsigned Address;  // Offset of the stnack area used to pass this argument.
 
-     ByValArgInfo() : FirstIdx(0), NumRegs(0), Address(0) {}
+      ByValArgInfo() : FirstIdx(0), NumRegs(0), Address(0) {}
     };
 
  protected:
@@ -102,6 +131,22 @@ namespace llvm {
     const MYRISCVXABIInfo &ABI;
 
  private:
+
+    // Create a TargetGlobalAddress node.
+    SDValue getTargetNode(GlobalAddressSDNode *N, EVT Ty, SelectionDAG &DAG,
+                          unsigned Flag) const;
+
+    // Create a TargetBlockAddress node.
+    SDValue getTargetNode(BlockAddressSDNode *N, EVT Ty, SelectionDAG &DAG,
+                          unsigned Flag) const;
+
+    // Create a TargetJumpTable node.
+    SDValue getTargetNode(JumpTableSDNode *N, EVT Ty, SelectionDAG &DAG,
+                          unsigned Flag) const;
+
+    // Create a TargetExternalSymbol node.
+    SDValue getTargetNode(ExternalSymbolSDNode *N, EVT Ty, SelectionDAG &DAG,
+                          unsigned Flag) const;
 
     // Lower Operand specifics
     SDValue lowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
