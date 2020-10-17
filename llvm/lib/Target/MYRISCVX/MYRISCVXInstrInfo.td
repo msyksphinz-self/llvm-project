@@ -47,6 +47,16 @@ def simm32: Operand<XLenVT>, ImmLeaf<XLenVT, [{return isInt<32>(Imm);}]>;
 //@} MYRISCVXInstrInfo_Operand_Definition
 
 
+def BareSymbol : AsmOperandClass {
+  let Name = "BareSymbol";
+}
+
+// A bare symbol.
+def bare_symbol : Operand<XLenVT> {
+  let ParserMatchClass = BareSymbol;
+}
+
+
 // @{MYRISCVXInstrInfo_LO12_HI20
 // 変換関数を定義する：定数のうち下位の12ビットを抽出する関数
 def LO12sext : SDNodeXForm<imm, [{
@@ -522,3 +532,14 @@ def : Pat<(setgt  GPR:$rs1, GPR:$rs2), (SLT GPR:$rs2, GPR:$rs1)>;
 def : Pat<(setge  GPR:$rs1, GPR:$rs2), (XORI (SLT GPR:$rs1, GPR:$rs2), 1)>;
 def : Pat<(setle  GPR:$rs1, GPR:$rs2), (XORI (SLT GPR:$rs2, GPR:$rs1), 1)>;
 // @} MYRISCVXInstrInfo_SLTPatterns
+
+
+// @{ MYRISCVXInstrInfo_PseudoLA_LLA
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0, isCodeGenOnly = 0,
+    isAsmParserOnly = 1 in
+def PseudoLLA : MYRISCVXPseudo<(outs GPR:$dst), (ins bare_symbol:$src), "lla\t$dst, $src", []>;
+
+let hasSideEffects = 0, mayLoad = 1, mayStore = 0, isCodeGenOnly = 0,
+    isAsmParserOnly = 1 in
+def PseudoLA : MYRISCVXPseudo<(outs GPR:$dst), (ins bare_symbol:$src), "la\t$dst, $src", []>;
+// @} MYRISCVXInstrInfo_PseudoLA_LLA
