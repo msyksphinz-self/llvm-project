@@ -49,6 +49,8 @@ namespace llvm {
       // Return
       Ret,
 
+      SELECT_CC,
+
       EH_RETURN,
 
       // DivRem(u)
@@ -150,6 +152,7 @@ namespace llvm {
 
     // Lower Operand specifics
     SDValue lowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
+    SDValue lowerSELECT(SDValue Op, SelectionDAG &DAG) const;
 
 	//- must be exist even without function all
     SDValue
@@ -165,6 +168,14 @@ namespace llvm {
                         const SmallVectorImpl<SDValue> &OutVals,
                         const SDLoc &dl, SelectionDAG &DAG) const override;
 
+    static unsigned getBranchOpcodeForIntCondCode (ISD::CondCode CC);
+
+    MachineBasicBlock *
+    EmitInstrWithCustomInserter(MachineInstr &MI,
+                                MachineBasicBlock *BB) const override;
+
+    static MachineBasicBlock *emitSelectPseudo(MachineInstr &MI,
+                                               MachineBasicBlock *BB);
   };
 }
 
