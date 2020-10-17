@@ -61,6 +61,9 @@ public:
 
   virtual bool runOnMachineFunction(MachineFunction &MF) override;
 
+    bool emitPseudoExpansionLowering(MCStreamer &OutStreamer,
+                                     const MachineInstr *MI);
+
   //- EmitInstruction() must exists or will have run time error.
   void emitInstruction(const MachineInstr *MI) override;
   void printSavedRegsBitmask(raw_ostream &O) {}
