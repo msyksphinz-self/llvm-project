@@ -1,0 +1,26 @@
+// @{ MYRISCVX_def
+#ifndef ELF_RELOC
+#error "ELF_RELOC must be defined"
+#endif
+
+// MYRISCVXのリロケーション情報を定義する
+
+ELF_RELOC(R_MYRISCVX_NONE,               0)
+
+// 関数呼び出し場所を指定するリロケーション情報
+ELF_RELOC(R_MYRISCVX_CALL,              18)
+ELF_RELOC(R_MYRISCVX_CALL_PLT,          19)
+
+// GOTを使用したグローバル変数へのアクセスのためのリロケーション情報
+ELF_RELOC(R_MYRISCVX_GOT_HI20,          20)
+
+// medanyコードモデルでのリロケーション情報
+ELF_RELOC(R_MYRISCVX_PCREL_HI20,        23)
+ELF_RELOC(R_MYRISCVX_PCREL_LO12_I,      24)
+ELF_RELOC(R_MYRISCVX_PCREL_LO12_S,      25)
+
+// medlowコードモデルでのリロケーション情報
+ELF_RELOC(R_MYRISCVX_HI20,              26)
+ELF_RELOC(R_MYRISCVX_LO12_I,            27)
+ELF_RELOC(R_MYRISCVX_LO12_S,            28)
+// @} MYRISCVX_def

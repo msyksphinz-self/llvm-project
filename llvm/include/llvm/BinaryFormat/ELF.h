@@ -130,9 +130,11 @@ enum { EV_NONE = 0, EV_CURRENT = 1 };
 // Machine architectures
 // See current registered ELF machine architectures at:
 //    http://www.uxsglobal.com/developers/gabi/latest/ch4.eheader.html
+// @{ ELF_h_EM_MYRISCVX
 enum {
   EM_NONE = 0,           // No machine
   EM_M32 = 1,            // AT&T WE 32100
+  // @{ ELF_h_EM_MYRISCVX ...
   EM_SPARC = 2,          // SPARC
   EM_386 = 3,            // Intel 386
   EM_68K = 4,            // Motorola 68000
@@ -315,12 +317,15 @@ enum {
   EM_NORC = 218,          // Nanoradio Optimized RISC
   EM_CSR_KALIMBA = 219,   // CSR Kalimba architecture family
   EM_AMDGPU = 224,        // AMD GPU architecture
+  // @} ELF_h_EM_MYRISCVX ...
   EM_RISCV = 243,         // RISC-V
   EM_LANAI = 244,         // Lanai 32-bit processor
   EM_BPF = 247,           // Linux kernel bpf virtual machine
   EM_VE = 251,            // NEC SX-Aurora VE
+  EM_MYRISCVX = 248,      // MYRISCVX
   EM_CSKY = 252,          // C-SKY 32-bit processor
 };
+// @} ELF_h_EM_MYRISCVX
 
 // Object file classes.
 enum {
@@ -659,6 +664,27 @@ enum : unsigned {
 enum {
 #include "ELFRelocs/RISCV.def"
 };
+
+// @{ELF_h_MYRISCVX_EFLAGS
+// MYRISCVX Specific e_flags
+enum : unsigned {
+  EF_MYRISCVX_RVC = 0x0001,
+  EF_MYRISCVX_FLOAT_ABI = 0x0006,
+  EF_MYRISCVX_FLOAT_ABI_SOFT = 0x0000,
+  EF_MYRISCVX_FLOAT_ABI_SINGLE = 0x0002,
+  EF_MYRISCVX_FLOAT_ABI_DOUBLE = 0x0004,
+  EF_MYRISCVX_FLOAT_ABI_QUAD = 0x0006,
+  EF_MYRISCVX_RVE = 0x0008
+};
+// @}ELF_h_MYRISCVX_EFLAGS
+
+// @{ELF_h_MYRISCVX_Relocs
+// MYRISCVXのリロケーション情報を登録する
+enum {
+#include "ELFRelocs/MYRISCVX.def"
+};
+// @}ELF_h_MYRISCVX_Relocs
+
 
 // ELF Relocation types for S390/zSeries
 enum {
