@@ -23,6 +23,9 @@ namespace llvm {
   class FunctionPass;
   class PassRegistry;
 
+FunctionPass *createMYRISCVXExpandPseudoPass();
+void initializeMYRISCVXExpandPseudoPass(PassRegistry &);
+
 } // end namespace llvm;
 
 #endif

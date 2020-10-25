@@ -38,6 +38,7 @@ add_llvm_target(MYRISCVXCodeGen
   MYRISCVXMCInstLower.cpp
   MYRISCVXISelDAGToDAG.cpp
   MYRISCVXMatInt.cpp
+  MYRISCVXExpandPseudoInsts.cpp
 )
 
 add_subdirectory(TargetInfo)
