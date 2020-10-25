@@ -22,6 +22,9 @@ namespace llvm {
   class MYRISCVXTargetMachine;
   class FunctionPass;
 
+FunctionPass *createMYRISCVXExpandPseudoPass();
+void initializeMYRISCVXExpandPseudoPass(PassRegistry &);
+
 } // end namespace llvm;
 
 #endif
