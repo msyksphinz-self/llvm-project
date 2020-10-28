@@ -143,8 +143,10 @@ void MYRISCVXDAGToDAGISel::Select(SDNode *Node) {
 // @} MYRISCVXISelDAGToDAG_cpp_Select
 
 
-bool MYRISCVXDAGToDAGISel::SelectInlineAsmMemoryOperand(
-    const SDValue &Op, unsigned ConstraintID, std::vector<SDValue> &OutOps) {
+// @{ MYRISCVXDAGToDAGISel_SelectInlineAsmMemoryOperand
+bool MYRISCVXDAGToDAGISel::SelectInlineAsmMemoryOperand(const SDValue &Op,
+                                                        unsigned ConstraintID,
+                                                        std::vector<SDValue> &OutOps) {
   switch (ConstraintID) {
   case InlineAsm::Constraint_m:
     // We just support simple memory operands that have a single address
@@ -160,6 +162,7 @@ bool MYRISCVXDAGToDAGISel::SelectInlineAsmMemoryOperand(
 
   return true;
 }
+// @} MYRISCVXDAGToDAGISel_SelectInlineAsmMemoryOperand
 
 
 void MYRISCVXDAGToDAGISel::processFunctionAfterISel(MachineFunction &MF) {
