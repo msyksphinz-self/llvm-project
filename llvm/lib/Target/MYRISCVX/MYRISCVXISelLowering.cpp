@@ -353,23 +353,29 @@ emitSelectPseudo(MachineInstr &MI,
 // @} MYRISCVXISelLowering_emitSelectPseudo
 
 
+// @{ MYRISCVXTargetLowering_getRegForInlineAsmConstraint
+// インラインアセンブリにおいて、どの制約文字がレジスタを使用するのかを返す
 std::pair<unsigned, const TargetRegisterClass *>
 MYRISCVXTargetLowering::getRegForInlineAsmConstraint(const TargetRegisterInfo *TRI,
-                                                  StringRef Constraint,
-                                                  MVT VT) const {
-  // First, see if this is a constraint that directly corresponds to a
+                                                     StringRef Constraint,
+                                                     MVT VT) const {
+  // MYRISCVXのレジスタクラスを使用するものがあればそれを返す
   // MYRISCVX register class.
   if (Constraint.size() == 1) {
     switch (Constraint[0]) {
     case 'r':
+      // 識別文字'r'はMYRISCVXのGPRRegClassを使用する
       return std::make_pair(0U, &MYRISCVX::GPRRegClass);
     default:
       break;
     }
   }
 
+  // それ以外の制約はデフォルトのものを使用する
   return TargetLowering::getRegForInlineAsmConstraint(TRI, Constraint, VT);
 }
+// @} MYRISCVXTargetLowering_getRegForInlineAsmConstraint
+
 
 unsigned
 MYRISCVXTargetLowering::getInlineAsmMemConstraint(StringRef ConstraintCode) const {
