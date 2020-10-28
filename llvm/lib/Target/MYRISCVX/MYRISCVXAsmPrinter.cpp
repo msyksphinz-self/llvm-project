@@ -131,6 +131,7 @@ void MYRISCVXAsmPrinter::emitStartOfAsmFile(Module &M) {
 }
 
 
+// @{ MYRISCVXAsmPrinter_PrintAsmOperand
 bool MYRISCVXAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
                                       const char *ExtraCode, raw_ostream &OS) {
   // First try the generic code, which knows about modifiers like 'c' and 'n'.
@@ -138,26 +139,6 @@ bool MYRISCVXAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
     return false;
 
   const MachineOperand &MO = MI->getOperand(OpNo);
-  if (ExtraCode && ExtraCode[0]) {
-    if (ExtraCode[1] != 0)
-      return true; // Unknown modifier.
-
-    switch (ExtraCode[0]) {
-    default:
-      return true; // Unknown modifier.
-    case 'z':      // Print zero register if zero, regular printing otherwise.
-      if (MO.isImm() && MO.getImm() == 0) {
-        OS << MYRISCVXInstPrinter::getRegisterName(MYRISCVX::ZERO);
-        return false;
-      }
-      break;
-    case 'i': // Literal 'i' if operand is not a register.
-      if (!MO.isReg())
-        OS << 'i';
-      return false;
-    }
-  }
-
   switch (MO.getType()) {
   case MachineOperand::MO_Immediate:
     OS << MO.getImm();
@@ -179,11 +160,14 @@ bool MYRISCVXAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
 
   return true;
 }
+// @} MYRISCVXAsmPrinter_PrintAsmOperand
 
+
+// @{ MYRISCVXAsmPrinter_PrintAsmMemoryOperand
 bool MYRISCVXAsmPrinter::PrintAsmMemoryOperand(const MachineInstr *MI,
-                                            unsigned OpNo,
-                                            const char *ExtraCode,
-                                            raw_ostream &OS) {
+                                               unsigned OpNo,
+                                               const char *ExtraCode,
+                                               raw_ostream &OS) {
   if (!ExtraCode) {
     const MachineOperand &MO = MI->getOperand(OpNo);
     // For now, we only support register memory operands in registers and
@@ -197,6 +181,7 @@ bool MYRISCVXAsmPrinter::PrintAsmMemoryOperand(const MachineInstr *MI,
 
   return AsmPrinter::PrintAsmMemoryOperand(MI, OpNo, ExtraCode, OS);
 }
+// @} MYRISCVXAsmPrinter_PrintAsmMemoryOperand
 
 
 void MYRISCVXAsmPrinter::PrintDebugValueComment(const MachineInstr *MI,
