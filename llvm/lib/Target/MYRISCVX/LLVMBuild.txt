@@ -16,16 +16,22 @@
 ;===------------------------------------------------------------------------===;
 
 ; @{ MYRISCVX_LLVMBuild.txt
+; @{ MYRISCVX_LLVMBuild.txt_AddDisassembler
 # @{ MYRISCVX_LLVMBuild.txt_AddAsmParser
 [common]
-subdirectories = MCTargetDesc TargetInfo AsmParser
+subdirectories = MCTargetDesc TargetInfo AsmParser Disassembler
 # @} MYRISCVX_LLVMBuild.txt_AddAsmParser
+; @} MYRISCVX_LLVMBuild.txt_AddDisassembler
 
 [component_0]
 # component_0はLLVMターゲットの定義を行っている
 type = TargetGroup
 name = MYRISCVX
 parent = Target
+; @{ LLVMBuild_txt_has_disassembler
+# MYRISCVXのディスアセンブラを有効にする
+has_disassembler = 1
+; @} LLVMBuild_txt_has_disassembler
 
 [component_1]
 # component_1はライブラリの定義を行っている. 名前はMYRISCVXCodeGen
