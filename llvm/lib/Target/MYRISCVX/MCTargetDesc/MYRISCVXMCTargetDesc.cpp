@@ -29,6 +29,7 @@
 #include "llvm/Support/FormattedStream.h"
 #include "llvm/Support/TargetRegistry.h"
 
+#include "MCTargetDesc/MYRISCVXELFStreamer.h"
 #include "MCTargetDesc/MYRISCVXMCAsmInfo.h"
 #include "MCTargetDesc/MYRISCVXInstPrinter.h"
 
@@ -104,6 +105,14 @@ class MYRISCVXMCInstrAnalysis : public MCInstrAnalysis {
 };
 }
 
+// @{ MYISCVXMCTarget_cpp_createMYRISCVXObjectTargetStreamer
+// LLVMInitializeMYRISCVXTargetMC()でMYRISCVXTargetObjectStreamer()を登録するためのラッパー関数
+static MCTargetStreamer *createMYRISCVXObjectTargetStreamer(MCStreamer &S,
+                                                            const MCSubtargetInfo &STI) {
+  return new MYRISCVXTargetELFStreamer(S, STI);
+}
+// @} MYISCVXMCTarget_cpp_createMYRISCVXObjectTargetStreamer
+
 static MCInstrAnalysis *createMYRISCVXMCInstrAnalysis(const MCInstrInfo *Info) {
   return new MYRISCVXMCInstrAnalysis(Info);
 }
@@ -123,9 +132,11 @@ static MCTargetStreamer *createMYRISCVXAsmTargetStreamer(MCStreamer &S,
 
 // @{ MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC
 // @{ MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_Asm
+// @{ MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_Object
 extern "C" void LLVMInitializeMYRISCVXTargetMC() {
   for (Target *T : {&getTheMYRISCVX32Target(), &getTheMYRISCVX64Target()}) {
     // @{ MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_Asm ...
+    // @{ MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_Object ...
     // MCASmInfoクラスを登録する
     RegisterMCAsmInfoFn X(*T, createMYRISCVXMCAsmInfo);
 
@@ -145,10 +156,23 @@ extern "C" void LLVMInitializeMYRISCVXTargetMC() {
     TargetRegistry::RegisterMCInstPrinter(*T,
 	                                      createMYRISCVXMCInstPrinter);
 
+    // @} MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_Object ...
+
     // アセンブリファイル出力用TargetStreamerの登録
     TargetRegistry::RegisterAsmTargetStreamer(*T, createMYRISCVXAsmTargetStreamer);
 
+    // オブジェクトファイルのTarget Streamerを登録する
+    TargetRegistry::RegisterObjectTargetStreamer(*T, createMYRISCVXObjectTargetStreamer);
+
+    // MC Code Emitterを登録する
+    TargetRegistry::RegisterMCCodeEmitter(*T, createMYRISCVXMCCodeEmitter);
+
+    // @{ MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_RegisterMCAsmBackend
+    // MCAsmBackendを登録する
+    TargetRegistry::RegisterMCAsmBackend(*T, createMYRISCVXAsmBackend);
+    // @} MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_RegisterMCAsmBackend
   }
 }
+// @} MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_Object
 // @} MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC_Asm
 // @} MYRISCVXMCTargetDesc_cpp_LLVMInitializeMYRISCVXTargetMC

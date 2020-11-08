@@ -7,4 +7,8 @@ add_llvm_library(LLVMMYRISCVXDesc
   MYRISCVXTargetStreamer.cpp
   MYRISCVXTargetStreamer.cpp
   MYRISCVXInstPrinter.cpp
+  MYRISCVXMCCodeEmitter.cpp
+  MYRISCVXAsmBackend.cpp
+  MYRISCVXELFObjectWriter.cpp
+  MYRISCVXELFStreamer.cpp
 )
