@@ -8,8 +8,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "MYRISCVX.h"
-
-#include "MYRISCVXMCExpr.h"
+#include "MCTargetDesc/MYRISCVXFixupKinds.h"
+#include "MCTargetDesc/MYRISCVXMCExpr.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCAssembler.h"
 #include "llvm/MC/MCContext.h"
@@ -79,6 +79,48 @@ void MYRISCVXMCExpr::printImpl(raw_ostream &OS, const MCAsmInfo *MAI) const {
   OS << ')';
 }
 //@} MYRISCVXMCExpr_printImpl
+
+
+const MCFixup *MYRISCVXMCExpr::getPCRelHiFixup(const MCFragment **DFOut) const {
+  MCValue AUIPCLoc;
+  if (!getSubExpr()->evaluateAsRelocatable(AUIPCLoc, nullptr, nullptr))
+    return nullptr;
+
+  const MCSymbolRefExpr *AUIPCSRE = AUIPCLoc.getSymA();
+  if (!AUIPCSRE)
+    return nullptr;
+
+  const MCSymbol *AUIPCSymbol = &AUIPCSRE->getSymbol();
+  const auto *DF = dyn_cast_or_null<MCDataFragment>(AUIPCSymbol->getFragment());
+
+  if (!DF)
+    return nullptr;
+
+  uint64_t Offset = AUIPCSymbol->getOffset();
+  if (DF->getContents().size() == Offset) {
+    DF = dyn_cast_or_null<MCDataFragment>(DF->getNextNode());
+    if (!DF)
+      return nullptr;
+    Offset = 0;
+  }
+
+  for (const MCFixup &F : DF->getFixups()) {
+    if (F.getOffset() != Offset)
+      continue;
+
+    switch ((unsigned)F.getKind()) {
+      default:
+        continue;
+      case MYRISCVX::fixup_MYRISCVX_GOT_HI20:
+      case MYRISCVX::fixup_MYRISCVX_PCREL_HI20:
+        if (DFOut)
+          *DFOut = DF;
+        return &F;
+    }
+  }
+
+  return nullptr;
+}
 
 bool
 MYRISCVXMCExpr::evaluateAsRelocatableImpl(MCValue &Res,
