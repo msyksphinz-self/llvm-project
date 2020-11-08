@@ -7,6 +7,10 @@
 
 ELF_RELOC(R_MYRISCVX_NONE,               0)
 
+// 条件分岐に関するリロケーション情報
+ELF_RELOC(R_MYRISCVX_BRANCH,            16)
+ELF_RELOC(R_MYRISCVX_JAL,               17)
+
 // 関数呼び出し場所を指定するリロケーション情報
 ELF_RELOC(R_MYRISCVX_CALL,              18)
 ELF_RELOC(R_MYRISCVX_CALL_PLT,          19)
@@ -23,4 +27,6 @@ ELF_RELOC(R_MYRISCVX_PCREL_LO12_S,      25)
 ELF_RELOC(R_MYRISCVX_HI20,              26)
 ELF_RELOC(R_MYRISCVX_LO12_I,            27)
 ELF_RELOC(R_MYRISCVX_LO12_S,            28)
+
+ELF_RELOC(R_MYRISCVX_RELAX,             51)
 // @} MYRISCVX_def
