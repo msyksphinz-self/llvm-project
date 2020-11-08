@@ -134,6 +134,8 @@ StringRef RISCVMCExpr::getVariantKindName(VariantKind Kind) {
     return "hi";
   case VK_RISCV_PCREL_LO:
     return "pcrel_lo";
+  case VK_RISCV_32_PCREL:
+    return "pcrel_32";
   case VK_RISCV_PCREL_HI:
     return "pcrel_hi";
   case VK_RISCV_GOT_HI:
