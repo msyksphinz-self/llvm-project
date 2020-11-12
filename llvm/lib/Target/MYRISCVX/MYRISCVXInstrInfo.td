@@ -91,6 +91,7 @@ def simm32: Operand<XLenVT>, ImmLeaf<XLenVT, [{return isInt<32>(Imm);}]>;
 
 def BareSymbol : AsmOperandClass {
   let Name = "BareSymbol";
+  let RenderMethod = "addImmOperands";
 }
 
 // A bare symbol.
@@ -101,6 +102,8 @@ def bare_symbol : Operand<XLenVT> {
 def CallSymbol : AsmOperandClass {
   let Name = "CallSymbol";
   let RenderMethod = "addImmOperands";
+  let DiagnosticType = "InvalidCallSymbol";
+  let ParserMethod = "parseCallSymbol";
 }
 
 // A bare symbol used in call/tail only.

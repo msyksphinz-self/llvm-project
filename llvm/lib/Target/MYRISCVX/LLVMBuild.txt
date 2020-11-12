@@ -16,8 +16,10 @@
 ;===------------------------------------------------------------------------===;
 
 ; @{ MYRISCVX_LLVMBuild.txt
+# @{ MYRISCVX_LLVMBuild.txt_AddAsmParser
 [common]
-subdirectories = MCTargetDesc TargetInfo
+subdirectories = MCTargetDesc TargetInfo AsmParser
+# @} MYRISCVX_LLVMBuild.txt_AddAsmParser
 
 [component_0]
 # component_0はLLVMターゲットの定義を行っている
@@ -31,6 +33,7 @@ parent = Target
 type = Library
 # Please enable asmprinter
 has_asmprinter = 1
+has_asmparser  = 1
 
 name = MYRISCVXCodeGen
 parent = MYRISCVX

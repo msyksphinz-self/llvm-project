@@ -129,6 +129,42 @@ MYRISCVXMCExpr::evaluateAsRelocatableImpl(MCValue &Res,
   return getSubExpr()->evaluateAsRelocatable(Res, Layout, Fixup);
 }
 
+
+bool MYRISCVXMCExpr::evaluateAsConstant(int64_t &Res) const
+{
+  MCValue Value;
+
+  if (Kind == VK_MYRISCVX_PCREL_HI20   || Kind == VK_MYRISCVX_GOT_HI20   ||
+      Kind == VK_MYRISCVX_PCREL_LO12_I || Kind == VK_MYRISCVX_PCREL_LO12_S ||
+      Kind == VK_MYRISCVX_CALL || Kind == VK_MYRISCVX_CALL_PLT)
+    return false;
+
+  if (!getSubExpr()->evaluateAsRelocatable(Value, nullptr, nullptr))
+    return false;
+
+  if (!Value.isAbsolute())
+    return false;
+
+  Res = evaluateAsInt64(Value.getConstant());
+  return true;
+}
+
+
+int64_t MYRISCVXMCExpr::evaluateAsInt64(int64_t Value) const
+{
+  switch (Kind) {
+  default:
+    llvm_unreachable("Invalid kind");
+  case VK_MYRISCVX_LO12_I:
+  case VK_MYRISCVX_LO12_S:
+    return SignExtend64<12>(Value);
+  case VK_MYRISCVX_HI20:
+    // Add 1 if bit 11 is 1, to compensate for low 12 bits being negative.
+    return ((Value + 0x800) >> 12) & 0xfffff;
+  }
+}
+
+
 void MYRISCVXMCExpr::visitUsedExpr(MCStreamer &Streamer) const {
   Streamer.visitUsedExpr(*getSubExpr());
 }
@@ -148,5 +184,39 @@ void MYRISCVXMCExpr::fixELFSymbolsInTLSFixups(MCAssembler &Asm) const {
     case VK_MYRISCVX_PCREL_LO12_I:
     case VK_MYRISCVX_PCREL_LO12_S:
       break;
+  }
+}
+
+
+// @{ MYRISCVXMCExpr_getVariantKindForName
+MYRISCVXMCExpr::MYRISCVXExprKind MYRISCVXMCExpr::getVariantKindForName(StringRef name) {
+  return StringSwitch<MYRISCVXMCExpr::MYRISCVXExprKind>(name)
+      .Case("lo", VK_MYRISCVX_LO12_I)
+      .Case("hi", VK_MYRISCVX_HI20)
+      .Case("pcrel_lo", VK_MYRISCVX_PCREL_LO12_I)
+      .Case("pcrel_hi", VK_MYRISCVX_PCREL_HI20)
+      .Case("got_pcrel_hi", VK_MYRISCVX_GOT_HI20)
+      .Default(VK_MYRISCVX_None);
+}
+// @} MYRISCVXMCExpr_getVariantKindForName
+
+StringRef MYRISCVXMCExpr::getVariantKindName(MYRISCVXExprKind Kind) {
+  switch (Kind) {
+    default:
+      llvm_unreachable("Invalid ELF symbol kind");
+    case VK_MYRISCVX_LO12_S:
+      return "lo";
+    case VK_MYRISCVX_LO12_I:
+      return "lo";
+    case VK_MYRISCVX_HI20:
+      return "hi";
+    case VK_MYRISCVX_PCREL_LO12_I:
+      return "pcrel_lo";
+    case VK_MYRISCVX_PCREL_LO12_S:
+      return "pcrel_lo";
+    case VK_MYRISCVX_PCREL_HI20:
+      return "pcrel_hi";
+    case VK_MYRISCVX_GOT_HI20:
+      return "got_pcrel_hi";
   }
 }
