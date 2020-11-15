@@ -345,6 +345,281 @@ MYRISCVXTargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
 // @} MYRISCVXISelLowering_EmitInstrWithCustomInserter
 
 
+// @{ MYRISCVXISelLowering_LowerCall
+// @{ MYRISCVXISelLowering_LowerCall_GlobalAddressSDNode
+SDValue
+MYRISCVXTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
+                                  SmallVectorImpl<SDValue> &InVals) const {
+
+  SelectionDAG &DAG                     = CLI.DAG;
+  SDLoc DL                              = CLI.DL;
+  SmallVectorImpl<ISD::OutputArg> &Outs = CLI.Outs;
+  SmallVectorImpl<SDValue> &OutVals     = CLI.OutVals;
+  SmallVectorImpl<ISD::InputArg> &Ins   = CLI.Ins;
+  SDValue Chain                         = CLI.Chain;
+  SDValue Callee                        = CLI.Callee;
+  bool &IsTailCall                      = CLI.IsTailCall;
+  CallingConv::ID CallConv              = CLI.CallConv;
+  bool IsVarArg                         = CLI.IsVarArg;
+
+  // @{ MYRISCVXISelLowering_LowerCall_GlobalAddressSDNode ...
+
+  EVT PtrVT = getPointerTy(DAG.getDataLayout());
+
+  MachineFunction &MF = DAG.getMachineFunction();
+  const TargetFrameLowering *TFL = MF.getSubtarget().getFrameLowering();
+  bool IsPIC = isPositionIndependent();
+
+  // @{ MYRISCVXISelLowering_LowerCall_AnalyzeCallOperands
+  // 関数呼び出しの引数解析を行い, 各オペランドの配置方法を決める
+  SmallVector<CCValAssign, 16> ArgLocs;
+  CCState CCInfo(CallConv, IsVarArg, DAG.getMachineFunction(),
+                 ArgLocs, *DAG.getContext());
+  CCInfo.AnalyzeCallOperands (Outs, CC_MYRISCVX);
+  // @} MYRISCVXISelLowering_LowerCall_AnalyzeCallOperands
+
+  // Get a count of how many bytes are to be pushed on the stack.
+  unsigned NextStackOffset = CCInfo.getNextStackOffset();
+
+  // Chain is the output chain of the last Load/Store or CopyToReg node.
+  // ByValChain is the output chain of the last Memcpy node created for copying
+  // byval arguments to the stack.
+  unsigned StackAlignment = TFL->getStackAlignment();
+  NextStackOffset = alignTo(NextStackOffset, StackAlignment);
+  SDValue NextStackOffsetVal = DAG.getIntPtrConstant(NextStackOffset, DL, true);
+
+  // @{ MYRISCVXISelLowering_LowerCall_getCALLSEQ_START
+  // 関数呼び出しに必要な処理がここから開始されることを意味する
+  if (!IsTailCall)
+    Chain = DAG.getCALLSEQ_START(Chain, NextStackOffset, 0, DL);
+  // @} MYRISCVXISelLowering_LowerCall_getCALLSEQ_START
+
+  SDValue StackPtr =
+      DAG.getCopyFromReg(Chain, DL, MYRISCVX::SP, PtrVT);
+
+  // With EABI is it possible to have 16 args on registers.
+  std::deque< std::pair<unsigned, SDValue> > RegsToPass;
+  SmallVector<SDValue, 8> MemOpChains;
+
+  // @{ MYRISCVXISelLowering_LowerCall_ArgLocs_Loop
+  // @{ MYRISCVXISelLowering_LowerCall_isMemLoc
+  // レジスタ・メモリへの引数割り当てを行う
+  for (unsigned i = 0, e = ArgLocs.size(); i != e; ++i) {
+    SDValue Arg = OutVals[i];
+    CCValAssign &VA = ArgLocs[i];
+    MVT LocVT = VA.getLocVT();
+
+    // @{ MYRISCVXISelLowering_LowerCall_isMemLoc ...
+
+    // 必要に応じて型を拡張するノードを挿入する
+    switch (VA.getLocInfo()) {
+      default: llvm_unreachable("Unknown loc info!");
+      case CCValAssign::Full:
+        break;
+      case CCValAssign::SExt:
+        Arg = DAG.getNode(ISD::SIGN_EXTEND, DL, LocVT, Arg);
+        break;
+      case CCValAssign::ZExt:
+        Arg = DAG.getNode(ISD::ZERO_EXTEND, DL, LocVT, Arg);
+        break;
+      case CCValAssign::AExt:
+        Arg = DAG.getNode(ISD::ANY_EXTEND, DL, LocVT, Arg);
+        break;
+    }
+
+    // @{ MYRISCVXISelLowering_LowerCall_isRegLoc
+    // AnalyzeCallOperandsの結果レジスタに配置された引数は,
+    // RegsToPassキューに積み上げていく
+    if (VA.isRegLoc()) {
+      RegsToPass.push_back(std::make_pair(VA.getLocReg(), Arg));
+      continue;
+    }
+    // @} MYRISCVXISelLowering_LowerCall_isRegLoc
+
+    // @} MYRISCVXISelLowering_LowerCall_isMemLoc ...
+    // ここにはメモリを経由する引数しかやってこないはず
+    assert(VA.isMemLoc());
+
+    // レジスタに入りきらない引数はMemOpChainsに積み上げていく
+    // passArgOnStackでスタックに引数を積み上げるノードを作り上げる
+    MemOpChains.push_back(passArgOnStack(StackPtr, VA.getLocMemOffset(),
+                                         Chain, Arg, DL, IsTailCall, DAG));
+    // @} MYRISCVXISelLowering_LowerCall_isMemLoc
+  }
+  // @} MYRISCVXISelLowering_LowerCall_ArgLocs_Loop
+
+  // @{ MYRISCVXISelLowering_LowerCall_MemOpChains
+  // TokenFactorノードを生成してストアノードを1つにまとめる
+  // 引数をメモリに格納するノードを1つにまとめ、それぞれのノードが独立であるということを示す
+  if (!MemOpChains.empty())
+    Chain = DAG.getNode(ISD::TokenFactor, DL, MVT::Other, MemOpChains);
+  // @} MYRISCVXISelLowering_LowerCall_MemOpChains
+
+  // If the callee is a GlobalAddress/ExternalSymbol node (quite common, every
+  // direct call is) turn it into a TargetGlobalAddress/TargetExternalSymbol
+  // node so that legalize doesn't hack it.
+  bool IsPICCall = IsPIC; // true if calls are translated to
+  bool GlobalOrExternal = false, InternalLinkage = false;
+
+  // @} MYRISCVXISelLowering_LowerCall_GlobalAddressSDNode ...
+  if (GlobalAddressSDNode *S = dyn_cast<GlobalAddressSDNode>(Callee)) {
+    // 関数呼び出しのターゲットがGlobalAddressSDNodeの場合
+    const GlobalValue *GV = S->getGlobal();
+
+    unsigned OpFlags = MYRISCVXII::MO_CALL;
+    if (!getTargetMachine().shouldAssumeDSOLocal(*GV->getParent(), GV))
+      OpFlags = MYRISCVXII::MO_CALL_PLT;
+
+    // DAG.getTargetGlobalAddress()により関数呼び出し先を示すノードを生成する
+    Callee = DAG.getTargetGlobalAddress(GV, DL, PtrVT, 0, OpFlags);
+  } else if (ExternalSymbolSDNode *S = dyn_cast<ExternalSymbolSDNode>(Callee)) {
+    // 関数呼び出しのターゲットがExternalSymbolSDNodeの場合
+    unsigned OpFlags = MYRISCVXII::MO_CALL;
+
+    if (!getTargetMachine().shouldAssumeDSOLocal(*MF.getFunction().getParent(),
+                                                 nullptr))
+      OpFlags = MYRISCVXII::MO_CALL_PLT;
+
+    // DAG.getTargetExternalSymbol()により関数呼び出し先を示すノードを生成する
+    Callee = DAG.getTargetExternalSymbol(S->getSymbol(), PtrVT, OpFlags);
+  }
+  // @} MYRISCVXISelLowering_LowerCall_GlobalAddressSDNode
+
+  SmallVector<SDValue, 8> Ops(1, Chain);
+  SDVTList NodeTys = DAG.getVTList(MVT::Other, MVT::Glue);
+
+  // 引数をレジスタに置くためのDAGを生成する
+  getOpndList(Ops, RegsToPass, IsPICCall, GlobalOrExternal, InternalLinkage,
+              CLI, Callee, Chain);
+
+  // @{ MYRISCVXISelLowering_LowerCall_MYRISCVXISD_CALL
+  Chain = DAG.getNode(MYRISCVXISD::CALL, DL, NodeTys, Ops);
+  SDValue InFlag = Chain.getValue(1);
+
+  // @{ MYRISCVXISelLowering_LowerCall_getCALLSEQ_END
+  // Create the CALLSEQ_END node.
+  Chain = DAG.getCALLSEQ_END(Chain, NextStackOffsetVal,
+                             DAG.getIntPtrConstant(0, DL, true), InFlag, DL);
+  // @} MYRISCVXISelLowering_LowerCall_getCALLSEQ_END
+  InFlag = Chain.getValue(1);
+
+  // 戻り値を処理するためのノード生成関数を呼び出す
+  return LowerCallResult(Chain, InFlag, CallConv, IsVarArg,
+                         Ins, DL, DAG, InVals, CLI.Callee.getNode(), CLI.RetTy);
+
+  // @} MYRISCVXISelLowering_LowerCall_MYRISCVXISD_CALL
+}
+// @} MYRISCVXISelLowering_LowerCall
+
+
+/// LowerCallResult - Lower the result values of a call into the
+/// appropriate copies out of appropriate physical registers.
+// @{ MYRISCVXISelLowering_LowerCallResult
+// @{ MYRISCVXISelLowering_LowerCallResult_Head
+SDValue
+MYRISCVXTargetLowering::LowerCallResult(SDValue Chain, SDValue InFlag,
+                                        CallingConv::ID CallConv, bool IsVarArg,
+                                        const SmallVectorImpl<ISD::InputArg> &Ins,
+                                        const SDLoc &DL, SelectionDAG &DAG,
+                                        SmallVectorImpl<SDValue> &InVals,
+                                        const SDNode *CallNode,
+                                        const Type *RetTy) const {
+  // @} MYRISCVXISelLowering_LowerCallResult_Head
+  // @{ MYRISCVXISelLowering_LowerCallResult_AnalyzeCallResult
+  // 戻り値を取得するための場所を確認する. ABIに基づきどのレジスタを使用するか決定する
+  SmallVector<CCValAssign, 16> RVLocs;
+  CCState CCInfo(CallConv, IsVarArg, DAG.getMachineFunction(),
+                 RVLocs, *DAG.getContext());
+  CCInfo.AnalyzeCallResult(Ins, RetCC_MYRISCVX);
+  // @} MYRISCVXISelLowering_LowerCallResult_AnalyzeCallResult
+
+  // Copy all of the result registers out of their specified physreg.
+  // @{ MYRISCVXISelLowering_LowerCallResult_Loop
+  for (unsigned i = 0; i != RVLocs.size(); ++i) {
+    // getCopyFromRegを用いて物理的なレジスタからDAGのノードに値を移す
+    SDValue Val = DAG.getCopyFromReg(Chain, DL, RVLocs[i].getLocReg(),
+                                     RVLocs[i].getLocVT(), InFlag);
+    Chain = Val.getValue(1);
+    InFlag = Val.getValue(2);
+
+    if (RVLocs[i].getValVT() != RVLocs[i].getLocVT())
+      Val = DAG.getNode(ISD::BITCAST, DL, RVLocs[i].getValVT(), Val);
+
+    InVals.push_back(Val);
+  }
+  // @} MYRISCVXISelLowering_LowerCallResult_Loop
+
+  return Chain;
+}
+// @} MYRISCVXISelLowering_LowerCallResult
+
+
+// @{ MYRISCVXISelLowering_passArgOnStack
+SDValue
+MYRISCVXTargetLowering::passArgOnStack(SDValue StackPtr, unsigned Offset,
+                                       SDValue Chain, SDValue Arg, const SDLoc &DL,
+                                       bool IsTailCall, SelectionDAG &DAG) const {
+  // 関数の引数をスタックに配置するために, オフセットを計算してストア命令を生成する
+  if (!IsTailCall) {
+    SDValue PtrOff =
+        DAG.getNode(ISD::ADD, DL, getPointerTy(DAG.getDataLayout()), StackPtr,
+                    DAG.getIntPtrConstant(Offset, DL));
+    return DAG.getStore(Chain, DL, Arg, PtrOff, MachinePointerInfo());
+  }
+
+  MachineFrameInfo &MFI = DAG.getMachineFunction().getFrameInfo();
+  int FI = MFI.CreateFixedObject(Arg.getValueSizeInBits() / 8, Offset, false);
+  SDValue FIN = DAG.getFrameIndex(FI, getPointerTy(DAG.getDataLayout()));
+  return DAG.getStore(Chain, DL, Arg, FIN, MachinePointerInfo(),
+                      /* Alignment = */ 0, MachineMemOperand::MOVolatile);
+}
+// @} MYRISCVXISelLowering_passArgOnStack
+
+
+// @{ MYRISCVXISelLowering_getOpndList
+// @{ MYRISCVXISelLowering_getOpndList_Loop
+void MYRISCVXTargetLowering::
+getOpndList(SmallVectorImpl<SDValue> &Ops,
+            std::deque< std::pair<unsigned, SDValue> > &RegsToPass,
+            bool IsPICCall, bool GlobalOrExternal, bool InternalLinkage,
+            CallLoweringInfo &CLI, SDValue Callee, SDValue Chain) const {
+  // 引数をレジスタに配置するためのDAGを生成する
+  // getCopyToRegを使ってひたすらレジスタに置いていく
+  // @{ MYRISCVXISelLowering_getOpndList_Loop ...
+  Ops.push_back(Callee);
+
+  // Build a sequence of copy-to-reg nodes chained together with token
+  // chain and flag operands which copy the outgoing args into registers.
+  // The InFlag in necessary since all emitted instructions must be
+  // stuck together.
+  SDValue InFlag;
+
+  // @} MYRISCVXISelLowering_getOpndList_Loop ...
+  for (unsigned i = 0, e = RegsToPass.size(); i != e; ++i) {
+    Chain = CLI.DAG.getCopyToReg(Chain, CLI.DL, RegsToPass[i].first,
+                                 RegsToPass[i].second, InFlag);
+    InFlag = Chain.getValue(1);
+  }
+
+  // Add argument registers to the end of the list so that they are
+  // known live into the call.
+  for (unsigned i = 0, e = RegsToPass.size(); i != e; ++i)
+    Ops.push_back(CLI.DAG.getRegister(RegsToPass[i].first,
+                                      RegsToPass[i].second.getValueType()));
+  // @} MYRISCVXISelLowering_getOpndList_Loop
+  // Add a register mask operand representing the call-preserved registers.
+  const TargetRegisterInfo *TRI = Subtarget.getRegisterInfo();
+  const uint32_t *Mask =
+      TRI->getCallPreservedMask(CLI.DAG.getMachineFunction(), CLI.CallConv);
+  assert(Mask && "Missing call preserved mask for calling convention");
+  Ops.push_back(CLI.DAG.getRegisterMask(Mask));
+
+  if (InFlag.getNode())
+    Ops.push_back(InFlag);
+}
+// @} MYRISCVXISelLowering_getOpndList
+
+
 //===----------------------------------------------------------------------===//
 //@            Formal Arguments Calling Convention Implementation
 //===----------------------------------------------------------------------===//
