@@ -2,6 +2,21 @@
 ; RUN:   | FileCheck -check-prefix=MYRVX32I %s
 
 
+define dso_local void @simple_func() #0 {
+
+; MYRVX32I-LABEL:simple_func:
+; MYRVX32I:         # %bb.0:
+; MYRVX32I-NEXT:ret
+
+; MYRVX64I-LABEL:simple_func:
+; MYRVX64I:         # %bb.0:
+; MYRVX64I-NEXT:ret
+
+entry:
+  ret void
+}
+
+
 define dso_local signext i32 @add_int_O0(i32 signext %arg1, i32 signext %arg2) #0 {
 
 ; MYRVX32I-LABEL:add_int_O0:
