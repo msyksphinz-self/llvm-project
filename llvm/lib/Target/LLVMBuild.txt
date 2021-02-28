@@ -16,12 +16,14 @@
 
 ; Please keep these as one per line so that out-of-tree merges
 ; will typically require only insertion of a line.
+; @{ Add_MYRISCVX_Subdirectory
 [common]
 subdirectories =
  AArch64
  AMDGPU
  ARC
  ARM
+; @{ Add_MYRISCVX_Subdirectory ...
  AVR
  BPF
  Hexagon
@@ -35,8 +37,12 @@ subdirectories =
  SystemZ
  VE
  WebAssembly
+; @} Add_MYRISCVX_Subdirectory ...
  X86
  XCore
+ MYRISCVX
+;; リストにMYRISCVXを追加
+; @} Add_MYRISCVX_Subdirectory
 
 ; This is a special group whose required libraries are extended (by llvm-build)
 ; with the best execution engine (the native JIT, if available, or the
