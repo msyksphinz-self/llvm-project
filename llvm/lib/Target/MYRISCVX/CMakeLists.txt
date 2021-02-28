@@ -5,10 +5,15 @@ set(LLVM_TARGET_DEFINITIONS MYRISCVX.td)
 # @{MYRISCVX_CMakeLists_TableGen
 # MYRISCVXGenRegisterInfo.incを生成する
 # tablegenを使用してMYRISCVXRegisterInfo.tdからMYRISCVXGenRegisterInfo.incが生成される
+# @{ MYRISCVX_CMakeLists_CallingConv_TableGen
 tablegen(LLVM MYRISCVXGenRegisterInfo.inc -gen-register-info)
 tablegen(LLVM MYRISCVXGenInstrInfo.inc -gen-instr-info)
 tablegen(LLVM MYRISCVXGenSubtargetInfo.inc -gen-subtarget)
 tablegen(LLVM MYRISCVXGenMCPseudoLowering.inc -gen-pseudo-lowering)
+
+# MYRISCVCallingConv.tdからMYRISCVXGenCallingConv.incを生成するためのtablegenを追加
+tablegen(LLVM MYRISCVXGenCallingConv.inc -gen-callingconv)
+# @} MYRISCVX_CMakeLists_CallingConv_TableGen
 # @}MYRISCVX_CMakeLists_TableGen
 
 # MYRISCVXCommonTableGenを定義しなければならない
