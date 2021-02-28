@@ -39,6 +39,7 @@ def RV32 : HwMode<"-64bit">;    // MYRISCVX32用のスイッチを定義
 include "MYRISCVXRegisterInfo.td"   // レジスタ定義を含んだtdファイル
 include "MYRISCVXSchedule.td"
 include "MYRISCVXInstrInfo.td"      // 命令定義を含んだtdファイル
+include "MYRISCVXCallingConv.td"
 
 def MYRISCVXInstrInfo : InstrInfo;
 
