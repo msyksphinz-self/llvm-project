@@ -23,6 +23,8 @@ class Triple;
 Target &getTheMYRISCVX32Target();
 Target &getTheMYRISCVX64Target();
 
+} // End llvm namespace
+
 // @{ MYRISCVXMC_TargetDesc_h_AddInclude
 // MYRISCVXGenRegisterInfo.inc / MYRISCVXGenInstrInfo.inc / 
 // MYRISCVXGenSubtargetInfo.inc からヘッダファイルに必要な情報を抽出する
@@ -36,7 +38,5 @@ Target &getTheMYRISCVX64Target();
 #include "MYRISCVXGenSubtargetInfo.inc"
 // @} MYRISCVXMC_TargetDesc_h_AddInclude
 
-
-} // End llvm namespace
 
 #endif
