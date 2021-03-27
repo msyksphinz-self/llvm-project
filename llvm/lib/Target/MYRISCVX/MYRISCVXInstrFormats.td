@@ -209,3 +209,16 @@ class MYRISCVX_J<bits<7> opcode,
   let Inst{6-0}   = opcode;
 }
 // @} MYRISCVXInstrFormats_MYRISCVX_J
+
+
+//@{ MYRISCVXInstrFormats_Pseudo
+//===-------------------------------===//
+// MYRISCVX Pseudo Instructions Format
+//===-------------------------------===//
+// MYRISCVXPseudoは具体的な命令を持たない疑似ノードを定義する際に使用する
+class MYRISCVXPseudo<dag outs, dag ins, string asmstr, list<dag> pattern>:
+      MYRISCVXInst<outs, ins, asmstr, pattern, IIPseudo, Pseudo> {
+  let isCodeGenOnly = 1;
+  let isPseudo = 1;         // 疑似ノードであることを示す
+}
+//@} MYRISCVXInstrFormats_Pseudo
