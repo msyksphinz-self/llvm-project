@@ -169,6 +169,13 @@ def LUI  : ArithLogicU<0b0110111, "lui", GPR, simm20u>;
 def ADD  : ArithLogicR<0b0110011, 0b000, 0b0000000, "add", add, GPR>;
 //@} MYRISCVXInstrInfo_Basic_Definition
 
+//@{ MYRISCVXInstrInfo_RetRA
+// RetRAノードの定義 RetRAは具体的な命令を持たない疑似ノード
+// MYRISCVXRetはRetRAに変換される
+let isReturn=1, isTerminator=1, hasDelaySlot=0, isBarrier=1, hasCtrlDep=1 in
+  def RetRA : MYRISCVXPseudo<(outs), (ins), "", [(MYRISCVXRet)]>;
+//@} MYRISCVXInstrInfo_RetRA
+
 //===----------------------------------------------------------------------===//
 //  Arbitrary patterns that map to one or more instructions
 //===----------------------------------------------------------------------===//
