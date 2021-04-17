@@ -58,9 +58,10 @@ static MCRegisterInfo *createMYRISCVXMCRegisterInfo(const Triple &TT) {
 // @{ MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCSubtargetInfo
 static MCSubtargetInfo *createMYRISCVXMCSubtargetInfo(const Triple &TT,
                                                       StringRef CPU, StringRef FS) {
+  std::string CPUName = std::string(CPU);
   if (CPU.empty())
     CPU = TT.isArch64Bit() ? "cpu-rv64" : "cpu-rv32";
-  return createMYRISCVXMCSubtargetInfoImpl(TT, CPU, FS);
+  return createMYRISCVXMCSubtargetInfoImpl(TT, CPU, /*TuneCPU*/CPUName ,FS);
 }
 // @} MYRISCVXMC_TargetDesc_cpp_createMYRISCVXMCSubtargetInfo
 
