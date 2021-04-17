@@ -79,6 +79,21 @@ class MYRISCVXAsmParser : public MCTargetAsmParser {
                                bool MatchingInlineAsm) override;
 // @{ MYRISCVXAsmParser_MYRISCVXAsmParser_Head ...
 
+  bool needsExpansion(MCInst &Inst);
+
+  void expandInstruction(MCInst &Inst, SMLoc IDLoc,
+                         SmallVectorImpl<MCInst> &Instructions,
+                         MCStreamer &Out);
+  void expandPseudoLI(MCInst &Inst, SMLoc IDLoc,
+                     SmallVectorImpl<MCInst> &Instructions,
+                     MCStreamer &Out);
+  void expandPseudoLA(MCInst &Inst, SMLoc IDLoc,
+                      SmallVectorImpl<MCInst> &Instructions,
+                      MCStreamer &Out);
+  void expandPseudoLLA(MCInst &Inst, SMLoc IDLoc,
+                       SmallVectorImpl<MCInst> &Instructions,
+                       MCStreamer &Out);
+
   // @} MYRISCVXAsmParser_MYRISCVXAsmParser_Head ...
   // レジスタオペランドを構文解析する
   bool ParseRegister(unsigned &RegNo, SMLoc &StartLoc,
@@ -370,6 +385,7 @@ void printMYRISCVXOperands(OperandVector &Operands) {
 
 
 // @{ MYRISCVXAsmParser_MatchAndEmitInstruction
+// @{ MYRISCVXAsmParser_MatchAndEmitInstruction_InstExpansion
 // @{ MYRISCVXAsmParser_MatchAndEmitInstruction_MatchInstructionImpl
 // MatchAndEmitInstruction()はParseしたアセンブリ命令が
 // どの命令にMatchするかを識別しMCInstを構築し
@@ -387,6 +403,12 @@ bool MYRISCVXAsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
     default: break;
     case Match_Success: {
       // Matchに成功した場合
+      if (needsExpansion(Inst)) {
+        // いくつかの疑似アセンブリ命令については、ここで展開する
+        SmallVector<MCInst, 4> Instructions;
+        expandInstruction(Inst, IDLoc, Instructions, Out);
+        return false;
+      }
       Inst.setLoc(IDLoc); // setLocはデバッグ情報を出力するために必要
       // Matchした命令をMCStreamerに出力する
       Out.emitInstruction(Inst, getSTI());
@@ -399,6 +421,7 @@ bool MYRISCVXAsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
       return true;
     case Match_InvalidOperand: {
       // Matchしなかった場合にはエラーを出力する
+      // @} MYRISCVXAsmParser_MatchAndEmitInstruction_InstExpansion
       SMLoc ErrorLoc = IDLoc;
       if (ErrorInfo != ~0U) {
         if (ErrorInfo >= Operands.size())
@@ -880,6 +903,165 @@ bool MYRISCVXAsmParser::ParseDirective(AsmToken DirectiveID) {
 
   return true;
 }
+
+
+// @{ MYRISCVXAsmParser_needsExpansion
+// needsExpansion()は MatchAndEmitinstruction()実行中にこれらの命令に遭遇した場合
+// 疑似命令のため本命令に置き換える処置が必要であることを示す
+bool MYRISCVXAsmParser::needsExpansion(MCInst &Inst) {
+  switch(Inst.getOpcode()) {
+    case MYRISCVX::LoadImm32Reg:
+    case MYRISCVX::PseudoLA:
+    case MYRISCVX::PseudoLLA:
+      return true;
+    default:
+      return false;
+  }
+}
+// @} MYRISCVXAsmParser_needsExpansion
+
+
+void MYRISCVXAsmParser::expandInstruction(MCInst &Inst, SMLoc IDLoc,
+                                          SmallVectorImpl<MCInst> &Instructions,
+                                          MCStreamer &Out){
+  switch(Inst.getOpcode()) {
+    case MYRISCVX::LoadImm32Reg:
+      return expandPseudoLI(Inst, IDLoc, Instructions, Out);
+    case MYRISCVX::PseudoLA:
+      return expandPseudoLA(Inst,IDLoc,Instructions, Out);
+    case MYRISCVX::PseudoLLA:
+      return expandPseudoLLA(Inst,IDLoc,Instructions, Out);
+  }
+}
+
+
+// @{ MYRISCVXAsmParser_expandPseudoLI
+// LoadImm32Reg (LI疑似命令)を変換するための処理
+void MYRISCVXAsmParser::expandPseudoLI(MCInst &Inst, SMLoc IDLoc,
+                                      SmallVectorImpl<MCInst> &Instructions,
+                                      MCStreamer &Out){
+  MCInst tmpInst;
+  const MCOperand &ImmOp = Inst.getOperand(1);
+  assert(ImmOp.isImm() && "expected immediate operand kind");
+  const MCOperand &RegOp = Inst.getOperand(0);
+  assert(RegOp.isReg() && "expected register operand kind");
+
+  int ImmValue = ImmOp.getImm();
+  tmpInst.setLoc(IDLoc);
+  if ( -2048 <= ImmValue && ImmValue < 2048) {
+    // -2048 から 2048までの値を生成する場合は、ADDI命令だけで良い
+    tmpInst.setOpcode(MYRISCVX::ADDI);
+    tmpInst.addOperand(MCOperand::createReg(RegOp.getReg()));
+    tmpInst.addOperand(
+        MCOperand::createReg(MYRISCVX::ZERO));
+    tmpInst.addOperand(MCOperand::createImm(ImmValue));
+    Out.emitInstruction(tmpInst, getSTI());
+  } else {
+    // それ以外のより大きな値を生成するためには LUI命令とADDI命令を組み合わせて生成する
+    tmpInst.setOpcode(MYRISCVX::LUI);
+    tmpInst.addOperand(MCOperand::createReg(RegOp.getReg()));
+    tmpInst.addOperand(MCOperand::createImm((((ImmValue + 0x800) & 0xfffff000) >> 12) & 0xffffff));
+    Out.emitInstruction(tmpInst, getSTI());
+    tmpInst.clear();
+    tmpInst.setOpcode(MYRISCVX::ADDI);
+    tmpInst.addOperand(MCOperand::createReg(RegOp.getReg()));
+    tmpInst.addOperand(MCOperand::createReg(RegOp.getReg()));
+    tmpInst.addOperand(MCOperand::createImm(ImmValue & 0x00fff));
+    tmpInst.setLoc(IDLoc);
+    Out.emitInstruction(tmpInst, getSTI());
+  }
+}
+// @} MYRISCVXAsmParser_expandPseudoLI
+
+
+// @{ MYRISCVXAsmParser_expandPseudoLLA
+void MYRISCVXAsmParser::expandPseudoLLA(MCInst &Inst, SMLoc IDLoc,
+                                        SmallVectorImpl<MCInst> &Instructions,
+                                        MCStreamer &Out){
+  // LLA rd, symbol
+  //    AUIPC rd, %pcrel_hi(symbol)
+  //    ADDI  rd, rd, %pcrel_lo(symbol)
+
+  MCContext &Ctx = getContext();
+
+  MCSymbol *TmpLabel = Ctx.createNamedTempSymbol("pcrel_hi");
+  Out.emitLabel(TmpLabel);
+
+  MCOperand DestReg = Inst.getOperand(0);
+  const MYRISCVXMCExpr *Symbol = MYRISCVXMCExpr::create(
+      MYRISCVXMCExpr::VK_MYRISCVX_PCREL_HI20, Inst.getOperand(1).getExpr(), Ctx);
+
+  MCInst tmpInst0 = MCInstBuilder(MYRISCVX::AUIPC)
+      .addOperand(DestReg)
+      .addExpr(Symbol);
+  Out.emitInstruction(tmpInst0, getSTI());
+
+  const MCExpr *RefToLinkTmpLabel =
+      MYRISCVXMCExpr::create(MYRISCVXMCExpr::VK_MYRISCVX_PCREL_LO12_I,
+                             MCSymbolRefExpr::create(TmpLabel, Ctx),
+                             Ctx);
+
+  MCInst tmpInst1 = MCInstBuilder(MYRISCVX::ADDI)
+      .addOperand(DestReg)
+      .addOperand(DestReg)
+      .addExpr(RefToLinkTmpLabel);
+  Out.emitInstruction(tmpInst1, getSTI());
+
+}
+// @} MYRISCVXAsmParser_expandPseudoLLA
+
+
+// @{ MYRISCVXAsmParser_expandPseudoLA
+// LA疑似命令を展開するための関数
+void MYRISCVXAsmParser::expandPseudoLA(MCInst &Inst, SMLoc IDLoc,
+                                       SmallVectorImpl<MCInst> &Instructions,
+                                       MCStreamer &Out){
+  // LA命令の変換パタン:
+  // LA rd, symbol
+  // Staticモードの場合:
+  //    AUIPC rd, %pcrel_hi(symbol)
+  //    ADDI  rd, rd, %pcrel_lo(symbol)
+  // PICモードの場合:
+  // 1: AUIPC rd, %got_pcrel_hi(symbol)
+  //    LW/LD rd, %pcrel_lo(1b)(rdest)
+
+  MCContext &Ctx = getContext();
+
+  MCOperand DestReg = Inst.getOperand(0);
+
+  if (getContext().getObjectFileInfo()->isPositionIndependent()) {
+    // PICモードの場合
+    unsigned GOTLoadOpcode = isRV64() ? MYRISCVX::LD : MYRISCVX::LW;
+
+    MCSymbol *TmpLabel = Ctx.createNamedTempSymbol("pcrel_hi");
+    Out.emitLabel(TmpLabel);
+
+    // AUIPC命令の生成
+    const MYRISCVXMCExpr *Symbol = MYRISCVXMCExpr::create(
+        MYRISCVXMCExpr::VK_MYRISCVX_GOT_HI20, Inst.getOperand(1).getExpr(), Ctx);
+    MCInst tmpInst0 = MCInstBuilder(MYRISCVX::AUIPC)
+        .addOperand(DestReg)
+        .addExpr(Symbol);
+    Out.emitInstruction(tmpInst0, getSTI());
+
+    const MCExpr *RefToLinkTmpLabel =
+        MYRISCVXMCExpr::create(MYRISCVXMCExpr::VK_MYRISCVX_PCREL_LO12_I,
+                               MCSymbolRefExpr::create(TmpLabel, Ctx),
+                               Ctx);
+
+    // ADDI命令の生成
+    MCInst tmpInst1 = MCInstBuilder(GOTLoadOpcode)
+        .addOperand(DestReg)
+        .addOperand(DestReg)
+        .addExpr(RefToLinkTmpLabel);
+    Out.emitInstruction(tmpInst1, getSTI());
+  } else {
+    // Staticモードの場合はLLA命令と同様なのでexpandPseudoLLA()にジャンプする
+    expandPseudoLLA(Inst, IDLoc, Instructions, Out);
+  }
+}
+// @} MYRISCVXAsmParser_expandPseudoLA
+
 
 extern "C" void LLVMInitializeMYRISCVXAsmParser() {
   RegisterMCAsmParser<MYRISCVXAsmParser> X(getTheMYRISCVX32Target());
