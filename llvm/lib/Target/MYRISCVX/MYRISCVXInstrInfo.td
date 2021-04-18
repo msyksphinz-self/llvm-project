@@ -74,14 +74,24 @@ include "MYRISCVXInstrFormats.td"   // 命令フォーマットを定義したMY
 //===----------------------------------------------------------------------===//
 // MYRISCVX のオペランド定義
 //===----------------------------------------------------------------------===//
+// @{ MYRISCVXInstrInfo_Operand_Definition_simm12_DecodeMethod
 // @{ MYRISCVXInstrInfo_Operand_Definition_simm12
 // 12ビットの即値オペランド
-def simm12 : Operand<XLenVT>, ImmLeaf<XLenVT, [{return isInt<12>(Imm);}]>;
+def simm12 : Operand<XLenVT>, ImmLeaf<XLenVT, [{return isInt<12>(Imm);}]> {
+  let DecoderMethod = "decodeImmOperand<12>";
+}
 // @} MYRISCVXInstrInfo_Operand_Definition_simm12
+// @} MYRISCVXInstrInfo_Operand_Definition_simm12_DecodeMethod
+
+// @{ MYRISCVXInstrInfo_Operand_Definition_simm20u_DecodeMethod
 // @{ MYRISCVXInstrInfo_Operand_Definition_simm20u
 // 上位20ビットで下位12ビットが0の即値オペランド
-def simm20u : Operand<XLenVT>, ImmLeaf<XLenVT, [{return isInt<32>(Imm) && !(Imm & 0x0fff);}]>;
+def simm20u : Operand<XLenVT>, ImmLeaf<XLenVT, [{return isInt<32>(Imm) && !(Imm & 0x0fff);}]> {
+  let DecoderMethod = "decodeImmOperand<20>";
+}
 // @} MYRISCVXInstrInfo_Operand_Definition_simm20u
+// @} MYRISCVXInstrInfo_Operand_Definition_simm20u_DecodeMethod
+
 // @{ MYRISCVXInstrInfo_Operand_Definition_simm32
 // 32ビットの即値オペランド
 def simm32: Operand<XLenVT>, ImmLeaf<XLenVT, [{return isInt<32>(Imm);}]>;
@@ -138,19 +148,25 @@ def calltarget : Operand<iPTR> {
 
 // JAL
 // @{ MYRISCVXInstrInfo_brtarget20
+// @{ MYRISCVXInstrInfo_brtarget20_DecodeMethod
 def brtarget20    : Operand<OtherVT> {
   let EncoderMethod = "getBranch20TargetOpValue";
   let OperandType   = "OPERAND_PCREL";
+  let DecoderMethod = "decodeBranchTarget<20>";
 }
+// @} MYRISCVXInstrInfo_brtarget20_DecodeMethod
 // @} MYRISCVXInstrInfo_brtarget20
 
 
 // @{ MYRISCVXInstrInfo_brtarget12
+// @{ MYRISCVXInstrInfo_brtarget12_DecodeMethod
 // BEQ, BNE
 def brtarget12    : Operand<OtherVT> {
   let EncoderMethod = "getBranch12TargetOpValue";
   let OperandType   = "OPERAND_PCREL";
+  let DecoderMethod = "decodeBranchTarget<12>";
 }
+// @} MYRISCVXInstrInfo_brtarget12_DecodeMethod
 // @} MYRISCVXInstrInfo_brtarget12
 
 
