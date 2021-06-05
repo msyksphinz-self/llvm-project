@@ -2,9 +2,14 @@
 add_llvm_component_group(MYRISCVX)
 set(LLVM_TARGET_DEFINITIONS MYRISCVX.td)
 
+# @{MYRISCVX_CMakeLists_TableGen
 # MYRISCVXGenRegisterInfo.incを生成する
-# このヘッダファイルはMYRISCVXRegisterInfo.tdから生成される
+# tablegenを使用してMYRISCVXRegisterInfo.tdからMYRISCVXGenRegisterInfo.incが生成される
 tablegen(LLVM MYRISCVXGenRegisterInfo.inc -gen-register-info)
+tablegen(LLVM MYRISCVXGenInstrInfo.inc -gen-instr-info)
+tablegen(LLVM MYRISCVXGenSubtargetInfo.inc -gen-subtarget)
+tablegen(LLVM MYRISCVXGenMCPseudoLowering.inc -gen-pseudo-lowering)
+# @}MYRISCVX_CMakeLists_TableGen
 
 # MYRISCVXCommonTableGenを定義しなければならない
 add_public_tablegen_target(MYRISCVXCommonTableGen)
