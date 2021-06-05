@@ -143,6 +143,32 @@ class ArithLogicU<bits<7> opcode,
 //@} MYRISCVXInstrInfo_Instruction_Format
 
 
+//@{ MYRISCVXInstrInfo_Shift
+// ShiftIは即値シフト命令を生成するためのテンプレート
+// opcode, funct3フィールドに加えてarithshiftを指定する
+class ShiftI<bits<7> opcode, bits<3> funct3, bit arithshift, string instr_asm,
+                   SDNode OpNode>:
+  // ShiftIはMYRISCVX_ISHIFTを継承している
+  // immZExt_XlenはRV32/RV63で長さが変わるオペランド
+  MYRISCVX_ISHIFT<opcode, funct3, arithshift, (outs GPR:$rd), (ins GPR:$rs1, immZExt_Xlen:$shamt),
+                  !strconcat(instr_asm, "\t$rd, $rs1, $shamt"),
+                  [(set GPR:$rd, (OpNode GPR:$rs1, immZExt_Xlen:$shamt))], IIAlu> {
+}
+
+
+// ShiftRはレジスタオペランドシフト命令を生成するためのテンプレート
+// MYRISCVX_Rとほぼ同じ
+class ShiftR<bits<7> opcode, bits<7> funct7, bits<3> funct3,
+                   bits<4> isRotate, string instr_asm,
+                   SDNode OpNode, RegisterClass RC>:
+  // ShiftRはMYRISCVX_Rを継承している
+  MYRISCVX_R<opcode, funct3, funct7, (outs RC:$rd), (ins RC:$rs1, RC:$rs2),
+          !strconcat(instr_asm, "\t$rd, $rs1, $rs2"),
+          [(set GPR:$rd, (OpNode RC:$rs1, RC:$rs2))], IIAlu> {
+}
+//@} MYRISCVXInstrInfo_Shift
+
+
 //@{ MYRISCVXInstrInfo_jalr_variation
 // JALR命令とそのエイリアスを定義する
 def JALR : ArithLogicI_J<0b1100111, 0b000, "jalr", simm12, GPR>;
@@ -196,10 +222,41 @@ class AlignedStore<PatFrag Node> :
 //@{ MYRISCVXInstrInfo_Arithmetic_ADDI
 def ADDI : ArithLogicI<0b0010011, 0b000, "addi", add, simm12, GPR>;
 //@} MYRISCVXInstrInfo_Arithmetic_ADDI
+def XORI : ArithLogicI<0b0010011, 0b100, "xori", xor, simm12, GPR>;
+def ORI  : ArithLogicI<0b0010011, 0b110, "ori",  or,  simm12, GPR>;
+def ANDI : ArithLogicI<0b0010011, 0b111, "andi", and, simm12, GPR>;
 
 def LUI  : ArithLogicU<0b0110111, "lui", GPR, simm20u>;
 def ADD  : ArithLogicR<0b0110011, 0b000, 0b0000000, "add", add, GPR>;
+def SUB  : ArithLogicR<0b0110011, 0b000, 0b0100000, "sub", sub, GPR>;
 //@} MYRISCVXInstrInfo_Basic_Definition
+
+def AND  : ArithLogicR     <0b0110011, 0b111, 0b0000000, "and", and, GPR>;
+def OR   : ArithLogicR     <0b0110011, 0b110, 0b0000000, "or",  or,  GPR>;
+def XOR  : ArithLogicR     <0b0110011, 0b100, 0b0000000, "xor", xor, GPR>;
+//@} MYRISCVXInstrInfo_Arithmetic
+
+// @{ MYRISCVXInstrInfo_ShiftInsts
+def SLL  : ShiftR<0b0110011, 0b0000000, 0b001, 0x0, "sll", shl, GPR>;
+def SRL  : ShiftR<0b0110011, 0b0000000, 0b101, 0x0, "srl", srl, GPR>;
+def SRA  : ShiftR<0b0110011, 0b0100000, 0b101, 0x0, "sra", sra, GPR>;
+
+def SRLI : ShiftI <0b0010011, 0b101, 0, "srli", srl>;
+def SLLI : ShiftI <0b0010011, 0b001, 0, "slli", shl>;
+def SRAI : ShiftI <0b0010011, 0b101, 1, "srai", sra>;
+// @} MYRISCVXInstrInfo_ShiftInsts
+
+// @{ MYRISCVXInstrInfo_MulDivInsts
+def MUL   : ArithLogicR<0b0110011, 0b000, 0b0000001, "mul",    mul,   GPR>;
+def MULH  : ArithLogicR<0b0110011, 0b001, 0b0000001, "mulh",   mulhs, GPR>;
+def MULHSU: ArithLogicR<0b0110011, 0b010, 0b0000001, "mulhsu", mulhs, GPR>;
+def MULHU : ArithLogicR<0b0110011, 0b011, 0b0000001, "mulhu",  mulhu, GPR>;
+def DIV   : ArithLogicR<0b0110011, 0b100, 0b0000001, "div",    sdiv,  GPR>;
+def DIVU  : ArithLogicR<0b0110011, 0b101, 0b0000001, "divu",   udiv,  GPR>;
+def REM   : ArithLogicR<0b0110011, 0b110, 0b0000001, "rem",    srem,  GPR>;
+def REMU  : ArithLogicR<0b0110011, 0b111, 0b0000001, "remu",   urem,  GPR>;
+// @} MYRISCVXInstrInfo_MulDivInsts
+
 
 //@{ MYRISCVXInstrInfo_RetRA
 // RetRAノードの定義 RetRAは具体的な命令を持たない疑似ノード
