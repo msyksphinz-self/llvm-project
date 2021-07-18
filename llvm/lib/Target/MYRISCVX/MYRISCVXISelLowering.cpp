@@ -111,18 +111,67 @@ const {
 // @{ MYRISCVXISelLowering_LowerReturn_MYRISCVXRet
 // LowerReturn()
 // LLVM IRのreturn文をどのようにSelectionDAGに置き換えるかをここで指定する
+// @{ MYRISCVXISelLowering_LowerReturn_Header
 SDValue
 MYRISCVXTargetLowering::LowerReturn(SDValue Chain,
                                     CallingConv::ID CallConv, bool IsVarArg,
                                     const SmallVectorImpl<ISD::OutputArg> &Outs,
                                     const SmallVectorImpl<SDValue> &OutVals,
                                     const SDLoc &DL, SelectionDAG &DAG) const {
-   // MYRISCVXISD::Retノードを生成し、ノードには
-   //  - 戻り値を格納しているChain
-   //  - 戻りアドレスを格納しているRAレジスタ
-   // を接続する
-   return DAG.getNode(MYRISCVXISD::Ret, DL, MVT::Other,
-                      Chain, DAG.getRegister(MYRISCVX::RA, Subtarget.getXLenVT()));
+  // @} MYRISCVXISelLowering_LowerReturn_Header
+  // CCValAssign - represent the assignment of
+  // the return value to a location
+  SmallVector<CCValAssign, 16> RVLocs;
+  MachineFunction &MF = DAG.getMachineFunction();
+
+
+  // @{ MYRISCVXISelLowering_LowerReturn_AnalyzeReturn
+  // CCStateにはレジスタとスタックスロットに関する情報が含まれる
+  CCState CCInfo(CallConv, IsVarArg, MF, RVLocs,
+                 *DAG.getContext());
+  // AnalyzeReturn()を使ってRetCC_MYRISCVXのルールで戻り値のレジスタ割り当てを行う
+  CCInfo.AnalyzeReturn(Outs, RetCC_MYRISCVX);
+  // @} MYRISCVXISelLowering_LowerReturn_AnalyzeReturn
+
+  SDValue Flag;
+  SmallVector<SDValue, 4> RetOps(1, Chain);
+
+  // @{ MYRISCVXISelLowering_LowerReturn_Loop
+  // 戻り値の値を戻り値用のレジスタにコピーするためのDAGを生成
+  for (unsigned i = 0; i != RVLocs.size(); ++i) {
+    SDValue Val = OutVals[i];
+    CCValAssign &VA = RVLocs[i];
+    assert(VA.isRegLoc() && "Can only return in registers!");
+
+    // @{ MYRISCVXISelLowering_LowerReturn_BITCAST
+    // 小さなサイズの型の場合は拡張のためのノード挿入
+    if (RVLocs[i].getValVT() != RVLocs[i].getLocVT())
+      Val = DAG.getNode(ISD::BITCAST, DL, RVLocs[i].getLocVT(), Val);
+    // @} MYRISCVXISelLowering_LowerReturn_BITCAST
+
+    // @{ MYRISCVXISelLowering_LowerReturn_getCopyToReg
+    // 戻り値のノードをCopyToRegでレジスタと結合
+    Chain = DAG.getCopyToReg(Chain, DL, VA.getLocReg(), Val, Flag);
+    // @} MYRISCVXISelLowering_LowerReturn_getCopyToReg
+
+    Flag = Chain.getValue(1);
+    // RetOpsに戻り値レジスタの情報を追加する
+    RetOps.push_back(DAG.getRegister(VA.getLocReg(), VA.getLocVT()));
+  }
+
+  // RetOpsの先頭はこれまでに作成したgetCopyRegsのチェインを接続する
+  // それ以降のRetOpsの要素は戻り値レジスタに関する情報が含まれている
+  RetOps[0] = Chain;  // Update chain.
+
+  if (Flag.getNode())
+    RetOps.push_back(Flag);
+  // @} MYRISCVXISelLowering_LowerReturn_Loop
+
+
+  // @{ MYRISCVXISelLowering_LowerReturn_RET
+  // 戻り値を含むノードRetOpsを引数としたMYRISCVXISD::Retノードを作成する
+  return DAG.getNode(MYRISCVXISD::Ret, DL, MVT::Other, RetOps);
+  // @} MYRISCVXISelLowering_LowerReturn_RET
 }
 // @} MYRISCVXISelLowering_LowerReturn_MYRISCVXRet
 // @} MYRISCVXISelLowering_LowerReturn
