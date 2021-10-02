@@ -36,6 +36,7 @@ add_llvm_target(MYRISCVXCodeGen
   MYRISCVXTargetObjectFile.cpp
   MYRISCVXAsmPrinter.cpp
   MYRISCVXMCInstLower.cpp
+  MYRISCVXISelDAGToDAG.cpp
 )
 
 add_subdirectory(TargetInfo)
