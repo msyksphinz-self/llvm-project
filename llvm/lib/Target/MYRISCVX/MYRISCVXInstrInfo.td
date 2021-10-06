@@ -308,6 +308,19 @@ let isBarrier = 1, isBranch = 1, isTerminator = 1 in
 //@} MYRISCVXInstrInfo_PseudoBR
 
 
+//@{ MYRISCVXInstrInfo_PseudoBRIND
+// PseudoBRとは違い、 汎用レジスタの値と即値を使ってジャンプするケース
+let isBarrier = 1, isBranch = 1, isIndirectBranch = 1, isTerminator = 1 in
+def PseudoBRIND : MYRISCVXPseudo<(outs), (ins GPR:$rs1, simm12:$simm12), "", []>,
+                  PseudoInstExpansion<(JALR ZERO, GPR:$rs1, simm12:$simm12)>;
+//@} MYRISCVXInstrInfo_PseudoBRIND
+
+//@{ MYRISCVXInstrInfo_PseudoBRIND_Pat
+// PseudoBRINDの生成パタン。 汎用レジスタと即値の組み合わせで生成する
+def : Pat<(brind GPR:$rs1), (PseudoBRIND GPR:$rs1, 0)>;
+def : Pat<(brind (add GPR:$rs1, simm12:$simm12)),
+          (PseudoBRIND GPR:$rs1, simm12:$simm12)>;
+//@} MYRISCVXInstrInfo_PseudoBRIND_Pat
 
 
 //@{ MYRISCVXInstrInfo_SelectCC_rrirr
