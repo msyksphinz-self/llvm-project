@@ -99,6 +99,12 @@ MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
   setOperationAction(ISD::SELECT,    XLenVT,     Custom);   // SELECTはカスタム関数を定義して生成する
   setOperationAction(ISD::SELECT_CC, XLenVT,     Expand);   // SELECT_CCは生成を抑制する
   // @} MYRISCVXTargetLowering_setOperationAction_Select
+
+  // @{ MYRISCVXTargetLowering_setMinimumJumpTableEntries
+  // テーブルジャンプの生成を抑制するのには, 生成条件のエントリ数を最大にしておくと
+  // 常に生成されなくなる
+  setMinimumJumpTableEntries(INT_MAX);
+  // @} MYRISCVXTargetLowering_setMinimumJumpTableEntries
 }
 // @} MYRISCVXTargetLowering
 
