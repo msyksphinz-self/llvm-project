@@ -65,6 +65,9 @@ class MYRISCVXMCExpr : public MCTargetExpr {
   void printImpl(raw_ostream &OS, const MCAsmInfo *MAI) const override;
   bool evaluateAsRelocatableImpl(MCValue &Res, const MCAsmLayout *Layout,
                                  const MCFixup *Fixup) const override;
+  bool evaluateAsConstant(int64_t &Res) const;
+  int64_t evaluateAsInt64(int64_t Value) const;
+
   void visitUsedExpr(MCStreamer &Streamer) const override;
   MCFragment *findAssociatedFragment() const override {
     return getSubExpr()->findAssociatedFragment();
@@ -75,6 +78,9 @@ class MYRISCVXMCExpr : public MCTargetExpr {
   static bool classof(const MCExpr *E) {
     return E->getKind() == MCExpr::Target;
   }
+
+  static MYRISCVXExprKind getVariantKindForName(StringRef name);
+  static StringRef getVariantKindName(MYRISCVXExprKind Kind);
 };
 } // end namespace llvm
 
