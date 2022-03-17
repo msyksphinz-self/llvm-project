@@ -247,3 +247,15 @@ class MYRISCVXPseudo<dag outs, dag ins, string asmstr, list<dag> pattern>:
   let isPseudo = 1;         // 疑似ノードであることを示す
 }
 //@} MYRISCVXInstrFormats_Pseudo
+
+
+//===---------------------------------------------------------------------===//
+// Pseudo-instructions for alternate assembly syntax (never used by codegen).
+// These are aliases that require C++ handling to convert to the target
+// instruction, while InstAliases can be handled directly by tblgen.
+//===---------------------------------------------------------------------===//
+class MYRISCVXAsmPseudoInst<dag outs, dag ins, string asmstr>:
+  MYRISCVXInst<outs, ins, asmstr, [], IIPseudo, Pseudo> {
+  let isPseudo = 1;
+  let Pattern = [];
+}
