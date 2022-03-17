@@ -16,6 +16,11 @@ tablegen(LLVM MYRISCVXGenCallingConv.inc -gen-callingconv)
 # @} MYRISCVX_CMakeLists_CallingConv_TableGen
 # @}MYRISCVX_CMakeLists_TableGen
 
+# @{CMakeLists_AsmMatcher
+# AsmParserで使用するMatcherを生成する
+tablegen(LLVM MYRISCVXGenAsmMatcher.inc -gen-asm-matcher)
+# @}CMakeLists_AsmMatcher
+
 tablegen(LLVM MYRISCVXGenCodeEmitter.inc -gen-emitter)
 tablegen(LLVM MYRISCVXGenMCCodeEmitter.inc -gen-emitter)
 
@@ -43,4 +48,5 @@ add_llvm_target(MYRISCVXCodeGen
 
 add_subdirectory(TargetInfo)
 add_subdirectory(MCTargetDesc)
+add_subdirectory(AsmParser)
 # @{MYRISCVX_CMakeLists.txt
