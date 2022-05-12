@@ -28,22 +28,106 @@
 
 using namespace llvm;
 
+#define DEBUG_TYPE "MYRISCVX-frame"
+
+// @{ MYRISCVXFrameLowering_emitPrologue_Impl
 // @{ MYRISCVXFrameLowering_emitPrologue
+// @{ MYRISCVXFrameLowering_emitPrologue_Name
+// @{ emitPrologue_ComputeStackSize
+// 関数のプロローグを生成する：関数フレームの確保とCallee Savedレジスタの退避
 void MYRISCVXFrameLowering::emitPrologue(MachineFunction &MF,
                                          MachineBasicBlock &MBB) const {
-  // 関数のプロローグを生成する
-  // ここではまだ何も実装しない
+  // @} MYRISCVXFrameLowering_emitPrologue_Name
+  assert(&MF.front() == &MBB && "Shrink-wrapping not yet supported");
+  MachineFrameInfo MFI = MF.getFrameInfo();
+
+  // @{ emitPrologue_ComputeStackSize ...
+  const MYRISCVXInstrInfo &TII =
+      *static_cast<const MYRISCVXInstrInfo *>(STI.getInstrInfo());
+
+  MachineBasicBlock::iterator MBBI = MBB.begin();
+  DebugLoc dl = MBBI != MBB.end() ? MBBI->getDebugLoc() : DebugLoc();
+  unsigned SP = MYRISCVX::SP;
+
+  // @} emitPrologue_ComputeStackSize ...
+  // まず最終的なスタックフレームのサイズを取得する
+  uint64_t StackSize = MFI.getStackSize();
+
+  // もしスタックフレームのサイズが0ならば, スタックフレームの調整は必要ない
+  if (StackSize == 0 && !MFI.adjustsStack())
+    return;
+
+  // @{ emitPrologue_ComputeStackSize ...
+  MachineModuleInfo &MMI = MF.getMMI();
+  const MCRegisterInfo *MRI = MMI.getContext().getRegisterInfo();
+  // @} emitPrologue_ComputeStackSize ...
+
+  // スタックフレームの調整を行う. マイナス方向
+  TII.adjustStackPtr(SP, -StackSize, MBB, MBBI);
+  // @} emitPrologue_ComputeStackSize
+
+  unsigned CFIIndex =
+      MF.addFrameInst(MCCFIInstruction::cfiDefCfaOffset(nullptr, -StackSize));
+  BuildMI(MBB, MBBI, dl, TII.get(TargetOpcode::CFI_INSTRUCTION))
+      .addCFIIndex(CFIIndex);
+
+  const std::vector<CalleeSavedInfo> &CSI = MFI.getCalleeSavedInfo();
+
+  if (CSI.size()) {
+    // もし退避しなければならないCallee Savedレジスタが存在していれば
+    // スタックに退避するための命令を生成する
+    for (unsigned i = 0; i < CSI.size(); ++i)
+      ++MBBI;
+
+    // 全ての退避しなければならないCallee Savedレジスタに対して
+    // スタックに退避するための命令を生成する
+    for (std::vector<CalleeSavedInfo>::const_iterator I = CSI.begin(),
+                                                      E = CSI.end();
+         I != E; ++I) {
+      int64_t Offset = MFI.getObjectOffset(I->getFrameIdx());
+      unsigned Reg = I->getReg();
+      {
+        // Reg is in CPURegs.
+        unsigned CFIIndex = MF.addFrameInst(MCCFIInstruction::createOffset(
+            nullptr, MRI->getDwarfRegNum(Reg, 1), Offset));
+        BuildMI(MBB, MBBI, dl, TII.get(TargetOpcode::CFI_INSTRUCTION))
+            .addCFIIndex(CFIIndex);
+      }
+    }
+  }
 }
 // @} MYRISCVXFrameLowering_emitPrologue
+// @} MYRISCVXFrameLowering_emitPrologue_Impl
 
+// @{ MYRISCVXFrameLowering_emitEpilogue_Impl
 // @{ MYRISCVXFrameLowering_emitEpilogue
+// 関数のスタックフレームを開放する
 void MYRISCVXFrameLowering::emitEpilogue(MachineFunction &MF,
                                          MachineBasicBlock &MBB) const {
-  // 関数のエピローグを生成する
-  // ここではまだ何も実装しない
+  // @{ MYRISCVXFrameLowering_emitEpilogue_Impl ...
+  MachineBasicBlock::iterator MBBI = MBB.getLastNonDebugInstr();
+  MachineFrameInfo MFI = MF.getFrameInfo();
+
+  const MYRISCVXInstrInfo &TII =
+      *static_cast<const MYRISCVXInstrInfo *>(STI.getInstrInfo());
+
+  DebugLoc dl = MBBI->getDebugLoc();
+  // @} MYRISCVXFrameLowering_emitEpilogue_Impl ...
+
+  // スタックポインタSPを使用する
+  unsigned SP = MYRISCVX::SP;
+
+  // スタックフレームのサイズを取得する
+  uint64_t StackSize = MFI.getStackSize();
+
+  if (!StackSize)
+    return;
+
+  // スタックポインタ(sp)の調整を行う. プラス方向
+  TII.adjustStackPtr(SP, StackSize, MBB, MBBI);
 }
 // @} MYRISCVXFrameLowering_emitEpilogue
-
+// @} MYRISCVXFrameLowering_emitEpilogue_Impl
 
 // hasFP - Return true if the specified function should have a dedicated frame
 // pointer register.  This is true if the function has variable sized allocas,
@@ -54,6 +138,6 @@ bool MYRISCVXFrameLowering::hasFP(const MachineFunction &MF) const {
   const TargetRegisterInfo *TRI = STI.getRegisterInfo();
 
   return MF.getTarget().Options.DisableFramePointerElim(MF) ||
-      MFI.hasVarSizedObjects() || MFI.isFrameAddressTaken() ||
-      TRI->needsStackRealignment(MF);
+         MFI.hasVarSizedObjects() || MFI.isFrameAddressTaken() ||
+         TRI->hasStackRealignment(MF);
 }

@@ -13,8 +13,8 @@
 
 #include "MYRISCVXInstrInfo.h"
 
-#include "MYRISCVXTargetMachine.h"
 #include "MYRISCVXMachineFunction.h"
+#include "MYRISCVXTargetMachine.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -33,11 +33,10 @@ MYRISCVXInstrInfo::MYRISCVXInstrInfo() {}
 /// Return the number of bytes of code the specified instruction may be.
 unsigned MYRISCVXInstrInfo::GetInstSizeInBytes(const MachineInstr &MI) const {
   switch (MI.getOpcode()) {
-    default:
-      return MI.getDesc().getSize();
+  default:
+    return MI.getDesc().getSize();
   }
 }
-
 
 //@{ MYRISCVXInstrInfo_expandPostRA
 /// 疑似命令を本物の命令に変換するための関数
@@ -45,22 +44,70 @@ bool MYRISCVXInstrInfo::expandPostRAPseudo(MachineInstr &MI) const {
   MachineBasicBlock &MBB = *MI.getParent();
 
   switch (MI.getDesc().getOpcode()) {
-    default:
-      return false;
-    case MYRISCVX::RetRA:     // MYRISCVX::RetRAノードの場合はexpandRetRA()に飛ぶ
-      expandRetRA(MBB, MI);
-      break;
+  default:
+    return false;
+  case MYRISCVX::RetRA: // MYRISCVX::RetRAノードの場合はexpandRetRA()に飛ぶ
+    expandRetRA(MBB, MI);
+    break;
   }
 
   MBB.erase(MI);
   return true;
 }
 
+// @{ MYRISCVXInstrInfo_adjustStackPtr
+/// SPをスタックフレームのサイズだけ移動する
+void MYRISCVXInstrInfo::adjustStackPtr(unsigned SP, int64_t Amount,
+                                       MachineBasicBlock &MBB,
+                                       MachineBasicBlock::iterator I) const {
+  DebugLoc DL = I != MBB.end() ? I->getDebugLoc() : DebugLoc();
+  // オフセットが12ビット以内に収まらない場合はADD命令を使用する
+  unsigned ADD = MYRISCVX::ADD;
+  // オフセットが12ビット以内に収まる場合はADDI命令を使用する
+  unsigned ADDI = MYRISCVX::ADDI;
+
+  if (isInt<12>(Amount)) {
+    // スタックフレームのサイズが12ビット以内で収まるならば, 単純にaddi sp, sp,
+    // amountを実行する
+    BuildMI(MBB, I, DL, get(ADDI), SP).addReg(SP).addImm(Amount);
+  } else {
+    // スタックフレームが12ビットのサイズに収まらない場合, loadImmediate()による定数生成を行う
+    MachineFunction *MF = MBB.getParent();
+    MachineRegisterInfo &MRI = MF->getRegInfo();
+    // 仮想的なレジスタを作成して定数の中間値を格納
+    unsigned Reg = MRI.createVirtualRegister(&MYRISCVX::GPRRegClass);
+    // loaImmediate()を呼び出して12ビットよりも大きい定数を生成
+    loadImmediate(Amount, MBB, I, DL, Reg, nullptr);
+    // 生成した定数通りにスタックポインタを更新する
+    BuildMI(MBB, I, DL, get(ADD), SP).addReg(SP).addReg(Reg, RegState::Kill);
+  }
+}
+// @} MYRISCVXInstrInfo_adjustStackPtr
+
+// @{ MYRISCVXInstrInfo_loadImmediate
+// 即値の生成に必要な命令の生成
+void MYRISCVXInstrInfo::loadImmediate(int64_t Imm, MachineBasicBlock &MBB,
+                                      MachineBasicBlock::iterator II,
+                                      const DebugLoc &DL, unsigned DstReg,
+                                      unsigned *NewImm) const {
+  // 定数を上位の20ビットと下位の12ビットに分けて命令を生成する
+  uint64_t Hi20 = ((Imm + 0x800) >> 12) & 0xfffff;
+  uint64_t Lo12 = SignExtend64<12>(Imm);
+  // 上位の20ビットはLUI命令を使用して生成
+  BuildMI(MBB, II, DL, get(MYRISCVX::LUI), DstReg).addImm(Hi20);
+  // 下位の12ビットはADDI命令を使用して生成
+  BuildMI(MBB, II, DL, get(MYRISCVX::ADDI), DstReg)
+      .addReg(DstReg, RegState::Kill)
+      .addImm(Lo12);
+}
+// @} MYRISCVXInstrInfo_loadImmediate
 
 void MYRISCVXInstrInfo::expandRetRA(MachineBasicBlock &MBB,
                                     MachineBasicBlock::iterator I) const {
   // expandRetRAでは, MYRISCVX::RetRAノードをret命令(=JALR x0,ra,0)に変換する
   BuildMI(MBB, I, I->getDebugLoc(), get(MYRISCVX::JALR))
-      .addReg(MYRISCVX::ZERO).addReg(MYRISCVX::RA).addImm(0);
+      .addReg(MYRISCVX::ZERO)
+      .addReg(MYRISCVX::RA)
+      .addImm(0);
 }
 //@} MYRISCVXInstrInfo_expandPostRA
