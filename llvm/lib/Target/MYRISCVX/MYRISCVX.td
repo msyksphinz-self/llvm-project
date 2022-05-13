@@ -14,6 +14,20 @@
 include "llvm/Target/Target.td"
 
 //===----------------------------------------------------------------------===//
+// MYRISCVX subtarget features and instruction predicates.
+//===----------------------------------------------------------------------===//
+
+// @{ MYRISCVX_td_SubTarget
+// MYRISCVXの属性としてFeatureRV64を定義する
+def FeatureRV64 : SubtargetFeature<"64bit", "HasRV64", "true", "RV64 support">;
+
+// CPUモデルcpu-rv32/cpu-rv64
+// cpu-rv64の時はFeatureRV64が有効になる
+def : ProcessorModel<"cpu-rv32", NoSchedModel, []>;
+def : ProcessorModel<"cpu-rv64", NoSchedModel, [FeatureRV64]>;
+// @} MYRISCVX_td_SubTarget
+
+//===----------------------------------------------------------------------===//
 // Target-dependent interfaces
 //===----------------------------------------------------------------------===//
 
