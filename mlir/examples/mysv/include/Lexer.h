@@ -1,4 +1,4 @@
-//===- Lexer.h - Lexer for the Toy language -------------------------------===//
+//===- Lexer.h - Lexer for the Mysv language -------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -10,15 +10,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef TOY_LEXER_H
-#define TOY_LEXER_H
+#ifndef MYSV_LEXER_H
+#define MYSV_LEXER_H
 
 #include "llvm/ADT/StringRef.h"
 
 #include <memory>
 #include <string>
 
-namespace toy {
+namespace mysv {
 
 /// Structure definition a location in a file.
 struct Location {
@@ -215,6 +215,6 @@ private:
   }
   const char *current, *end;
 };
-} // namespace toy
+} // namespace mysv
 
-#endif // TOY_LEXER_H
+#endif // MYSV_LEXER_H

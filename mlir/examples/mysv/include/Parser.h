@@ -14,13 +14,11 @@
 #ifndef MYSV_PARSER_H
 #define MYSV_PARSER_H
 
-#include "MYSV/AST.h"
-#include "MYSV/Lexer.h"
+#include "AST.h"
+#include "Lexer.h"
 
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/STLExtras.h"
-#include "llvm/ADT/StringExtras.h"
-#include "llvm/Support/raw_ostream.h"
 
 #include <map>
 #include <utility>
@@ -42,8 +40,8 @@ public:
   std::unique_ptr<ModuleAST> parseModule() {
     lexer.getNextToken();   // prime the lexer
     // Parse functions one at a time and accumulate in this vector.
-    std::vector<AssignAST> functions;
-    while (auto f = parseASsign()) {
+    std::vector<AssignExprAST> functions;
+    while (auto f = parseAssign()) {
       functions.push_back(std::move(*f));
       if (lexer.getCurToken() == tok_eof)
         break;
@@ -72,7 +70,7 @@ private:
   /// and identifier and an optional type (shape specification) before the
   /// initializer.
   /// decl ::= assign identifier = expr
-  std::unique_ptr<VarDeclExprAST> parseAssign() {
+  std::unique_ptr<AssignExprAST> parseAssign() {
     if (lexer.getCurToken() != tok_assign) {
       return parseError<AssignExprAST>("assign", "to begin assign");
     }
@@ -87,6 +85,8 @@ private:
     lexer.consume(Token('='));
 
     auto expr = parseNumberExpr();
+
+    lexer.consume(Token(';'));
     return std::make_unique<AssignExprAST>(std::move(loc), std::move(id), std::move(expr));
   }
 
