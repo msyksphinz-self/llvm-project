@@ -15,6 +15,7 @@ endmacro(add_mysv_chapter name)
 add_mysv_chapter(mysv
   mysv.cpp
   AST.cpp
+  MLIRGen.cpp
 )
 
 target_link_libraries(mysv

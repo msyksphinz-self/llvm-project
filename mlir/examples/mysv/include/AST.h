@@ -67,16 +67,16 @@ class NumberExprAST : public ExprAST {
 /// Expression class for assignment.
 class AssignExprAST : public ExprAST {
   std::string name;
-  std::unique_ptr<ExprAST> initVal;
+  std::unique_ptr<NumberExprAST> initVal;
 
  public:
-  AssignExprAST(Location loc, llvm::StringRef name, std::unique_ptr<ExprAST> initVal)
+  AssignExprAST(Location loc, llvm::StringRef name, std::unique_ptr<NumberExprAST> initVal)
       : ExprAST(Expr_Assign, std::move(loc)),
         name(name),
         initVal(std::move(initVal)) {}
 
   llvm::StringRef getName() { return name; }
-  ExprAST *getInitVal() { return initVal.get(); }
+  NumberExprAST *getInitVal() { return initVal.get(); }
 
   /// LLVM style RTTI
   static bool classof(const ExprAST *c) { return c->getKind() == Expr_Assign; }

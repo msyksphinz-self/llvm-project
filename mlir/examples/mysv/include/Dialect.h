@@ -20,4 +20,13 @@
 #include "mlir/Interfaces/CallInterfaces.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
 
+/// Include the auto-generated header file containing the declaration of the mysv
+/// dialect.
+#include "mlir/Dialect/MYSV/MYSVDialect.h.inc"
+
+/// Include the auto-generated header file containing the declarations of the
+/// mysv operations.
+#define GET_OP_CLASSES
+#include "mlir/Dialect/MYSV/MYSV.h.inc"
+
 #endif // MLIR_TUTORIAL_MYSV_DIALECT_H_

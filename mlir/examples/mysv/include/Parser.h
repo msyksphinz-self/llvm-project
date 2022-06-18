@@ -59,11 +59,11 @@ private:
 
   /// Parse a literal number.
   /// numberexpr ::= number
-  std::unique_ptr<ExprAST> parseNumberExpr() {
+  std::unique_ptr<NumberExprAST> parseNumberExpr() {
     auto loc = lexer.getLastLocation();
     auto result = std::make_unique<NumberExprAST>(std::move(loc), lexer.getValue());
     lexer.consume(tok_number);
-    return std::move(result);
+    return result;
   }
 
   /// Parse a variable declaration, it starts with a `var` keyword followed by
