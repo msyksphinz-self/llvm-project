@@ -1,4 +1,4 @@
-//===- MLIRGen.cpp - MLIR Generation from a Toy AST -----------------------===//
+//===- MLIRGen.cpp - MLIR Generation from a MYSV AST -----------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -94,7 +94,7 @@ class MLIRGenImpl {
 
 
   /// Emit a literal/constant array. It will be emitted as a flattened array of
-  /// data in an Attribute attached to a `toy.constant` operation.
+  /// data in an Attribute attached to a `mysv.constant` operation.
   /// See documentation on [Attributes](LangRef.md#attributes) for more details.
   /// Here is an excerpt:
   ///
@@ -107,13 +107,13 @@ class MLIRGenImpl {
     // tensor literal.
     // auto dataAttribute = mlir::DenseElementsAttr::get(elementType);
 
-    // Build the MLIR op `toy.constant`. This invokes the `ConstantOp::build`
+    // Build the MLIR op `mysv.constant`. This invokes the `ConstantOp::build`
     // method.
     return builder.create<ConstantOp>(loc(lit.loc()), elementType, lit.getValue());
   }
 
  private:
-  /// A "module" matches a Toy source file: containing a list of functions.
+  /// A "module" matches a MYSV source file: containing a list of functions.
   mlir::ModuleOp theModule;
 
   /// The builder is a helper class to create IR inside a function. The builder
