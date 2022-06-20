@@ -192,6 +192,12 @@ def : Pat<(setule FPR_S:$rs1, FPR_S:$rs2), (FLE_S $rs1, $rs2)>;
 def : Pat<(setugt FPR_S:$rs1, FPR_S:$rs2), (FLE_S $rs2, $rs1)>;
 def : Pat<(setuge FPR_S:$rs1, FPR_S:$rs2), (FLT_S $rs2, $rs1)>;
 
+def : Pat<(setoeq FPR_S:$rs1, FPR_S:$rs2), (FEQ_S $rs1, $rs2)>;
+def : Pat<(setolt FPR_S:$rs1, FPR_S:$rs2), (FLT_S $rs1, $rs2)>;
+def : Pat<(setole FPR_S:$rs1, FPR_S:$rs2), (FLE_S $rs1, $rs2)>;
+def : Pat<(setogt FPR_S:$rs1, FPR_S:$rs2), (FLE_S $rs2, $rs1)>;
+def : Pat<(setoge FPR_S:$rs1, FPR_S:$rs2), (FLT_S $rs2, $rs1)>;
+
 def : Pat<(setgt  FPR_S:$rs1, FPR_S:$rs2), (FLE_S $rs2, $rs1)>;
 def : Pat<(setge  FPR_S:$rs1, FPR_S:$rs2), (FLT_S $rs2, $rs1)>;
 // @} MYRISCVXInstrInfoFD_td_FP_Compare_S_Pattern
@@ -219,6 +225,12 @@ def : Pat<(setult FPR_D:$rs1, FPR_D:$rs2), (FLT_D $rs1, $rs2)>;
 def : Pat<(setule FPR_D:$rs1, FPR_D:$rs2), (FLE_D $rs1, $rs2)>;
 def : Pat<(setugt FPR_D:$rs1, FPR_D:$rs2), (FLE_D $rs2, $rs1)>;
 def : Pat<(setuge FPR_D:$rs1, FPR_D:$rs2), (FLT_D $rs2, $rs1)>;
+
+def : Pat<(setoeq FPR_D:$rs1, FPR_D:$rs2), (FEQ_D $rs1, $rs2)>;
+def : Pat<(setolt FPR_D:$rs1, FPR_D:$rs2), (FLT_D $rs1, $rs2)>;
+def : Pat<(setole FPR_D:$rs1, FPR_D:$rs2), (FLE_D $rs1, $rs2)>;
+def : Pat<(setogt FPR_D:$rs1, FPR_D:$rs2), (FLE_D $rs2, $rs1)>;
+def : Pat<(setoge FPR_D:$rs1, FPR_D:$rs2), (FLT_D $rs2, $rs1)>;
 
 def : Pat<(setgt  FPR_D:$rs1, FPR_D:$rs2), (FLE_D $rs2, $rs1)>;
 def : Pat<(setge  FPR_D:$rs1, FPR_D:$rs2), (FLT_D $rs2, $rs1)>;
@@ -288,3 +300,7 @@ def : Pat<(fp_to_uint FPR_D:$rs1), (FCVT_WU_D $rs1)>;
 def : Pat<(sint_to_fp GPR:$rs1), (FCVT_D_W  $rs1)>;
 def : Pat<(uint_to_fp GPR:$rs1), (FCVT_D_WU $rs1)>;
 // @} MYRISCVXInstrInfoFD_td_FP_Double_Single_TwoOps_Patterns
+
+
+def Select_FPR32_Using_CC_GPR : SelectCC_rrirr<FPR_S, GPR>;
+def Select_FPR64_Using_CC_GPR : SelectCC_rrirr<FPR_D, GPR>;

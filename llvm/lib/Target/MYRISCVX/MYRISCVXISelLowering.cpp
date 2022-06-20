@@ -138,11 +138,16 @@ MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
   setOperationAction(ISD::BR_CC,             MVT::f64,   Expand);
   setOperationAction(ISD::SELECT_CC,         MVT::f32,   Expand);
   setOperationAction(ISD::SELECT_CC,         MVT::f64,   Expand);
+  setOperationAction(ISD::SELECT,            MVT::f32,   Custom);   // SELECTはカスタム関数を定義して生成する
+  setOperationAction(ISD::SELECT,            MVT::f64,   Custom);   // SELECTはカスタム関数を定義して生成する
 
   setOperationAction(ISD::ConstantPool, MVT::i32, Custom);
   setOperationAction(ISD::ConstantPool, MVT::i64, Custom);
   setOperationAction(ISD::ConstantPool, MVT::f32, Custom);
   setOperationAction(ISD::ConstantPool, MVT::f64, Custom);
+
+  setOperationAction(ISD::FPOW, MVT::f32, Expand);
+  setOperationAction(ISD::FPOW, MVT::f64, Expand);
 
   // RISCV doesn't have extending float->double load/store.  Set LoadExtAction
   // for f32, f16
@@ -497,6 +502,10 @@ MYRISCVXTargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
     default:
       llvm_unreachable("Unexpected instr type to insert");
     case MYRISCVX::Select_GPR_Using_CC_GPR:
+      return emitSelectPseudo(MI, BB);
+    case MYRISCVX::Select_FPR32_Using_CC_GPR:
+      return emitSelectPseudo(MI, BB);
+    case MYRISCVX::Select_FPR64_Using_CC_GPR:
       return emitSelectPseudo(MI, BB);
   }
 }
