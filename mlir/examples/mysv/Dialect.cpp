@@ -35,3 +35,17 @@ void MYSVDialect::initialize() {
 #include "mlir/Dialect/MYSV/MYSV.cpp.inc"
       >();
 }
+
+
+//===----------------------------------------------------------------------===//
+// ConstantOp
+//===----------------------------------------------------------------------===//
+
+/// Build a constant operation.
+/// The builder is passed as an argument, so is the state that this method is
+/// expected to fill in order to build the operation.
+void ConstantOp::build(mlir::OpBuilder &builder, mlir::OperationState &state,
+                       int64_t value) {
+  auto dataType = RankedTensorType::get({}, builder.getI64Type());
+  ConstantOp::build(builder, state, dataType, builder.getIntegerAttr(dataType, value));
+}

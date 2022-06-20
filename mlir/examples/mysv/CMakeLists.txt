@@ -16,8 +16,17 @@ add_mysv_chapter(mysv
   mysv.cpp
   AST.cpp
   MLIRGen.cpp
+  Dialect.cpp
 )
+
+include_directories(include/)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/include/)
 
 target_link_libraries(mysv
   PRIVATE
-  MLIRSupport)
+    MLIRSupport
+    MLIRAnalysis
+    MLIRIR
+    MLIRParser
+    MLIRSideEffectInterfaces
+    MLIRTransforms)
