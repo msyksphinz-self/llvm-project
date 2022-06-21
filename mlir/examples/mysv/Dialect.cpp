@@ -41,11 +41,19 @@ void MYSVDialect::initialize() {
 // ConstantOp
 //===----------------------------------------------------------------------===//
 
-/// Build a constant operation.
-/// The builder is passed as an argument, so is the state that this method is
-/// expected to fill in order to build the operation.
-void ConstantOp::build(mlir::OpBuilder &builder, mlir::OperationState &state,
-                       int64_t value) {
-  auto dataType = RankedTensorType::get({}, builder.getI64Type());
-  ConstantOp::build(builder, state, dataType, builder.getIntegerAttr(dataType, value));
-}
+// /// Build a constant operation.
+// /// The builder is passed as an argument, so is the state that this method is
+// /// expected to fill in order to build the operation.
+// void ConstantOp::build(mlir::OpBuilder &builder, mlir::OperationState &state,
+//                        int64_t value) {
+//   auto dataType = RankedTensorType::get({}, builder.getI64Type());
+//   ConstantOp::build(builder, state, dataType, builder.getIntegerAttr(dataType, value));
+// }
+
+
+//===----------------------------------------------------------------------===//
+// TableGen'd op method definitions
+//===----------------------------------------------------------------------===//
+
+#define GET_OP_CLASSES
+#include "mlir/Dialect/MYSV/MYSV.cpp.inc"

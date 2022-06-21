@@ -20,7 +20,7 @@ def MYSV_Dialect : Dialect {
     The My original System Verilog Dialect.
   }];
 
-  let hasConstantMaterializer = 1;
+  // let hasConstantMaterializer = 1;
   let emitAccessorPrefix = kEmitAccessorPrefix_Prefixed;
 }
 

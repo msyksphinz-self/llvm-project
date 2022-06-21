@@ -154,4 +154,4 @@ mlir::OwningOpRef<mlir::ModuleOp> mlirGen(mlir::MLIRContext &context,
   return MLIRGenImpl(context).mlirGen(moduleAST);
 }
 
-};  // namespace mysv
+}  // namespace mysv
