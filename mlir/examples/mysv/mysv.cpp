@@ -52,7 +52,7 @@ std::unique_ptr<mysv::ModuleAST> parseInputFile(llvm::StringRef filename) {
 int dumpMLIR() {
   mlir::MLIRContext context;
   // Load our Dialect in this MLIR Context.
-  // context.getOrLoadDialect<mlir::mysv::MYSVDialect>();
+  context.getOrLoadDialect<mlir::mysv::MYSVDialect>();
 
   // Handle '.mysv' input to the compiler.
   auto moduleAST = parseInputFile(inputFilename);
