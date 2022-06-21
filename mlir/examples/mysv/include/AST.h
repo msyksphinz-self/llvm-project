@@ -50,13 +50,13 @@ class ExprAST {
 
 /// Expression class for numeric literals like "1".
 class NumberExprAST : public ExprAST {
-  uint64_t val;
+  int64_t val;
 
  public:
-  NumberExprAST(Location loc, uint64_t val)
+  NumberExprAST(Location loc, int64_t val)
       : ExprAST(Expr_Num, std::move(loc)), val(val) {}
 
-  uint64_t getValue() { return val; }
+  int64_t getValue() { return val; }
 
   /// LLVM style RTTI
   static bool classof(const ExprAST *c) { return c->getKind() == Expr_Num; }
