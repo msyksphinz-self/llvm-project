@@ -39,8 +39,24 @@ def ConstantOp : MYSV_Op<"constant"> {
   let arguments = (ins SI64Attr:$value);
 
   // The constant operation returns a single value of TensorType.
-  // F64Tensor corresponds to a 64-bit floating-point TensorType.
+  // I64Tensor corresponds to a 64-bit floating-point TensorType.
   let results = (outs I64);
+
+  // Add custom build methods for the constant operation. These method populates
+  // the `state` that MLIR uses to create operations, i.e. these are used when
+  // using `builder.create<ConstantOp>(...)`.
+  let builders = [
+    // Build a constant with a given constant tensor value.
+    OpBuilder<(ins "IntegerAttr":$value), [{
+      build($_builder, $_state, value.getType(), value);
+    }]>,
+
+    // Build a constant with a given constant floating-point value.
+    OpBuilder<(ins "int":$value)>
+  ];
+
+  // Invoke a static verify method to verify this return operation.
+  let hasVerifier = 1;
 }
 
 #endif // MYSV
