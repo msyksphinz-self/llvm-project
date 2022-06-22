@@ -54,6 +54,9 @@ class MLIRGenImpl {
   /// Public API: convert the AST for a Mysv module (source file) to an MLIR
   /// Module operation.
   mlir::ModuleOp mlirGen(ModuleAST &moduleAST) {
+    // Create a scope in the symbol table to hold variable declarations.
+    ScopedHashTableScope<llvm::StringRef, mlir::Value> varScope(symbolTable);
+
     // We create an empty MLIR module and codegen functions one at a time and
     // add them to the module.
     theModule = mlir::ModuleOp::create(builder.getUnknownLoc());
@@ -74,6 +77,12 @@ class MLIRGenImpl {
 
   /// Emit a new function and add it to the MLIR module.
   mlir::Value mlirGen(AssignExprAST &assignAST) {
+    // Create a scope in the symbol table to hold variable declarations.
+    ScopedHashTableScope<llvm::StringRef, mlir::Value> varScope(symbolTable);
+
+    // Create an MLIR function for the given prototype.
+    builder.setInsertionPointToEnd(theModule.getBody());
+
     auto *init = assignAST.getInitVal();
     if (!init) {
       emitError(loc(assignAST.loc()),
@@ -81,15 +90,15 @@ class MLIRGenImpl {
       return nullptr;
     }
 
-    auto value = mlirGen(*init);
-    if (!value)
+    auto assign = mlirGen(*init);
+    if (!assign)
       return nullptr;
 
-    // Register the value in the symbol table.
-    if (failed(declare(assignAST.getName(), value)))
+    // Register the assign in the symbol table.
+    if (failed(declare(assignAST.getName(), assign)))
       return nullptr;
 
-    return value;
+    return assign;
   }
 
 
