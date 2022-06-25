@@ -32,6 +32,7 @@ class ExprAST {
   enum ExprASTKind {
     Expr_Assign,
     Expr_Num,
+    Expr_Var,
   };
 
   ExprAST(ExprASTKind kind, Location location)
@@ -63,20 +64,35 @@ class NumberExprAST : public ExprAST {
 };
 
 
+/// Expression class for variable literals.
+class VarExprAST : public ExprAST {
+  std::string name;
+
+ public:
+  VarExprAST(Location loc, llvm::StringRef name)
+      : ExprAST(Expr_Var, std::move(loc)), name(name) {}
+
+  llvm::StringRef getName() { return name; }
+
+  /// LLVM style RTTI
+  static bool classof(const ExprAST *c) { return c->getKind() == Expr_Var; }
+};
+
+
 
 /// Expression class for assignment.
 class AssignExprAST : public ExprAST {
   std::string name;
-  std::unique_ptr<NumberExprAST> initVal;
+  std::unique_ptr<ExprAST> expr;
 
  public:
-  AssignExprAST(Location loc, llvm::StringRef name, std::unique_ptr<NumberExprAST> initVal)
+  AssignExprAST(Location loc, llvm::StringRef name, std::unique_ptr<ExprAST> expr)
       : ExprAST(Expr_Assign, std::move(loc)),
         name(name),
-        initVal(std::move(initVal)) {}
+        expr(std::move(expr)) {}
 
   llvm::StringRef getName() { return name; }
-  NumberExprAST *getInitVal() { return initVal.get(); }
+  ExprAST *getExpr() { return expr.get(); }
 
   /// LLVM style RTTI
   static bool classof(const ExprAST *c) { return c->getKind() == Expr_Assign; }

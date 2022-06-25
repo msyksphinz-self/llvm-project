@@ -66,6 +66,40 @@ private:
     return result;
   }
 
+  /// identifierexpr
+  ///   ::= identifier
+  std::unique_ptr<ExprAST> parseIdentifierExpr() {
+    std::string name(lexer.getId());
+
+    auto loc = lexer.getLastLocation();
+    lexer.getNextToken(); // eat identifier.
+
+    return std::make_unique<VarExprAST>(std::move(loc), name);
+  }
+
+  /// primary
+  ///   ::= identifierexpr
+  ///   ::= numberexpr
+  std::unique_ptr<ExprAST> parsePrimary() {
+    switch (lexer.getCurToken()) {
+      default:
+        llvm::errs() << "unknown token '" << lexer.getCurToken()
+                     << "' when expecting an expression\n";
+        return nullptr;
+      case tok_identifier:
+        return parseIdentifierExpr();
+      case tok_number:
+        return parseNumberExpr();
+    }
+  }
+
+  std::unique_ptr<ExprAST> parseExpr() {
+    auto lhs = parsePrimary();
+    if (!lhs)
+      return nullptr;
+    return lhs;
+  }
+
   /// Parse a variable declaration, it starts with a `var` keyword followed by
   /// and identifier and an optional type (shape specification) before the
   /// initializer.
@@ -84,7 +118,7 @@ private:
 
     lexer.consume(Token('='));
 
-    auto expr = parseNumberExpr();
+    auto expr = parseExpr();
 
     lexer.consume(Token(';'));
     return std::make_unique<AssignExprAST>(std::move(loc), std::move(id), std::move(expr));

@@ -83,14 +83,14 @@ class MLIRGenImpl {
     // Create an MLIR function for the given prototype.
     builder.setInsertionPointToEnd(theModule.getBody());
 
-    auto *init = assignAST.getInitVal();
-    if (!init) {
+    auto *expr = assignAST.getExpr();
+    if (!expr) {
       emitError(loc(assignAST.loc()),
-                "missing initializer in variable declaration");
+                "missing exprializer in variable declaration");
       return nullptr;
     }
 
-    auto assign = mlirGen(*init);
+    auto assign = mlirGen(*expr);
     if (!assign)
       return nullptr;
 
@@ -99,6 +99,21 @@ class MLIRGenImpl {
       return nullptr;
 
     return assign;
+  }
+
+  /// Dispatch codegen for the right expression subclass using RTTI.
+  mlir::Value mlirGen(ExprAST &expr) {
+    switch (expr.getKind()) {
+      case mysv::ExprAST::Expr_Var:
+        return mlirGen(cast<VarExprAST>(expr));
+      case mysv::ExprAST::Expr_Num:
+        return mlirGen(cast<NumberExprAST>(expr));
+      default:
+        emitError(loc(expr.loc()))
+            << "MLIR codegen encountered an unhandled expr kind '"
+            << Twine(expr.getKind()) << "'";
+        return nullptr;
+    }
   }
 
 
@@ -119,6 +134,19 @@ class MLIRGenImpl {
     // Build the MLIR op `mysv.constant`. This invokes the `ConstantOp::build`
     // method.
     return builder.create<ConstantOp>(loc(lit.loc()), elementType, lit.getValue());
+  }
+
+
+  /// This is a reference to a variable in an expression. The variable is
+  /// expected to have been declared and so should have a value in the symbol
+  /// table, otherwise emit an error and return nullptr.
+  mlir::Value mlirGen(VarExprAST &expr) {
+    if (auto variable = symbolTable.lookup(expr.getName()))
+      return variable;
+
+    emitError(loc(expr.loc()), "error: unknown variable '")
+        << expr.getName() << "'";
+    return nullptr;
   }
 
  private:

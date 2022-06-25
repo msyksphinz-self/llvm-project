@@ -26,6 +26,7 @@ class ASTDumper {
   void dump(AssignExprAST *assignExpr);
   void dump(ExprAST *expr);
   void dump(NumberExprAST *num);
+  void dump(VarExprAST *name);
 
   // Actually print spaces matching the current indentation level
   void indent() {
@@ -55,7 +56,7 @@ template <typename T> static std::string loc(T *node) {
 /// Dispatch to a generic expressions to the appropriate subclass using RTTI
 void ASTDumper::dump(ExprAST *expr) {
   llvm::TypeSwitch<ExprAST *>(expr)
-      .Case<NumberExprAST, AssignExprAST>(
+      .Case<NumberExprAST, AssignExprAST, VarExprAST>(
           [&](auto *node) { this->dump(node); })
       .Default([&](ExprAST *) {
         // No match, fallback to a generic message
@@ -70,7 +71,7 @@ void ASTDumper::dump(AssignExprAST *varDecl) {
   INDENT();
   llvm::errs() << "assign " << varDecl->getName();
   llvm::errs() << " " << loc(varDecl) << "\n";
-  dump(varDecl->getInitVal());
+  dump(varDecl->getExpr());
 }
 
 
@@ -78,6 +79,13 @@ void ASTDumper::dump(AssignExprAST *varDecl) {
 void ASTDumper::dump(NumberExprAST *num) {
   INDENT();
   llvm::errs() << num->getValue() << " " << loc(num) << "\n";
+}
+
+
+/// A literal number, just print the value.
+void ASTDumper::dump(VarExprAST *var) {
+  INDENT();
+  llvm::errs() << var->getName() << " " << loc(var) << "\n";
 }
 
 
