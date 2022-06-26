@@ -155,6 +155,11 @@ MYRISCVXTargetLowering::MYRISCVXTargetLowering(const MYRISCVXTargetMachine &TM,
     setLoadExtAction(ISD::EXTLOAD, VT, MVT::f32, Expand);
     setLoadExtAction(ISD::EXTLOAD, VT, MVT::f16, Expand);
   }
+
+  setCondCodeAction (llvm::ISD::SETO, MVT::f32, Expand);
+  setCondCodeAction (llvm::ISD::SETO, MVT::f64, Expand);
+  setCondCodeAction (llvm::ISD::SETUO, MVT::f32, Expand);
+  setCondCodeAction (llvm::ISD::SETUO, MVT::f64, Expand);
 }
 // @} MYRISCVXTargetLowering
 
