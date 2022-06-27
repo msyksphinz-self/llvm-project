@@ -77,8 +77,8 @@ class MLIRGenImpl {
 
   /// Emit a new function and add it to the MLIR module.
   mlir::Value mlirGen(AssignExprAST &assignAST) {
-    // Create a scope in the symbol table to hold variable declarations.
-    ScopedHashTableScope<llvm::StringRef, mlir::Value> varScope(symbolTable);
+    // // Create a scope in the symbol table to hold variable declarations.
+    // ScopedHashTableScope<llvm::StringRef, mlir::Value> varScope(symbolTable);
 
     // Create an MLIR function for the given prototype.
     builder.setInsertionPointToEnd(theModule.getBody());
