@@ -33,6 +33,7 @@ class ExprAST {
     Expr_Assign,
     Expr_Num,
     Expr_Var,
+    Expr_BinOp,
   };
 
   ExprAST(ExprASTKind kind, Location location)
@@ -78,6 +79,25 @@ class VarExprAST : public ExprAST {
   static bool classof(const ExprAST *c) { return c->getKind() == Expr_Var; }
 };
 
+
+/// Expression class for a binary operator.
+class BinaryExprAST : public ExprAST {
+  char op;
+  std::unique_ptr<ExprAST> lhs, rhs;
+
+public:
+  char getOp() { return op; }
+  ExprAST *getLHS() { return lhs.get(); }
+  ExprAST *getRHS() { return rhs.get(); }
+
+  BinaryExprAST(Location loc, char op, std::unique_ptr<ExprAST> lhs,
+                std::unique_ptr<ExprAST> rhs)
+      : ExprAST(Expr_BinOp, std::move(loc)), op(op), lhs(std::move(lhs)),
+        rhs(std::move(rhs)) {}
+
+  /// LLVM style RTTI
+  static bool classof(const ExprAST *c) { return c->getKind() == Expr_BinOp; }
+};
 
 
 /// Expression class for assignment.

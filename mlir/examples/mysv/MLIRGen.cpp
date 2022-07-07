@@ -108,6 +108,8 @@ class MLIRGenImpl {
         return mlirGen(cast<VarExprAST>(expr));
       case mysv::ExprAST::Expr_Num:
         return mlirGen(cast<NumberExprAST>(expr));
+      case mysv::ExprAST::Expr_BinOp:
+        return mlirGen(cast<BinaryExprAST>(expr));
       default:
         emitError(loc(expr.loc()))
             << "MLIR codegen encountered an unhandled expr kind '"
@@ -146,6 +148,42 @@ class MLIRGenImpl {
 
     emitError(loc(expr.loc()), "error: unknown variable '")
         << expr.getName() << "'";
+    return nullptr;
+  }
+
+
+  /// Emit a binary operation
+  mlir::Value mlirGen(BinaryExprAST &binop) {
+    // First emit the operations for each side of the operation before emitting
+    // the operation itself. For example if the expression is `a + foo(a)`
+    // 1) First it will visiting the LHS, which will return a reference to the
+    //    value holding `a`. This value should have been emitted at declaration
+    //    time and registered in the symbol table, so nothing would be
+    //    codegen'd. If the value is not in the symbol table, an error has been
+    //    emitted and nullptr is returned.
+    // 2) Then the RHS is visited (recursively) and a call to `foo` is emitted
+    //    and the result value is returned. If an error occurs we get a nullptr
+    //    and propagate.
+    //
+    mlir::Value lhs = mlirGen(*binop.getLHS());
+    if (!lhs)
+      return nullptr;
+    mlir::Value rhs = mlirGen(*binop.getRHS());
+    if (!rhs)
+      return nullptr;
+    auto location = loc(binop.loc());
+    mlir::Type elementType = builder.getI64Type();
+
+    // Derive the operation name from the binary operator. At the moment we only
+    // support '+' and '*'.
+    switch (binop.getOp()) {
+    case '+':
+      return builder.create<AddOp>(location, elementType, lhs, rhs);
+    case '*':
+      return builder.create<MulOp>(location, elementType, lhs, rhs);
+    }
+
+    emitError(location, "invalid binary operator '") << binop.getOp() << "'";
     return nullptr;
   }
 

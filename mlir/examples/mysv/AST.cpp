@@ -27,6 +27,7 @@ class ASTDumper {
   void dump(ExprAST *expr);
   void dump(NumberExprAST *num);
   void dump(VarExprAST *name);
+  void dump(BinaryExprAST *name);
 
   // Actually print spaces matching the current indentation level
   void indent() {
@@ -56,7 +57,7 @@ template <typename T> static std::string loc(T *node) {
 /// Dispatch to a generic expressions to the appropriate subclass using RTTI
 void ASTDumper::dump(ExprAST *expr) {
   llvm::TypeSwitch<ExprAST *>(expr)
-      .Case<NumberExprAST, AssignExprAST, VarExprAST>(
+      .Case<NumberExprAST, AssignExprAST, VarExprAST, BinaryExprAST>(
           [&](auto *node) { this->dump(node); })
       .Default([&](ExprAST *) {
         // No match, fallback to a generic message
@@ -86,6 +87,15 @@ void ASTDumper::dump(NumberExprAST *num) {
 void ASTDumper::dump(VarExprAST *var) {
   INDENT();
   llvm::errs() << var->getName() << " " << loc(var) << "\n";
+}
+
+
+/// A literal number, just print the value.
+void ASTDumper::dump(BinaryExprAST *node) {
+  INDENT();
+  llvm::errs() << "BinOp: " << node->getOp() << " " << loc(node) << "\n";
+  dump(node->getLHS());
+  dump(node->getRHS());
 }
 
 

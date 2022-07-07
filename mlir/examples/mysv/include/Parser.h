@@ -93,11 +93,73 @@ private:
     }
   }
 
+
+  /// Recursively parse the right hand side of a binary expression, the ExprPrec
+  /// argument indicates the precedence of the current binary operator.
+  ///
+  /// binoprhs ::= ('+' primary)*
+  std::unique_ptr<ExprAST> parseBinOpRHS(int exprPrec,
+                                         std::unique_ptr<ExprAST> lhs) {
+    // If this is a binop, find its precedence.
+    while (true) {
+      int tokPrec = getTokPrecedence();
+
+      // If this is a binop that binds at least as tightly as the current binop,
+      // consume it, otherwise we are done.
+      if (tokPrec < exprPrec)
+        return lhs;
+
+      // Okay, we know this is a binop.
+      int binOp = lexer.getCurToken();
+      lexer.consume(Token(binOp));
+      auto loc = lexer.getLastLocation();
+
+      // Parse the primary expression after the binary operator.
+      auto rhs = parsePrimary();
+      if (!rhs)
+        return parseError<ExprAST>("expression", "to complete binary operator");
+
+      // If BinOp binds less tightly with rhs than the operator after rhs, let
+      // the pending operator take rhs as its lhs.
+      int nextPrec = getTokPrecedence();
+      if (tokPrec < nextPrec) {
+        rhs = parseBinOpRHS(tokPrec + 1, std::move(rhs));
+        if (!rhs)
+          return nullptr;
+      }
+
+      // Merge lhs/RHS.
+      lhs = std::make_unique<BinaryExprAST>(std::move(loc), binOp,
+                                            std::move(lhs), std::move(rhs));
+    }
+  }
+
+
+  /// Get the precedence of the pending binary operator token.
+  int getTokPrecedence() {
+    if (!isascii(lexer.getCurToken()))
+      return -1;
+
+    // 1 is lowest precedence.
+    switch (static_cast<char>(lexer.getCurToken())) {
+    case '-':
+      return 20;
+    case '+':
+      return 20;
+    case '*':
+      return 40;
+    default:
+      return -1;
+    }
+  }
+
+
+  /// expression::= primary binop rhs
   std::unique_ptr<ExprAST> parseExpr() {
     auto lhs = parsePrimary();
     if (!lhs)
       return nullptr;
-    return lhs;
+    return parseBinOpRHS(0, std::move(lhs));
   }
 
   /// Parse a variable declaration, it starts with a `var` keyword followed by
