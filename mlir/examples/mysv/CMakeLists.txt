@@ -16,6 +16,7 @@ add_mysv_chapter(mysv
   mysv.cpp
   AST.cpp
   MLIRGen.cpp
+  mlir/MYSVOpt.cpp
   Dialect.cpp
 )
 

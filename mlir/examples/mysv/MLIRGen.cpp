@@ -179,6 +179,8 @@ class MLIRGenImpl {
     switch (binop.getOp()) {
     case '+':
       return builder.create<AddOp>(location, elementType, lhs, rhs);
+    case '-':
+      return builder.create<SubOp>(location, elementType, lhs, rhs);
     case '*':
       return builder.create<MulOp>(location, elementType, lhs, rhs);
     }

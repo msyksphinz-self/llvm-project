@@ -7,6 +7,9 @@
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/Verifier.h"
 #include "mlir/Parser/Parser.h"
+#include "mlir/Pass/Pass.h"
+#include "mlir/Pass/PassManager.h"
+#include "mlir/Transforms/Passes.h"
 
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/CommandLine.h"
@@ -33,6 +36,8 @@ static cl::opt<enum Action>
 emitAction("emit", cl::desc("Select the kind of output desired"),
            cl::values(clEnumValN(DumpAST, "ast", "output the AST dump")),
            cl::values(clEnumValN(DumpMLIR, "mlir", "output the MLIR dump")));
+
+static cl::opt<bool> enableOpt("opt", cl::desc("Enable optimizations"));
 
 /// Returns a MYSV AST resulting from parsing the file or a nullptr on error.
 std::unique_ptr<mysv::ModuleAST> parseInputFile(llvm::StringRef filename) {
@@ -62,6 +67,17 @@ int dumpMLIR() {
   if (!module)
     return 1;
 
+  if (enableOpt) {
+    mlir::PassManager pm(&context);
+    // Apply any generic pass manager command line options and run the pipeline.
+    applyPassManagerCLOptions(pm);
+
+    // Add a run of the canonicalizer to optimize the mlir module.
+    pm.addNestedPass<mlir::mysv::SubOp>(mlir::createCanonicalizerPass());
+    if (mlir::failed(pm.run(*module)))
+      return 4;
+  }
+
   module->dump();
 
   return 0;
@@ -82,6 +98,11 @@ int dumpAST() {
 
 int main(int argc, char **argv)
 {
+  // Register any command line options.
+  mlir::registerAsmPrinterCLOptions();
+  mlir::registerMLIRContextCLOptions();
+  mlir::registerPassManagerCLOptions();
+
   cl::ParseCommandLineOptions(argc, argv, "mysv compiler\n");
 
   switch (emitAction) {

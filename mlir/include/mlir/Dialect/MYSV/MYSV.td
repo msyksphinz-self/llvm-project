@@ -110,4 +110,33 @@ def AddOp : MYSV_Op<"add", [NoSideEffect]> {
   // ];
 }
 
+
+//===----------------------------------------------------------------------===//
+// SubOp
+//===----------------------------------------------------------------------===//
+
+def SubOp : MYSV_Op<"sub", [
+    NoSideEffect, IsolatedFromAbove
+  ]> {
+  let summary = "element-wise subition operation";
+  let description = [{
+    The "sub" operation performs element-wise subition between two tensors.
+    The shapes of the tensor operands are expected to match.
+  }];
+
+  let arguments = (ins I64:$lhs, I64:$rhs);
+  let results = (outs I64);
+
+  // Enable registering canonicalization patterns with this operation.
+  let hasCanonicalizer = 1;
+
+  // // Indicate that the operation has a custom parser and printer method.
+  // let hasCustomAssemblyFormat = 1;
+  //
+  // // Allow building an SubOp with from the two input operands.
+  // let builders = [
+  //   OpBuilder<(ins "Value":$lhs, "Value":$rhs)>
+  // ];
+}
+
 #endif // MYSV
