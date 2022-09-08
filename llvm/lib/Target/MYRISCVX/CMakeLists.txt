@@ -25,6 +25,10 @@ tablegen(LLVM MYRISCVXGenCodeEmitter.inc -gen-emitter)
 tablegen(LLVM MYRISCVXGenMCCodeEmitter.inc -gen-emitter)
 
 tablegen(LLVM MYRISCVXGenAsmWriter.inc -gen-asm-writer)
+# @{CMakeLists_DisassemblerTables
+# MYRISCVXInstrInfo.tdからDisasseblerで使用するテーブルを生成する
+tablegen(LLVM MYRISCVXGenDisassemblerTables.inc -gen-disassembler)
+# @}CMakeLists_DisassemblerTables
 
 # MYRISCVXCommonTableGenを定義しなければならない
 add_public_tablegen_target(MYRISCVXCommonTableGen)
@@ -49,4 +53,9 @@ add_llvm_target(MYRISCVXCodeGen
 add_subdirectory(TargetInfo)
 add_subdirectory(MCTargetDesc)
 add_subdirectory(AsmParser)
-# @{MYRISCVX_CMakeLists.txt
+# @{CMakeLists_Disassembler
+# DisassemblerディレクトリをLLVMビルド対象とする
+add_subdirectory(Disassembler)
+# @}CMakeLists_Disassembler
+
+# @} MYRISCVX_CMakeLists.txt
