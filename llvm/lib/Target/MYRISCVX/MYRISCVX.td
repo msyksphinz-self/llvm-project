@@ -52,11 +52,22 @@ include "MYRISCVXCallingConv.td"
 
 def MYRISCVXInstrInfo : InstrInfo;
 
+// @{ Add_MYRISCVX_td_MYRISCVXAsmParser
+// AsmParserで使用するMatcherを生成する
+def MYRISCVXAsmParser : AsmParser {
+  // AsmParserのParse時にAltNameで指定したレジスタ名も受け付ける
+  let ShouldEmitMatchRegisterAltName = 1;
+}
+// @} Add_MYRISCVX_td_MYRISCVXAsmParser
+
 // @{ MYRISCVX_td_MYRISCVX
 // MYRISCVXターゲットアーキテクチャを作成する
 def MYRISCVX : Target {
   // MYRISCVXInstrInfoは上記で定義したもの. InstrInfoを継承している
   let InstructionSet = MYRISCVXInstrInfo;
+  // アセンブリのParserとして`MYRISCVXAsmParser`を使用する
+  let AssemblyParsers = [MYRISCVXAsmParser];
 }
 // @} MYRISCVX_td_MYRISCVX
+// @} Add_MYRISCVX_td_Target_AssemblyParsers
 // @} Add_MYRISCVX_td_target
